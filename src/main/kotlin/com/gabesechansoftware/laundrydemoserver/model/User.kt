@@ -9,6 +9,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import jakarta.persistence.UniqueConstraint
 import java.util.UUID
@@ -39,5 +40,8 @@ class User {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false)
     open var organization: Organization? = null
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    open var addresses: Set<Address>? = null
 
 }
