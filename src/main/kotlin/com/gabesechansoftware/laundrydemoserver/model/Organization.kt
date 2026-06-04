@@ -1,10 +1,8 @@
 package com.gabesechansoftware.laundrydemoserver.model
 
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import java.util.UUID
+import jakarta.persistence.*
+import java.util.*
+
 
 @Entity
 class Organization {
@@ -12,6 +10,7 @@ class Organization {
     @GeneratedValue(strategy = GenerationType.UUID)
     open var id: UUID? = null
 
+    @Column(nullable = false)
     open var name: String? = null
 
 }

@@ -8,5 +8,4 @@ import org.springframework.stereotype.Service
 @Service
 class OrganizationService(@Autowired private val orgRepo: OrganizationRepository) {
 
-    fun findAll(): List<Organization> = orgRepo.findAll()
 }
