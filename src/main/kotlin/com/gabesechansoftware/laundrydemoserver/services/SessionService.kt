@@ -1,5 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.services
 
+import com.gabesechansoftware.laundrydemoserver.auth.BadAuthTokenException
 import com.gabesechansoftware.laundrydemoserver.model.User
 import com.gabesechansoftware.laundrydemoserver.model.auth.Session
 import com.gabesechansoftware.laundrydemoserver.repositories.SessionRepository
@@ -27,6 +28,22 @@ class SessionService(
             id = 0
         }
         entityManager.persist(session)
+    }
+
+    fun getSessionForToken(token: String): Session {
+        val sessions = sessionRepository.findByToken(token)
+        if(sessions.size > 1) {
+            throw RuntimeException("More than one session exists with token $token")
+        }
+        if(sessions.isEmpty()) {
+            throw BadAuthTokenException(token)
+        }
+        return sessions[0]
+    }
+
+    fun updateExpiration(session: Session, expiration: OffsetDateTime) {
+        session.expiration = expiration
+        sessionRepository.save(session)
     }
 
 }

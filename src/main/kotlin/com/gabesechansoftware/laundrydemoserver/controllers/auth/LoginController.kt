@@ -1,4 +1,4 @@
-package com.gabesechansoftware.laundrydemoserver.controllers
+package com.gabesechansoftware.laundrydemoserver.controllers.auth
 
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.model.User
@@ -32,11 +32,14 @@ data class Address(
     val postcode: String
 )
 
-@RestController
-class LoginController {
-    @Autowired
-    private lateinit var loginAuthenticator: LoginAuthenticator
+data class CheckAuthRequest(val token: String)
+data class CheckAuthResponse(val success: Boolean)
 
+
+@RestController
+class LoginController(
+    @Autowired private val loginAuthenticator: LoginAuthenticator
+) {
 
     @PostMapping("/login")
     fun login(
@@ -59,4 +62,17 @@ class LoginController {
     fun User.toLoginUser(): LoginUser = LoginUser(
         name!!, email, phone!!, emptyList()
     )
+
+    @PostMapping("/checkAuth")
+    fun checkAuth(
+        @RequestBody request: CheckAuthRequest): CheckAuthResponse {
+            try {
+                loginAuthenticator.authenticateToken(request.token)
+                return CheckAuthResponse(true)
+            }
+            catch (ex: Exception) {
+                ex.printStackTrace()
+                return CheckAuthResponse(false)
+            }
+    }
 }

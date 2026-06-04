@@ -38,10 +38,10 @@ class LoginAuthenticator(
         }
     }
 
-    fun authenticateToken(session: String): User {
-        //check if session is in sessions table
-            //if found, return user (with embedded org) of the login
-            //if not, throw exception
-        return User()
+    fun authenticateToken(token: String): User {
+        val session = sessionService.getSessionForToken(token)
+        //Using a token refreshes expiration
+        sessionService.updateExpiration(session, OffsetDateTime.now().plusYears(1))
+        return session.user!!
     }
 }
