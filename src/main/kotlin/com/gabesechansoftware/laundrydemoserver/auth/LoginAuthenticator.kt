@@ -3,18 +3,22 @@ package com.gabesechansoftware.laundrydemoserver.auth
 import com.gabesechansoftware.laundrydemoserver.model.User
 import com.gabesechansoftware.laundrydemoserver.model.auth.Password
 import com.gabesechansoftware.laundrydemoserver.repositories.UserRepository
+import com.gabesechansoftware.laundrydemoserver.services.OrganizationService
 import com.gabesechansoftware.laundrydemoserver.services.PasswordService
+import com.gabesechansoftware.laundrydemoserver.services.SessionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.encrypt.TextEncryptor
 import org.springframework.stereotype.Component
+import java.time.OffsetDateTime
 import java.util.UUID
 
 data class UserSession(val user: User, val token: String)
 
 @Component
 class LoginAuthenticator(
-    @Autowired val passwordService: PasswordService
+    @Autowired val passwordService: PasswordService,
+    @Autowired val sessionService: SessionService
 ) {
 
     private val encoder = BCryptPasswordEncoder(16)
@@ -25,6 +29,8 @@ class LoginAuthenticator(
 
         if(matches) {
             val token = UUID.randomUUID().toString()
+            val expire = OffsetDateTime.now().plusYears(1)
+            sessionService.addSesseion(password.user!!.id!!, token, expire)
             return UserSession(password.user!!, token)
         }
         else {
