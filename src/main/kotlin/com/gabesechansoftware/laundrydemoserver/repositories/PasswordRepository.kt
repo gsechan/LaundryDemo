@@ -11,7 +11,6 @@ import java.util.UUID
 
 data class UserAndPassword(val user: User, val password: Password)
 
-@Repository
 interface PasswordRepository: JpaRepository<Password, Long>{
     @Query("""
         SELECT p FROM Password p, User u

@@ -32,6 +32,6 @@ class WashFoldPrices {
     var avgWeight: BigDecimal? = null
 
     @Column( name = "organization_id", nullable = false, unique = true)
-    @JoinColumn(name = "organization_id", foreignKey = ForeignKey(name = "fk_wash_fold_user_id"))
+    @JoinColumn(name = "organization_id", foreignKey = ForeignKey(name = "fk_wash_fold_organization_id"))
     val organization: UUID? = null
 }
