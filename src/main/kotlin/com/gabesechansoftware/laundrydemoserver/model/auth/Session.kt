@@ -8,6 +8,11 @@ import java.time.OffsetDateTime
 
 
 @Entity
+@Table(
+    indexes = [
+        Index(name = "idx_session_token", columnList = "token", unique = true),
+    ]
+)
 class Session {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

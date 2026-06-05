@@ -21,7 +21,7 @@ import java.util.UUID
         UniqueConstraint(name = "user_org_and_phone", columnNames = [ "phone", "organization_id" ])
     ],
     indexes = [
-        Index(name = "idx_user_phone", columnList = "phone, organization_id", unique = true),
+        Index(name = "idx_user_phone_org", columnList = "phone, organization_id", unique = true),
     ]
 )
 class User {

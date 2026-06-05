@@ -6,11 +6,19 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.SequenceGenerator
+import jakarta.persistence.Table
+import jakarta.persistence.UniqueConstraint
 
 @Entity
+@Table(
+    indexes = [
+        Index(name = "idx_address_user", columnList = "user_id"),
+    ]
+)
 class Address {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
