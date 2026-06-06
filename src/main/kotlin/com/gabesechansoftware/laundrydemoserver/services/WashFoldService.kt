@@ -15,10 +15,10 @@ class WashFoldService(
     @Autowired private val washFoldPriceRepository: WashFoldPriceRepository,
 ) {
 
-    fun washFoldPrice(uuid: UUID): WashFoldData {
-        val results = washFoldPriceRepository.findByOrganization(uuid)
+    fun washFoldPrice(org: UUID): WashFoldData {
+        val results = washFoldPriceRepository.findByOrganization(org)
         if(results.size != 1) {
-            throw IllegalStateException("There should be exactly one wash price for $uuid, found ${results.size}")
+            throw IllegalStateException("There should be exactly one wash price for $org, found ${results.size}")
         }
         return WashFoldData(results[0].price!!, results[0].avgWeight!!)
     }

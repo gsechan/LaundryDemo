@@ -1,4 +1,4 @@
-package com.gabesechansoftware.laundrydemoserver.model
+package com.gabesechansoftware.laundrydemoserver.model.inventory
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -9,7 +9,6 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToMany
-import jakarta.persistence.SequenceGenerator
 import java.math.BigDecimal
 import java.util.UUID
 
@@ -31,4 +30,3 @@ class DryCleanItem {
     @JoinColumn(name = "item_id")
     var names: List<DryCleanItemName> = emptyList()
 }
-

@@ -1,13 +1,10 @@
-package com.gabesechansoftware.laundrydemoserver.model
+package com.gabesechansoftware.laundrydemoserver.model.inventory
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
-import jakarta.persistence.ForeignKey
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.SequenceGenerator
 import java.util.UUID
 
 @Entity

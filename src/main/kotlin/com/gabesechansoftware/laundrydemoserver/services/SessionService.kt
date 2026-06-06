@@ -1,7 +1,7 @@
 package com.gabesechansoftware.laundrydemoserver.services
 
 import com.gabesechansoftware.laundrydemoserver.auth.BadAuthTokenException
-import com.gabesechansoftware.laundrydemoserver.model.User
+import com.gabesechansoftware.laundrydemoserver.model.user.User
 import com.gabesechansoftware.laundrydemoserver.model.auth.Session
 import com.gabesechansoftware.laundrydemoserver.repositories.SessionRepository
 import jakarta.persistence.EntityManager

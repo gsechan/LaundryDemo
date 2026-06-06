@@ -1,6 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.model.auth
 
-import com.gabesechansoftware.laundrydemoserver.model.User
+import com.gabesechansoftware.laundrydemoserver.model.user.User
 import jakarta.persistence.*
 import org.hibernate.annotations.TimeZoneStorage
 import org.hibernate.annotations.TimeZoneStorageType

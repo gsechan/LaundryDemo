@@ -1,8 +1,8 @@
 package com.gabesechansoftware.laundrydemoserver.controllers.auth
 
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
-import com.gabesechansoftware.laundrydemoserver.model.Address
-import com.gabesechansoftware.laundrydemoserver.model.User
+import com.gabesechansoftware.laundrydemoserver.model.user.Address
+import com.gabesechansoftware.laundrydemoserver.model.user.User
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody

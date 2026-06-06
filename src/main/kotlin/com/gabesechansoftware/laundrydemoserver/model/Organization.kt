@@ -13,4 +13,7 @@ class Organization {
     @Column(nullable = false)
     open var name: String? = null
 
+    @Column
+    var defaultLocale: String? = null
+
 }

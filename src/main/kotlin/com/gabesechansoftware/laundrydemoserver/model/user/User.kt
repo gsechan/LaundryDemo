@@ -1,5 +1,6 @@
-package com.gabesechansoftware.laundrydemoserver.model
+package com.gabesechansoftware.laundrydemoserver.model.user
 
+import com.gabesechansoftware.laundrydemoserver.model.Organization
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
@@ -18,7 +19,7 @@ import java.util.UUID
 @Table(
     name = "users",
     uniqueConstraints = [
-        UniqueConstraint(name = "user_org_and_phone", columnNames = [ "phone", "organization_id" ])
+        UniqueConstraint(name = "user_org_and_phone", columnNames = ["phone", "organization_id"])
     ],
     indexes = [
         Index(name = "idx_user_phone_org", columnList = "phone, organization_id", unique = true),
@@ -37,7 +38,7 @@ class User {
     @Column(nullable = false)
     open var phone: String? = null
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "organization_id", nullable = false)
     open var organization: Organization? = null
 

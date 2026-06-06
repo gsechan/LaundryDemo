@@ -1,4 +1,4 @@
-package com.gabesechansoftware.laundrydemoserver.model
+package com.gabesechansoftware.laundrydemoserver.model.inventory
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity

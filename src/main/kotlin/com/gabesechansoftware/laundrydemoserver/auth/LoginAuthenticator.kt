@@ -1,14 +1,10 @@
 package com.gabesechansoftware.laundrydemoserver.auth
 
-import com.gabesechansoftware.laundrydemoserver.model.User
-import com.gabesechansoftware.laundrydemoserver.model.auth.Password
-import com.gabesechansoftware.laundrydemoserver.repositories.UserRepository
-import com.gabesechansoftware.laundrydemoserver.services.OrganizationService
+import com.gabesechansoftware.laundrydemoserver.model.user.User
 import com.gabesechansoftware.laundrydemoserver.services.PasswordService
 import com.gabesechansoftware.laundrydemoserver.services.SessionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.encrypt.TextEncryptor
 import org.springframework.stereotype.Component
 import java.time.OffsetDateTime
 import java.util.UUID

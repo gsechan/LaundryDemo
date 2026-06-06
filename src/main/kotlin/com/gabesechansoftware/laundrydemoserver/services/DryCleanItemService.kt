@@ -1,6 +1,7 @@
 package com.gabesechansoftware.laundrydemoserver.services
 
-import com.gabesechansoftware.laundrydemoserver.model.DryCleanItemName
+import com.gabesechansoftware.laundrydemoserver.model.inventory.DryCleanItem
+import com.gabesechansoftware.laundrydemoserver.model.inventory.DryCleanItemName
 import com.gabesechansoftware.laundrydemoserver.repositories.DryCleanItemRepository
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -14,35 +15,34 @@ class DryCleanItemService(
 ) {
      fun getDryCleanItems(org: UUID, locale:String): List<DryCleanItemWithName> {
           return dryCleanItemRepository.findByOrganization(org).map { item->
-               var foundName: DryCleanItemName? = null
-               item.names.forEach { name->
-                    if(name.locale == locale) {
-                         foundName = name
-                         return@forEach
-                    }
+               var name = findMatchingNameForItem(item.names, locale)
+               if(name == null) {
+                    name = findMatchingNameForItem(item.names, "en-US")
                }
-               if(foundName == null) {
-                    val subLocale = locale.substringBefore("-")
-                    item.names.forEach { name ->
-                         if(name.locale == subLocale) {
-                              foundName = name
-                              return@forEach
-                         }
-                    }
+               if(name == null) {
+                    name = "Unkown Item"
                }
-               if(foundName == null) {
-                    item.names.forEach { name ->
-                         if(name.locale?.startsWith("en") ?: false ) {
-                              foundName = name
-                              return@forEach
-                         }
-                    }
-               }
-               val name = foundName?.name ?: "Unknown Item"
                DryCleanItemWithName(item.id!!, name, item.price!!)
           }
 
      }
 
+     fun getDryCleanItem(org: UUID,item: UUID): DryCleanItem {
+          return dryCleanItemRepository.findByOrganizationAndId(org, item)!!
+     }
 
+     fun findMatchingNameForItem(names: List<DryCleanItemName>, locale: String): String? {
+          names.forEach { name->
+               if(name.locale == locale) {
+                    return@findMatchingNameForItem name.name
+               }
+          }
+           val subLocale = locale.substringBefore("-")
+           names.forEach { name ->
+               if(name.locale == subLocale) {
+                    return@findMatchingNameForItem name.name
+               }
+          }
+          return null
+     }
 }
