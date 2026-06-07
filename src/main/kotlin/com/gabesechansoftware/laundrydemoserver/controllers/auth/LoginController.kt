@@ -1,5 +1,7 @@
 package com.gabesechansoftware.laundrydemoserver.controllers.auth
 
+import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
+import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.model.user.Address
 import com.gabesechansoftware.laundrydemoserver.model.user.User
@@ -9,12 +11,13 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
+
+
 data class LoginRequest(val phone: String, val password: String, val organization: String)
 
 data class LoginResponse(
-    val success: Boolean,
-    val session: String?,
-    val user: LoginUser?
+    val session: String,
+    val user: LoginUser
 )
 
 data class LoginUser(
@@ -34,7 +37,6 @@ data class LoginAddress(
 )
 
 data class CheckAuthRequest(val token: String)
-data class CheckAuthResponse(val success: Boolean, val user: LoginUser?)
 
 
 @RestController
@@ -44,19 +46,18 @@ class LoginController(
 
     @PostMapping("/login")
     fun login(
-        @RequestBody request: LoginRequest): LoginResponse {
+        @RequestBody request: LoginRequest): NetworkResponse<LoginResponse> {
         try {
-            //TODO:  normalize phone number format
             val session = loginAuthenticator.authenticateLoginAndCreateSession(
                 UUID.fromString(request.organization),
                 request.phone,
                 request.password
             )
-            return LoginResponse(true, session.token, session.user.toLoginUser())
+            return NetworkResponse(LoginResponse(session.token, session.user.toLoginUser()))
         }
         catch (ex: Exception) {
             ex.printStackTrace()
-            return LoginResponse(false, null, null)
+            return NetworkResponse(NetworkErrorType.BAD_AUTH, "Could not authenticate")
         }
     }
 
@@ -72,14 +73,14 @@ class LoginController(
 
     @PostMapping("/checkAuth")
     fun checkAuth(
-        @RequestBody request: CheckAuthRequest): CheckAuthResponse {
+        @RequestBody request: CheckAuthRequest): NetworkResponse<LoginUser> {
             try {
                 val user = loginAuthenticator.authenticateToken(request.token)
-                return CheckAuthResponse(true, user.toLoginUser())
+                return NetworkResponse(  user.toLoginUser())
             }
             catch (ex: Exception) {
                 ex.printStackTrace()
-                return CheckAuthResponse(false, null)
+                return NetworkResponse(NetworkErrorType.BAD_AUTH, "Invalid session token")
             }
     }
 }
