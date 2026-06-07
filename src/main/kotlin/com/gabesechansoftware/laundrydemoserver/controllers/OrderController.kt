@@ -1,10 +1,14 @@
 package com.gabesechansoftware.laundrydemoserver.controllers
 
+import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
+import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.model.Organization
 import com.gabesechansoftware.laundrydemoserver.model.orders.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.orders.Order
 import com.gabesechansoftware.laundrydemoserver.model.orders.OrderLine
 import com.gabesechansoftware.laundrydemoserver.model.orders.OrderState
+import com.gabesechansoftware.laundrydemoserver.model.user.User
 import com.gabesechansoftware.laundrydemoserver.services.DryCleanItemService
 import com.gabesechansoftware.laundrydemoserver.services.OrderService
 import com.gabesechansoftware.laundrydemoserver.services.WashFoldService
@@ -68,15 +72,26 @@ class OrderController(
         @RequestHeader("Authorization") authHeader: String,
         @RequestBody request: PostOrderRequest,
         @RequestHeader("Accept-Language") locale: String,
-    ): PostOrderResponse {
-        val token = authHeader.substringAfter(" ")
-        val authedUser = loginAuthenticator.authenticateToken(token)
-        val org = authedUser.organization!!
+    ): NetworkResponse<PostOrderResponse> {
+        val org: Organization
+        val authedUser: User
+        try {
+            val token = authHeader.substringAfter(" ")
+            authedUser = loginAuthenticator.authenticateToken(token)
+            org = authedUser.organization!!
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+            return NetworkResponse(NetworkErrorType.BAD_AUTH, "Token invalid")
+        }
 
         val now = OffsetDateTime.now(ZoneOffset.UTC)
 
         if (request.lines.isEmpty()) {
-            throw IllegalStateException("Must have at least 1 line")
+            return NetworkResponse(
+                NetworkErrorType.API_SPECIFIC_ERROR,
+                "There must be at least one line in an order"
+            )
         }
         val order = Order().apply {
             user = authedUser
@@ -98,7 +113,10 @@ class OrderController(
                 if (requestItemType == ItemType.WASH_AND_FOLD) {
                     pricePerUnit = washFoldService.washFoldPrice(org.id!!).price
                     if (requestLine.quantity != null) {
-                        throw IllegalStateException("Wash and fold must not have quantity")
+                        return NetworkResponse(
+                            NetworkErrorType.API_SPECIFIC_ERROR,
+                            "Wash and Fold lines must not have a quantity"
+                        )
                     }
                     quantity = null
                     totalCost = null
@@ -108,7 +126,10 @@ class OrderController(
 
                 } else if (requestItemType == ItemType.DRY_CLEANING) {
                     if (requestLine.quantity == null) {
-                        throw IllegalStateException("DCI must have quantity")
+                        return NetworkResponse(
+                            NetworkErrorType.API_SPECIFIC_ERROR,
+                            "Dry cleaning lines must have a quantity"
+                        )
                     }
                     val dryCleanItem =
                         dryCleanItemService.getDryCleanItem(org.id!!, UUID.fromString(requestLine.itemId))
@@ -121,7 +142,11 @@ class OrderController(
                         dryCleanItemService.findMatchingNameForItem(dryCleanItem.names, org.defaultLocale!!)
                     nameInDefaultLocale = dryCleanItemService.findMatchingNameForItem(dryCleanItem.names, "en-US")
                 } else {
-                    throw IllegalStateException("Unknown item")
+                    return NetworkResponse(
+                        NetworkErrorType.API_SPECIFIC_ERROR,
+                        "Unknown item type"
+                    )
+
                 }
                 OrderLine().apply {
                     itemType = requestItemType
@@ -141,36 +166,47 @@ class OrderController(
             }.toSet()
         }
         orderService.createOrder(order)
-        return PostOrderResponse(true, order.id.toString())
+        return NetworkResponse(PostOrderResponse(true, order.id.toString()))
     }
 
     @GetMapping("/orders")
     fun allOrders(
         @RequestHeader("Authorization") authHeader: String,
-    ): GetOrderResponse {
-        val token = authHeader.substringAfter(" ")
-        val authedUser = loginAuthenticator.authenticateToken(token)
+    ): NetworkResponse<GetOrderResponse> {
+        val authedUser: User
+        try {
+            val token = authHeader.substringAfter(" ")
+            authedUser = loginAuthenticator.authenticateToken(token)
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+            return NetworkResponse(NetworkErrorType.BAD_AUTH, "Token invalid")
+        }
         val orders = orderService.getAllOrdersOfUser(authedUser)
-        return GetOrderResponse(orders.map { order ->
-            GetOrder(
-                order.id.toString(),
-                order.state.toString(),
-                order.completed?.toInstant()?.toEpochMilli(),
-                order.lastChange!!.toInstant().toEpochMilli(),
-                order.submitted!!.toInstant().toEpochMilli(),
-                order.scheduledPickup!!.toInstant().toEpochMilli(),
-                order.scheduledDropoff!!.toInstant().toEpochMilli(),
-                order.lines!!.map { line ->
-                    GetOrderLine(
-                        line.id.toString(),
-                        line.itemType.toString(),
-                        line.nameInSubmittedLocale ?: line.nameInEnglishLocale ?: "Unknown Item",
-                        line.pricePerUnit.toString(),
-                        line.quantity?.toString(),
-                        line.totalCost?.toString()
+        return NetworkResponse(
+            GetOrderResponse(
+                orders.map { order ->
+                    GetOrder(
+                        order.id.toString(),
+                        order.state.toString(),
+                        order.completed?.toInstant()?.toEpochMilli(),
+                        order.lastChange!!.toInstant().toEpochMilli(),
+                        order.submitted!!.toInstant().toEpochMilli(),
+                        order.scheduledPickup!!.toInstant().toEpochMilli(),
+                        order.scheduledDropoff!!.toInstant().toEpochMilli(),
+                        order.lines!!.map { line ->
+                            GetOrderLine(
+                                line.id.toString(),
+                                line.itemType.toString(),
+                                line.nameInSubmittedLocale ?: line.nameInEnglishLocale ?: "Unknown Item",
+                                line.pricePerUnit.toString(),
+                                line.quantity?.toString(),
+                                line.totalCost?.toString()
+                            )
+                        }
                     )
                 }
             )
-        })
+        )
     }
 }

@@ -1,5 +1,7 @@
 package com.gabesechansoftware.laundrydemoserver.controllers
 
+import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
+import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.services.WashFoldService
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,10 +19,22 @@ class WashFoldPricesController(
     @Autowired val loginAuthenticator: LoginAuthenticator,
 ) {
     @GetMapping("/washFold")
-    fun washFold( @RequestHeader("Authorization") authHeader: String): WashFoldResponse {
-        val token = authHeader.substringAfter(" ")
-        val orgId = loginAuthenticator.authenticateToken(token).organization?.id!!
+    fun washFold( @RequestHeader("Authorization") authHeader: String): NetworkResponse<WashFoldResponse> {
+        val orgId: UUID
+        try {
+            val token = authHeader.substringAfter(" ")
+            orgId = loginAuthenticator.authenticateToken(token).organization?.id!!
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+            return NetworkResponse(NetworkErrorType.BAD_AUTH, "Token invalid")
+        }
         val washFoldData = washFoldService.washFoldPrice(orgId)
-        return WashFoldResponse(washFoldData.price.toString(), washFoldData.avgWeight.toString())
+        return NetworkResponse(
+            WashFoldResponse(
+                washFoldData.price.toString(),
+                washFoldData.avgWeight.toString()
+            )
+        )
     }
 }
