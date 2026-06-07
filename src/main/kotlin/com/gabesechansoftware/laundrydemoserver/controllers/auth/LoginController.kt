@@ -34,7 +34,7 @@ data class LoginAddress(
 )
 
 data class CheckAuthRequest(val token: String)
-data class CheckAuthResponse(val success: Boolean)
+data class CheckAuthResponse(val success: Boolean, val user: LoginUser?)
 
 
 @RestController
@@ -74,12 +74,12 @@ class LoginController(
     fun checkAuth(
         @RequestBody request: CheckAuthRequest): CheckAuthResponse {
             try {
-                loginAuthenticator.authenticateToken(request.token)
-                return CheckAuthResponse(true)
+                val user = loginAuthenticator.authenticateToken(request.token)
+                return CheckAuthResponse(true, user.toLoginUser())
             }
             catch (ex: Exception) {
                 ex.printStackTrace()
-                return CheckAuthResponse(false)
+                return CheckAuthResponse(false, null)
             }
     }
 }
