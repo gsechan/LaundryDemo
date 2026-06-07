@@ -6,6 +6,7 @@ import com.gabesechansoftware.laundrydemoserver.services.SessionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Component
+import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -36,6 +37,9 @@ class LoginAuthenticator(
 
     fun authenticateToken(token: String): User {
         val session = sessionService.getSessionForToken(token)
+        if(session.expiration!!.toInstant().toEpochMilli() < Instant.now().toEpochMilli()) {
+            throw BadLoginException()
+        }
         //Using a token refreshes expiration
         sessionService.updateExpiration(session, OffsetDateTime.now().plusYears(1))
         return session.user!!
