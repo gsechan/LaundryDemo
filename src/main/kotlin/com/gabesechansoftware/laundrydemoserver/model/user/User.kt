@@ -16,15 +16,7 @@ import jakarta.persistence.UniqueConstraint
 import java.util.UUID
 
 @Entity
-@Table(
-    name = "users",
-    uniqueConstraints = [
-        UniqueConstraint(name = "user_org_and_phone", columnNames = ["phone", "organization_id"])
-    ],
-    indexes = [
-        Index(name = "idx_user_phone_org", columnList = "phone, organization_id", unique = true),
-    ]
-)
+@Table(name = "users")
 class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

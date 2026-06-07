@@ -5,19 +5,15 @@ import jakarta.persistence.*
 import org.hibernate.annotations.TimeZoneStorage
 import org.hibernate.annotations.TimeZoneStorageType
 import java.time.OffsetDateTime
+import java.util.UUID
 
 
 @Entity
-@Table(
-    indexes = [
-        Index(name = "idx_session_token", columnList = "token", unique = true),
-    ]
-)
+@Table(name="sessions")
 class Session {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "session_seq", sequenceName = "session_id_seq", allocationSize = 1)
-    var id: Long = 0
+    @GeneratedValue(strategy = GenerationType.UUID)
+    var id: UUID? = null
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)

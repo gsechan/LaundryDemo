@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.Table
 import java.math.BigDecimal
 import java.util.UUID
 
@@ -21,6 +22,7 @@ enum class ItemType {
 }
 
 @Entity
+@Table(name="order_lines")
 class OrderLine {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

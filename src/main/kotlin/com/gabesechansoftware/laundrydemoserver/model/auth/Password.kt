@@ -12,18 +12,14 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToOne
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
+import java.util.UUID
 
 @Entity
-@Table(
-    indexes = [
-        Index(name = "idx_password_user", columnList = "user_id", unique = true),
-    ]
-)
+@Table(name = "passwords")
 class Password {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "password_seq", sequenceName = "password_id_seq", allocationSize = 1)
-    var id: Long? = null
+    @GeneratedValue(strategy = GenerationType.UUID)
+    var id: UUID? = null
 
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false, unique = true)

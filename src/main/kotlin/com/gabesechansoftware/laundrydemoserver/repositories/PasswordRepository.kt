@@ -9,7 +9,7 @@ import java.util.UUID
 
 data class UserAndPassword(val user: User, val password: Password)
 
-interface PasswordRepository: JpaRepository<Password, Long>{
+interface PasswordRepository: JpaRepository<Password, UUID>{
     @Query("""
         SELECT p FROM Password p, User u
         WHERE p.user.phone = :phone AND p.user.organization.id = :organizationId

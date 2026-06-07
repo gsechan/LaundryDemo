@@ -9,6 +9,8 @@ import com.gabesechansoftware.laundrydemoserver.model.orders.Order
 import com.gabesechansoftware.laundrydemoserver.model.orders.OrderLine
 import com.gabesechansoftware.laundrydemoserver.model.orders.OrderState
 import com.gabesechansoftware.laundrydemoserver.model.user.User
+import com.gabesechansoftware.laundrydemoserver.repositories.AddressRepository
+import com.gabesechansoftware.laundrydemoserver.repositories.OrderRepository
 import com.gabesechansoftware.laundrydemoserver.services.DryCleanItemService
 import com.gabesechansoftware.laundrydemoserver.services.OrderService
 import com.gabesechansoftware.laundrydemoserver.services.WashFoldService
@@ -27,7 +29,9 @@ import java.util.UUID
 data class PostOrderRequest(
     val lines: List<PostOrderLine>,
     val scheduledPickup: Long,
-    val scheduledDropoff: Long
+    val scheduledDropoff: Long,
+    val pickupAddress: String,
+    val dropoffAddress: String,
 )
 
 data class PostOrderLine(
@@ -47,6 +51,8 @@ data class GetOrder(
     val submitted: Long,
     val scheduledPickup: Long,
     val scheduledDropoff: Long,
+    val pickupAddressId: String,
+    val dropoffAddressId: String,
     val lines: List<GetOrderLine>
 )
 
@@ -65,6 +71,7 @@ class OrderController(
     @Autowired val loginAuthenticator: LoginAuthenticator,
     @Autowired val washFoldService: WashFoldService,
     @Autowired val dryCleanItemService: DryCleanItemService,
+    @Autowired val addressRepository: AddressRepository,
 ) {
 
     @PostMapping("/orders")
@@ -101,6 +108,8 @@ class OrderController(
             completed = null
             scheduledPickup = Instant.ofEpochMilli(request.scheduledPickup).atOffset(ZoneOffset.UTC)
             scheduledDropoff = Instant.ofEpochMilli(request.scheduledDropoff).atOffset(ZoneOffset.UTC)
+            pickup_address = addressRepository.getReferenceById(UUID.fromString(request.pickupAddress))
+            dropoff_address = addressRepository.getReferenceById(UUID.fromString(request.dropoffAddress))
 
             lines = request.lines.map { requestLine ->
                 val requestItemType = enumValueOf<ItemType>(requestLine.itemType)
@@ -194,6 +203,8 @@ class OrderController(
                         order.submitted!!.toInstant().toEpochMilli(),
                         order.scheduledPickup!!.toInstant().toEpochMilli(),
                         order.scheduledDropoff!!.toInstant().toEpochMilli(),
+                        order.pickup_address!!.id.toString(),
+                        order.dropoff_address!!.id.toString(),
                         order.lines!!.map { line ->
                             GetOrderLine(
                                 line.id.toString(),

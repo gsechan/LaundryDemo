@@ -28,6 +28,7 @@ data class LoginUser(
 )
 
 data class LoginAddress(
+    val id: String,
     val street1: String,
     val street2: String?,
     val city: String,
@@ -68,7 +69,7 @@ class LoginController(
     }
 
     fun Address.toLoginAddress(): LoginAddress {
-        return LoginAddress(street1!!, street2, city!!, state!!, country!!, postcode!!)
+        return LoginAddress(id.toString(), street1!!, street2, city!!, state!!, country!!, postcode!!)
     }
 
     @PostMapping("/checkAuth")

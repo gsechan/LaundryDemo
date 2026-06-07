@@ -14,6 +14,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
+import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.TimeZoneStorage
 import org.hibernate.annotations.TimeZoneStorageType
@@ -69,5 +70,13 @@ class Order {
     @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
     @Column(columnDefinition = "TIMESTAMP(9)")
     var scheduledDropoff: OffsetDateTime? = null
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dropoff_address_id", nullable = false)
+    var dropoff_address: Address? = null
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pickup_address_id", nullable = false)
+    var pickup_address: Address? = null
 
 }

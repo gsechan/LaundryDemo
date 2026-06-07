@@ -25,7 +25,6 @@ class SessionService(
             token = newToken
             user = userRef
             expiration = expireAt
-            id = 0
         }
         entityManager.persist(session)
     }

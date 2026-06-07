@@ -14,11 +14,7 @@ import java.math.BigDecimal
 import java.util.UUID
 
 @Entity
-@Table(
-    indexes = [
-        Index(name = "idx_washfold_org", columnList = "organization_id"),
-    ]
-)
+@Table(name="wash_fold_prices")
 class WashFoldPrices {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

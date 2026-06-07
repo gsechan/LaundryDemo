@@ -5,6 +5,7 @@ import java.util.*
 
 
 @Entity
+@Table(name="organizations")
 class Organization {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

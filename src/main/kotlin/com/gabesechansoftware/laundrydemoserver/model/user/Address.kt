@@ -11,18 +11,14 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
+import java.util.UUID
 
 @Entity
-@Table(
-    indexes = [
-        Index(name = "idx_address_user", columnList = "user_id"),
-    ]
-)
+@Table(name="addresses")
 class Address {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "address_seq", sequenceName = "address_id_seq", allocationSize = 1)
-    var id: Long = 0
+    @GeneratedValue(strategy = GenerationType.UUID)
+    var id: UUID? = null
 
     @Column(nullable = false)
     val street1: String? = null
@@ -53,5 +49,6 @@ class Address {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     var user: User? = null
+
 
 }

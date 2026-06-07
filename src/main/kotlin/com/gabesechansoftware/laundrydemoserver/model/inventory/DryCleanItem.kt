@@ -9,15 +9,16 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToMany
+import jakarta.persistence.Table
 import java.math.BigDecimal
 import java.util.UUID
 
 @Entity
+@Table(name = "dry_clean_items")
 class DryCleanItem {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID? = null
-
 
     @Column( name = "organization_id", nullable = false)
     @JoinColumn(name = "organization_id", foreignKey = ForeignKey(name = "fk_dry_clean_organization_id"))
