@@ -5,7 +5,6 @@ import com.gabesechansoftware.laundrydemoserver.model.orders.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.orders.Order
 import com.gabesechansoftware.laundrydemoserver.model.orders.OrderLine
 import com.gabesechansoftware.laundrydemoserver.model.orders.OrderState
-import com.gabesechansoftware.laundrydemoserver.repositories.WashFoldPriceRepository
 import com.gabesechansoftware.laundrydemoserver.services.DryCleanItemService
 import com.gabesechansoftware.laundrydemoserver.services.OrderService
 import com.gabesechansoftware.laundrydemoserver.services.WashFoldService
@@ -15,14 +14,15 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
 data class PostOrderRequest(
-    val lines: List<PostOrderLine>
-
+    val lines: List<PostOrderLine>,
+    val scheduledPickup: Long,
+    val scheduledDropoff: Long
 )
 
 data class PostOrderLine(
@@ -62,25 +62,35 @@ class OrderController(
             submitted = now
             lastChange = now
             completed = null
+            scheduledPickup =  Instant.ofEpochMilli(request.scheduledPickup).atOffset(ZoneOffset.UTC)
+            scheduledDropoff =  Instant.ofEpochMilli(request.scheduledDropoff).atOffset(ZoneOffset.UTC)
 
             lines = request.lines.map { requestLine ->
                 val requestItemType = enumValueOf<ItemType>(requestLine.itemType)
-                var pricePerUnit = BigDecimal.ZERO
-                var quantity: BigDecimal? = null
-                var totalCost: BigDecimal? = null
-                var nameInSubmitLocale: String? = null
-                var nameInOrgsLocale: String? = null
-                var nameInDefaultLocale: String? = null
+                var pricePerUnit: BigDecimal
+                var quantity: BigDecimal?
+                var totalCost: BigDecimal?
+                var nameInSubmitLocale: String?
+                var nameInOrgsLocale: String?
+                var nameInDefaultLocale: String?
                 if (requestItemType == ItemType.WASH_AND_FOLD) {
                     pricePerUnit = washFoldService.washFoldPrice(org.id!!).price
+                    if (requestLine.quantity != null) {
+                        throw IllegalStateException("Wash and fold must not have quantity")
+                    }
+                    quantity = null
+                    totalCost = null
+                    nameInSubmitLocale = "Wash and fold"
+                    nameInOrgsLocale = "Wash and fold"
+                    nameInDefaultLocale = "Wash and fold"
+
+                } else if (requestItemType == ItemType.DRY_CLEANING) {
                     if (requestLine.quantity == null) {
                         throw IllegalStateException("DCI must have quantity")
                     }
-
-                } else if (requestItemType == ItemType.DRY_CLEANING) {
                     val dryCleanItem =
                         dryCleanItemService.getDryCleanItem(org.id!!, UUID.fromString(requestLine.itemId))
-                    pricePerUnit = dryCleanItem.price
+                    pricePerUnit = dryCleanItem.price!!
                     quantity = BigDecimal(requestLine.quantity)
                     totalCost = quantity.times(pricePerUnit)
 

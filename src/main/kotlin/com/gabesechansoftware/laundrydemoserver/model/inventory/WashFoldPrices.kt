@@ -21,9 +21,8 @@ import java.util.UUID
 )
 class WashFoldPrices {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @SequenceGenerator(name = "address_seq", sequenceName = "address_id_seq", allocationSize = 1)
-    var id: Long = 0
+    @GeneratedValue(strategy = GenerationType.UUID)
+     var id: UUID? = null
 
     @Column(nullable = false, precision = 10, scale = 2)
     var price: BigDecimal? = null

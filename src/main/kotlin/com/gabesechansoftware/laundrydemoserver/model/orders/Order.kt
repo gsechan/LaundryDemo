@@ -62,4 +62,12 @@ class Order {
     @Column(columnDefinition = "TIMESTAMP(9)")
     var completed: OffsetDateTime? = null
 
+    @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
+    @Column(columnDefinition = "TIMESTAMP(9)")
+    var scheduledPickup: OffsetDateTime? = null
+
+    @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
+    @Column(columnDefinition = "TIMESTAMP(9)")
+    var scheduledDropoff: OffsetDateTime? = null
+
 }
