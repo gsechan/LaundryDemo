@@ -9,6 +9,7 @@ import com.gabesechansoftware.laundrydemoserver.services.DryCleanItemService
 import com.gabesechansoftware.laundrydemoserver.services.OrderService
 import com.gabesechansoftware.laundrydemoserver.services.WashFoldService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
@@ -32,6 +33,27 @@ data class PostOrderLine(
 )
 
 data class PostOrderResponse(val success: Boolean, val orderId: String)
+data class GetOrderResponse(val orders:List<GetOrder>)
+
+data class GetOrder(
+    val id: String,
+    val state: String,
+    val completed: Long?,
+    val lastChange: Long,
+    val submitted: Long,
+    val scheduledPickup: Long,
+    val scheduledDropoff: Long,
+    val lines: List<GetOrderLine>
+)
+
+data class GetOrderLine(
+    val id: String,
+    val itemType: String,
+    val name: String,
+    val price_per_unit: String,
+    val quantity: String?,
+    val total_cost: String?,
+)
 
 @RestController
 class OrderController(
@@ -53,7 +75,7 @@ class OrderController(
 
         val now = OffsetDateTime.now(ZoneOffset.UTC)
 
-        if(request.lines.isEmpty()) {
+        if (request.lines.isEmpty()) {
             throw IllegalStateException("Must have at least 1 line")
         }
         val order = Order().apply {
@@ -62,8 +84,8 @@ class OrderController(
             submitted = now
             lastChange = now
             completed = null
-            scheduledPickup =  Instant.ofEpochMilli(request.scheduledPickup).atOffset(ZoneOffset.UTC)
-            scheduledDropoff =  Instant.ofEpochMilli(request.scheduledDropoff).atOffset(ZoneOffset.UTC)
+            scheduledPickup = Instant.ofEpochMilli(request.scheduledPickup).atOffset(ZoneOffset.UTC)
+            scheduledDropoff = Instant.ofEpochMilli(request.scheduledDropoff).atOffset(ZoneOffset.UTC)
 
             lines = request.lines.map { requestLine ->
                 val requestItemType = enumValueOf<ItemType>(requestLine.itemType)
@@ -122,4 +144,33 @@ class OrderController(
         return PostOrderResponse(true, order.id.toString())
     }
 
+    @GetMapping("/orders")
+    fun allOrders(
+        @RequestHeader("Authorization") authHeader: String,
+    ): GetOrderResponse {
+        val token = authHeader.substringAfter(" ")
+        val authedUser = loginAuthenticator.authenticateToken(token)
+        val orders = orderService.getAllOrdersOfUser(authedUser)
+        return GetOrderResponse(orders.map { order ->
+            GetOrder(
+                order.id.toString(),
+                order.state.toString(),
+                order.completed?.toInstant()?.toEpochMilli(),
+                order.lastChange!!.toInstant().toEpochMilli(),
+                order.submitted!!.toInstant().toEpochMilli(),
+                order.scheduledPickup!!.toInstant().toEpochMilli(),
+                order.scheduledDropoff!!.toInstant().toEpochMilli(),
+                order.lines!!.map { line ->
+                    GetOrderLine(
+                        line.id.toString(),
+                        line.itemType.toString(),
+                        line.nameInSubmittedLocale ?: line.nameInEnglishLocale ?: "Unknown Item",
+                        line.pricePerUnit.toString(),
+                        line.quantity?.toString(),
+                        line.totalCost?.toString()
+                    )
+                }
+            )
+        })
+    }
 }
