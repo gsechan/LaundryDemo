@@ -7,7 +7,7 @@ import java.util.*
 
 @Entity
 @Table(name="wash_fold_prices")
-class WashFoldPrices(
+class WashFoldPrice(
 
     @Column(nullable = false, precision = 10, scale = 2)
     var price: BigDecimal? = null,

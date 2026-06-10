@@ -11,8 +11,8 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
 import com.gabesechansoftware.laundrydemoserver.catalog.DryCleanItemService
+import com.gabesechansoftware.laundrydemoserver.catalog.WashFoldService
 import com.gabesechansoftware.laundrydemoserver.services.OrderService
-import com.gabesechansoftware.laundrydemoserver.services.WashFoldService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -119,7 +119,7 @@ class OrderController(
                 var nameInOrgsLocale: String?
                 var nameInDefaultLocale: String?
                 if (requestItemType == ItemType.WASH_AND_FOLD) {
-                    pricePerUnit = washFoldService.washFoldPrice(org.id!!).price
+                    pricePerUnit = washFoldService.washFoldPriceInternal(org.id!!).price!!
                     if (requestLine.quantity != null) {
                         return NetworkResponse(
                             NetworkErrorType.API_SPECIFIC_ERROR,
