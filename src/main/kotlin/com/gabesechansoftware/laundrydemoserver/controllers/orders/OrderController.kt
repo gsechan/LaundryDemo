@@ -33,13 +33,8 @@ class OrderController(
         @RequestBody request: PostOrderRequest,
         @RequestHeader("Accept-Language") locale: String,
     ): NetworkResponse<PostOrderResponse> {
-        try {
-            val order = orderService.postUserOrder(request.order, authedUser, locale)
-            return NetworkResponse(PostOrderResponse(true, order.id.toString()))
-        }
-        catch (ex: APIErrorException) {
-            return NetworkResponse(NetworkErrorType.API_SPECIFIC_ERROR, ex.errors)
-        }
+        val order = orderService.postUserOrder(request.order, authedUser, locale)
+        return NetworkResponse(PostOrderResponse(true, order.id.toString()))
     }
 
     @GetMapping("/orders")
