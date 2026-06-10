@@ -3,9 +3,9 @@ package com.gabesechansoftware.laundrydemoserver.auth
 import com.gabesechansoftware.laundrydemoserver.DataConstraintException
 import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Session
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
-import com.gabesechansoftware.laundrydemoserver.repositories.SessionRepository
+import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.SessionRepository
+import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.UserRepository
 import com.gabesechansoftware.laundrydemoserver.services.PasswordService
-import jakarta.persistence.EntityManager
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Component
 import java.time.Instant
@@ -16,9 +16,9 @@ data class UserSession(val user: User, val token: String)
 
 @Component
 class LoginAuthenticator(
-    val passwordService: PasswordService,
-    val sessionRepository: SessionRepository,
-    private val entityManager: EntityManager,
+    private val passwordService: PasswordService,
+    private val sessionRepository: SessionRepository,
+    private val userRepository: UserRepository,
 ) {
 
     private val encoder = BCryptPasswordEncoder(16)
@@ -70,13 +70,13 @@ class LoginAuthenticator(
     }
 
     fun addSession(userId: UUID, newToken: String, expireAt: OffsetDateTime) {
-        val userRef = entityManager.getReference(User::class.java, userId)
+        val userRef = userRepository.getReferenceById(userId)
         val session = Session().apply {
             token = newToken
             user = userRef
             expiration = expireAt
         }
-        entityManager.persist(session)
+        sessionRepository.save(session)
     }
 
 }
