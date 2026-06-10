@@ -1,6 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.auth
 
-import com.gabesechansoftware.laundrydemoserver.DataConstraintException
+import com.gabesechansoftware.laundrydemoserver.DatabaseDataInvalidException
 import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Password
 import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Session
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.PasswordRepository
@@ -57,7 +57,7 @@ class LoginAuthenticator(
     private fun getSessionForToken(token: String): Session {
         val sessions = sessionRepository.findByToken(token)
         if(sessions.size > 1) {
-            throw DataConstraintException("More than one session exists with token $token")
+            throw DatabaseDataInvalidException("More than one session exists with token $token")
         }
         if(sessions.isEmpty()) {
             throw BadAuthTokenException(token)

@@ -1,0 +1,141 @@
+package com.gabesechansoftware.laundrydemoserver.orders
+
+import com.gabesechansoftware.laundrydemoserver.APIErrorException
+import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
+import com.gabesechansoftware.laundrydemoserver.NetworkResponse
+import com.gabesechansoftware.laundrydemoserver.catalog.DryCleanItemService
+import com.gabesechansoftware.laundrydemoserver.catalog.WashFoldService
+import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrder
+import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.ItemType
+import com.gabesechansoftware.laundrydemoserver.model.customerview.Order as CustomerOrder
+import com.gabesechansoftware.laundrydemoserver.model.customerview.OrderLine as CustomerOrderLine
+import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order
+import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderLine
+import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
+import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
+import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
+import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.OrderRepository
+import org.springframework.stereotype.Service
+import java.math.BigDecimal
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.util.UUID
+
+@Service
+class OrderService(
+    private val orderRepository: OrderRepository,
+    private val addressRepository: AddressRepository,
+    private val washFoldService: WashFoldService,
+    private val dryCleanItemService: DryCleanItemService,
+) {
+
+    fun getAllOrdersForCustomerView(user: User): List<CustomerOrder> {
+        val orders = orderRepository.findByUser(user)
+        return orders.map { order ->
+            CustomerOrder(
+                order.id.toString(),
+                order.state.toString(),
+                order.completed?.toInstant()?.toEpochMilli(),
+                order.lastChange!!.toInstant().toEpochMilli(),
+                order.submitted!!.toInstant().toEpochMilli(),
+                order.scheduledPickup!!.toInstant().toEpochMilli(),
+                order.scheduledDropoff!!.toInstant().toEpochMilli(),
+                order.pickupAddress!!.id.toString(),
+                order.dropoffAddress!!.id.toString(),
+                order.lines!!.map { line ->
+                    CustomerOrderLine(
+                        line.id.toString(),
+                        line.itemType.toString(),
+                        line.nameInSubmittedLocale ?: line.nameInEnglishLocale ?: "Unknown Item",
+                        line.pricePerUnit.toString(),
+                        line.quantity?.toString(),
+                        line.totalCost?.toString()
+                    )
+                }
+            )
+        }
+    }
+
+    fun postUserOrder(uploadOrder: UploadOrder, authedUser: User, locale: String): Order {
+        val org = authedUser.organization!!
+        val now = OffsetDateTime.now(ZoneOffset.UTC)
+        val errors = mutableListOf<String>()
+
+        if (uploadOrder.lines.isEmpty()) {
+            errors.add("There must be at least one line in an order")
+        }
+        val order = Order().apply {
+            user = authedUser
+            state = OrderState.SUBMITTED
+            submitted = now
+            lastChange = now
+            completed = null
+            scheduledPickup = Instant.ofEpochMilli(uploadOrder.scheduledPickup).atOffset(ZoneOffset.UTC)
+            scheduledDropoff = Instant.ofEpochMilli(uploadOrder.scheduledDropoff).atOffset(ZoneOffset.UTC)
+            pickupAddress = addressRepository.getReferenceById(UUID.fromString(uploadOrder.pickupAddress))
+            dropoffAddress = addressRepository.getReferenceById(UUID.fromString(uploadOrder.dropoffAddress))
+
+            lines = uploadOrder.lines.map { requestLine ->
+                val requestItemType = enumValueOf<ItemType>(requestLine.itemType)
+                var pricePerUnit = BigDecimal.ZERO
+                var quantity: BigDecimal? = null
+                var totalCost: BigDecimal? = null
+                var nameInSubmitLocale: String? = null
+                var nameInOrgsLocale: String? = null
+                var nameInDefaultLocale: String? = null
+                if (requestItemType == ItemType.WASH_AND_FOLD) {
+                    pricePerUnit = washFoldService.washFoldPriceInternal(org.id).price!!
+                    if (requestLine.quantity != null) {
+                        errors.add("Wash and Fold lines must not have a quantity")
+                    }
+                    quantity = null
+                    totalCost = null
+                    nameInSubmitLocale = "Wash and fold"
+                    nameInOrgsLocale = "Wash and fold"
+                    nameInDefaultLocale = "Wash and fold"
+
+                } else if (requestItemType == ItemType.DRY_CLEANING) {
+                    if (requestLine.quantity == null) {
+                        errors.add("Dry cleaning lines must have a quantity")
+                    }
+                    val dryCleanItem = dryCleanItemService.getDryCleanItem(
+                        org.id,
+                        UUID.fromString(requestLine.itemId)
+                    )
+                    pricePerUnit = dryCleanItem.price!!
+                    quantity = BigDecimal(requestLine.quantity)
+                    totalCost = quantity.times(pricePerUnit)
+
+                    nameInSubmitLocale = dryCleanItemService.getDryCleanItemNameForLocale(dryCleanItem, locale)
+                    nameInOrgsLocale = dryCleanItemService.getDryCleanItemNameForLocale(dryCleanItem, org.defaultLocale!!)
+                    nameInDefaultLocale = dryCleanItemService.getDryCleanItemNameForLocale(dryCleanItem, "en-US")
+                } else {
+                    errors.add("Unknown item type")
+                }
+                OrderLine().apply {
+                    itemType = requestItemType
+                    this.totalCost = totalCost
+                    this.quantity = quantity
+                    this.pricePerUnit = pricePerUnit
+
+                    submittedLocale = locale
+                    nameInSubmittedLocale = nameInSubmitLocale
+                    nameInEnglishLocale = nameInDefaultLocale
+                    nameInOrgLocale = nameInOrgsLocale
+
+                    orgLocale = org.defaultLocale
+
+
+                }
+            }.toMutableList()
+        }
+        if(errors.isEmpty()) {
+            orderRepository.save(order)
+        }
+        else {
+            throw APIErrorException(errors)
+        }
+        return order
+    }
+}
