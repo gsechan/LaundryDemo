@@ -1,11 +1,12 @@
 package com.gabesechansoftware.laundrydemoserver.auth
 
 import com.gabesechansoftware.laundrydemoserver.DataConstraintException
+import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Password
 import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Session
+import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.PasswordRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.SessionRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.UserRepository
-import com.gabesechansoftware.laundrydemoserver.services.PasswordService
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Component
 import java.time.Instant
@@ -16,7 +17,7 @@ data class UserSession(val user: User, val token: String)
 
 @Component
 class LoginAuthenticator(
-    private val passwordService: PasswordService,
+    private val passwordRepo: PasswordRepository,
     private val sessionRepository: SessionRepository,
     private val userRepository: UserRepository,
 ) {
@@ -24,7 +25,7 @@ class LoginAuthenticator(
     private val encoder = BCryptPasswordEncoder(16)
 
     fun authenticateLoginAndCreateSession(org:UUID, phone: String, unhashed: String): UserSession {
-        val password = passwordService.findPossiblePassword(org, phone)
+        val password = findPossiblePassword(org, phone)
         val matches = encoder.matches(unhashed, password.hash)
 
         if(matches) {
@@ -77,6 +78,10 @@ class LoginAuthenticator(
             expiration = expireAt
         }
         sessionRepository.save(session)
+    }
+
+    fun findPossiblePassword(org: UUID, phone: String): Password {
+        return passwordRepo.findByOrganizationIdAndPhone(org, phone) ?: throw BadLoginException()
     }
 
 }
