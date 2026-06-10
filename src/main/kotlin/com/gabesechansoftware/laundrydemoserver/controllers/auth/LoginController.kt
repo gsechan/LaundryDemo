@@ -50,7 +50,7 @@ class LoginController(
     @GetMapping("/logout")
     fun logout(@RequestHeader("Authorization") authHeader: String ): NetworkResponse<Unit> {
         try {
-            val token = authHeader.substringAfter(" ")
+            val token = authHeader.removePrefix("Bearer ")
             loginAuthenticator.logout(token)
         }
         catch (e: Exception) {
