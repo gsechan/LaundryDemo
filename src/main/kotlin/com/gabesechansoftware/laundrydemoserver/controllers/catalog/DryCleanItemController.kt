@@ -1,10 +1,10 @@
-package com.gabesechansoftware.laundrydemoserver.controllers
+package com.gabesechansoftware.laundrydemoserver.controllers.catalog
 
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
-import com.gabesechansoftware.laundrydemoserver.services.DryCleanItemService
-import org.springframework.beans.factory.annotation.Autowired
+import com.gabesechansoftware.laundrydemoserver.catalog.DryCleanItemService
+import com.gabesechansoftware.laundrydemoserver.model.customerview.DryCleanItem
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
@@ -12,19 +12,14 @@ import java.util.UUID
 
 
 data class DryCleanItemsResponse(
-    val items: List<JSONDryCleanItem>
+    val items: List<DryCleanItem>
 )
 
-data class JSONDryCleanItem(
-    val id: String,
-    val name: String,
-    val price: String
-)
 
 @RestController
 class DryCleanItemController(
-    @Autowired val dryCleanItemService: DryCleanItemService,
-    @Autowired val loginAuthenticator: LoginAuthenticator,
+    private val dryCleanItemService: DryCleanItemService,
+    private val loginAuthenticator: LoginAuthenticator,
 ) {
     @GetMapping("/dryCleanItem")
     fun dryCleanItem(
@@ -40,17 +35,7 @@ class DryCleanItemController(
             e.printStackTrace()
             return NetworkResponse(NetworkErrorType.BAD_AUTH, "Token invalid")
         }
-        val  items = dryCleanItemService.getDryCleanItems(orgId, locale)
-        return NetworkResponse(
-            DryCleanItemsResponse(
-                items.map {
-                    JSONDryCleanItem(
-                        it.id.toString(),
-                        it.name,
-                        it.price.toString()
-                    )
-                }
-            )
-        )
+        val  items = dryCleanItemService.getCustomerDryCleanItems(orgId, locale)
+        return NetworkResponse(DryCleanItemsResponse(items))
     }
 }

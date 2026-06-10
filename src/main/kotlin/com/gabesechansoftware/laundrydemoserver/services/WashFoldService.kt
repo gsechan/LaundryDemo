@@ -1,6 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.services
 
-import com.gabesechansoftware.laundrydemoserver.repositories.WashFoldPriceRepository
+import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.WashFoldPriceRepository
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

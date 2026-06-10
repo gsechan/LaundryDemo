@@ -1,4 +1,4 @@
-package com.gabesechansoftware.laundrydemoserver.repositories
+package com.gabesechansoftware.laundrydemoserver.model.dbview.repositories
 
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User

@@ -1,4 +1,4 @@
-package com.gabesechansoftware.laundrydemoserver.repositories
+package com.gabesechansoftware.laundrydemoserver.model.dbview.repositories
 
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.WashFoldPrices
 import org.springframework.data.jpa.repository.JpaRepository

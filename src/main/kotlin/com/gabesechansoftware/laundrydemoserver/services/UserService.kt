@@ -1,6 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.services
 
-import com.gabesechansoftware.laundrydemoserver.repositories.UserRepository
+import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 

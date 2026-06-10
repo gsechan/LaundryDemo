@@ -1,4 +1,4 @@
-package com.gabesechansoftware.laundrydemoserver.controllers
+package com.gabesechansoftware.laundrydemoserver.controllers.orders
 
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
@@ -9,8 +9,8 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderLine
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
-import com.gabesechansoftware.laundrydemoserver.repositories.AddressRepository
-import com.gabesechansoftware.laundrydemoserver.services.DryCleanItemService
+import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
+import com.gabesechansoftware.laundrydemoserver.catalog.DryCleanItemService
 import com.gabesechansoftware.laundrydemoserver.services.OrderService
 import com.gabesechansoftware.laundrydemoserver.services.WashFoldService
 import org.springframework.beans.factory.annotation.Autowired
@@ -145,10 +145,9 @@ class OrderController(
                     quantity = BigDecimal(requestLine.quantity)
                     totalCost = quantity.times(pricePerUnit)
 
-                    nameInSubmitLocale = dryCleanItemService.findMatchingNameForItem(dryCleanItem.names, locale)
-                    nameInOrgsLocale =
-                        dryCleanItemService.findMatchingNameForItem(dryCleanItem.names, org.defaultLocale!!)
-                    nameInDefaultLocale = dryCleanItemService.findMatchingNameForItem(dryCleanItem.names, "en-US")
+                    nameInSubmitLocale = dryCleanItemService.getDryCleanItemNameForLocale(dryCleanItem, locale)
+                    nameInOrgsLocale = dryCleanItemService.getDryCleanItemNameForLocale(dryCleanItem, org.defaultLocale!!)
+                    nameInDefaultLocale = dryCleanItemService.getDryCleanItemNameForLocale(dryCleanItem, "en-US")
                 } else {
                     return NetworkResponse(
                         NetworkErrorType.API_SPECIFIC_ERROR,
