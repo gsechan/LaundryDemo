@@ -1,5 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.model.auth
 
+import com.gabesechansoftware.laundrydemoserver.model.BaseEntity
 import com.gabesechansoftware.laundrydemoserver.model.user.User
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
@@ -14,9 +15,6 @@ import java.util.UUID
 @Entity
 @Table(name = "passwords")
 class Password(
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null,
 
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
@@ -24,4 +22,4 @@ class Password(
 
     var hash: String? = null,
 
- )
+ ): BaseEntity()

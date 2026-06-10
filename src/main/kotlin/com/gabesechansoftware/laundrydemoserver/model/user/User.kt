@@ -1,5 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.model.user
 
+import com.gabesechansoftware.laundrydemoserver.model.BaseEntity
 import com.gabesechansoftware.laundrydemoserver.model.Organization
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -16,9 +17,6 @@ import java.util.UUID
 @Entity
 @Table(name = "users")
 data class User(
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null,
     var name: String? = null,
     var email: String? = null,
     var phone: String? = null,
@@ -27,4 +25,4 @@ data class User(
     var organization: Organization? = null,
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     var addresses: MutableList<Address> = mutableListOf(),
-)
+): BaseEntity()

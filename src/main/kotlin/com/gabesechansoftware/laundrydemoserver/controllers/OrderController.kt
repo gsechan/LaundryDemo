@@ -171,7 +171,7 @@ class OrderController(
 
 
                 }
-            }.toMutableSet()
+            }.toMutableList()
         }
         orderService.createOrder(order)
         return NetworkResponse(PostOrderResponse(true, order.id.toString()))

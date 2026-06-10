@@ -1,5 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.model.user
 
+import com.gabesechansoftware.laundrydemoserver.model.BaseEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
@@ -16,9 +17,7 @@ import java.util.UUID
 @Entity
 @Table(name="addresses")
 class Address(
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null,
+
     val street1: String? = null,
     val street2: String? = null,
     val city: String? = null,
@@ -29,4 +28,4 @@ class Address(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     var user: User? = null,
-)
+): BaseEntity()

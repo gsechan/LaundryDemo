@@ -1,5 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.model.auth
 
+import com.gabesechansoftware.laundrydemoserver.model.BaseEntity
 import com.gabesechansoftware.laundrydemoserver.model.user.User
 import jakarta.persistence.*
 import org.hibernate.annotations.TimeZoneStorage
@@ -11,9 +12,6 @@ import java.util.UUID
 @Entity
 @Table(name="sessions")
 class Session(
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null,
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
@@ -25,4 +23,4 @@ class Session(
     @Column(name = "expiration", nullable = false, columnDefinition = "TIMESTAMP(9)")
     var expiration: OffsetDateTime? = null,
 
-)
+): BaseEntity()

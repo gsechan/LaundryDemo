@@ -1,5 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.model.inventory
 
+import com.gabesechansoftware.laundrydemoserver.model.BaseEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
@@ -16,9 +17,6 @@ import java.util.UUID
 @Entity
 @Table(name = "dry_clean_items")
 class DryCleanItem(
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null,
 
     @Column( name = "organization_id", nullable = false)
     @JoinColumn(name = "organization_id", foreignKey = ForeignKey(name = "fk_dry_clean_organization_id"))
@@ -30,4 +28,4 @@ class DryCleanItem(
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "item_id")
     var names: MutableList<DryCleanItemName> = mutableListOf(),
-)
+): BaseEntity()

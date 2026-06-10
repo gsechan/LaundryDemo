@@ -1,5 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.model.orders
 
+import com.gabesechansoftware.laundrydemoserver.model.BaseEntity
 import com.gabesechansoftware.laundrydemoserver.model.user.Address
 import com.gabesechansoftware.laundrydemoserver.model.user.User
 import jakarta.persistence.CascadeType
@@ -34,9 +35,6 @@ enum class OrderState {
 @Entity
 @Table(name = "orders")
 class Order(
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -76,4 +74,4 @@ class Order(
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pickup_address_id", nullable = false)
     var pickupAddress: Address? = null,
-)
+): BaseEntity()

@@ -1,5 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.model.orders
 
+import com.gabesechansoftware.laundrydemoserver.model.BaseEntity
 import jakarta.persistence.*
 import java.math.BigDecimal
 import java.util.*
@@ -13,9 +14,6 @@ enum class ItemType {
 @Entity
 @Table(name="order_lines")
 class OrderLine(
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null,
 
     var nameInSubmittedLocale: String? = null,
     var submittedLocale: String? = null,
@@ -28,4 +26,4 @@ class OrderLine(
 
     @Enumerated(EnumType.STRING)
     var itemType: ItemType? = null,
-)
+): BaseEntity()
