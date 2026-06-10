@@ -54,7 +54,7 @@ class LoginAuthenticatorTest {
         every { userRepository.getReferenceById(userId) } returns user
 
 
-        val result = authService.authenticateLoginAndCreateSession(orgId, phone, unhashedPassword)
+        val result = authService.authenticatePassword(orgId, phone, unhashedPassword)
 
         assertNotNull(result.token)
         assertEquals(user, result.user)
@@ -66,7 +66,7 @@ class LoginAuthenticatorTest {
         every { passwordRepo.findByOrganizationIdAndPhone(orgId, phone) } returns password
 
         assertThrows<BadLoginException> {
-            authService.authenticateLoginAndCreateSession(orgId, phone, "wrong")
+            authService.authenticatePassword(orgId, phone, "wrong")
         }
 
         verify(exactly = 0) { sessionRepository.save(any()) }
@@ -77,7 +77,7 @@ class LoginAuthenticatorTest {
         every { passwordRepo.findByOrganizationIdAndPhone(orgId, phone) } returns null
 
         assertThrows<BadLoginException> {
-            authService.authenticateLoginAndCreateSession(orgId, phone, unhashedPassword)
+            authService.authenticatePassword(orgId, phone, unhashedPassword)
         }
 
         verify(exactly = 0) { sessionRepository.save(any()) }
@@ -89,8 +89,8 @@ class LoginAuthenticatorTest {
         every { sessionRepository.save(any()) } returnsArgument 0
         every { userRepository.getReferenceById(userId) } returns user
 
-        val result1 = authService.authenticateLoginAndCreateSession(orgId, phone, unhashedPassword)
-        val result2 = authService.authenticateLoginAndCreateSession(orgId, phone, unhashedPassword)
+        val result1 = authService.authenticatePassword(orgId, phone, unhashedPassword)
+        val result2 = authService.authenticatePassword(orgId, phone, unhashedPassword)
 
         assertNotEquals(result1.token, result2.token)
     }
@@ -105,6 +105,6 @@ class LoginAuthenticatorTest {
         }
         every { userRepository.getReferenceById(userId) } returns user
 
-        authService.authenticateLoginAndCreateSession(orgId, phone, unhashedPassword)
+        authService.authenticatePassword(orgId, phone, unhashedPassword)
     }
 }

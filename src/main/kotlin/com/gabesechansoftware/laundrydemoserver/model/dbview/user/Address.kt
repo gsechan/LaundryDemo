@@ -11,13 +11,13 @@ import jakarta.persistence.Table
 @Table(name="addresses")
 class Address(
 
-    val street1: String? = null,
-    val street2: String? = null,
-    val city: String? = null,
-    val state: String? = null,
-    val country: String? = null,
-    val postcode: String? = null,
-    val isDefault: Boolean? = null,
+    var street1: String? = null,
+    var street2: String? = null,
+    var city: String? = null,
+    var state: String? = null,
+    var country: String? = null,
+    var postcode: String? = null,
+    var isDefault: Boolean? = null,
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     var user: User? = null,

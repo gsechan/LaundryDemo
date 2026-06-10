@@ -6,7 +6,6 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Session
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.PasswordRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.SessionRepository
-import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.UserRepository
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Component
 import java.time.Instant
@@ -19,24 +18,28 @@ data class UserSession(val user: User, val token: String)
 class LoginAuthenticator(
     private val passwordRepo: PasswordRepository,
     private val sessionRepository: SessionRepository,
-    private val userRepository: UserRepository,
 ) {
 
     private val encoder = BCryptPasswordEncoder(16)
 
-    fun authenticateLoginAndCreateSession(org:UUID, phone: String, unhashed: String): UserSession {
+    fun authenticatePassword(org:UUID, phone: String, unhashed: String): User {
         val password = findPossiblePassword(org, phone)
-        val matches = encoder.matches(unhashed, password.hash)
-
-        if(matches) {
-            val token = UUID.randomUUID().toString()
-            val expire = OffsetDateTime.now().plusYears(1)
-            addSession(password.user!!.id, token, expire)
-            return UserSession(password.user!!, token)
-        }
-        else {
+        if(!encoder.matches(unhashed, password.hash)) {
             throw BadLoginException()
         }
+        return password.user!!
+    }
+
+    fun createSession(user: User): Session {
+        val token = UUID.randomUUID().toString()
+        val expireAt = OffsetDateTime.now().plusYears(1)
+        val session = Session().apply {
+            this.token = token
+            this.user = user
+            expiration = expireAt
+        }
+        sessionRepository.save(session)
+        return session
     }
 
     fun authenticateToken(token: String): User {
@@ -70,18 +73,16 @@ class LoginAuthenticator(
         sessionRepository.save(session)
     }
 
-    fun addSession(userId: UUID, newToken: String, expireAt: OffsetDateTime) {
-        val userRef = userRepository.getReferenceById(userId)
-        val session = Session().apply {
-            token = newToken
-            user = userRef
-            expiration = expireAt
-        }
-        sessionRepository.save(session)
+    private fun findPossiblePassword(org: UUID, phone: String): Password {
+        return passwordRepo.findByOrganizationIdAndPhone(org, phone) ?: throw BadLoginException()
     }
 
-    fun findPossiblePassword(org: UUID, phone: String): Password {
-        return passwordRepo.findByOrganizationIdAndPhone(org, phone) ?: throw BadLoginException()
+    fun setPasswordForUser(user: User, password: String) {
+        val password = Password().apply {
+            this.user = user
+            this.hash = encoder.encode(password)
+        }
+        passwordRepo.save(password)
     }
 
 }

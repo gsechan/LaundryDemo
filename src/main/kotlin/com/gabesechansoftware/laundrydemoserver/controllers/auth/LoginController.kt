@@ -34,12 +34,13 @@ class LoginController(
     fun login(
         @RequestBody request: LoginRequest): NetworkResponse<LoginResponse> {
         try {
-            val session = loginAuthenticator.authenticateLoginAndCreateSession(
+            val user = loginAuthenticator.authenticatePassword(
                 UUID.fromString(request.organization),
                 request.phone,
                 request.password
             )
-            return NetworkResponse(LoginResponse(session.token, session.user.toCustomerFacing()))
+            val session = loginAuthenticator.createSession(user)
+            return NetworkResponse(LoginResponse(session.token!!, session.user!!.toCustomerFacing()))
         }
         catch (ex: Exception) {
             ex.printStackTrace()

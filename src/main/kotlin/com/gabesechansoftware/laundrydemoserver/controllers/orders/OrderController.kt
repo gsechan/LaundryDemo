@@ -1,7 +1,5 @@
 package com.gabesechansoftware.laundrydemoserver.controllers.orders
 
-import com.gabesechansoftware.laundrydemoserver.APIErrorException
-import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import com.gabesechansoftware.laundrydemoserver.auth.AuthenticatedUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.Order as CustomerOrder
