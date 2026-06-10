@@ -15,40 +15,18 @@ import java.util.UUID
 
 @Entity
 @Table(name="addresses")
-class Address {
+class Address(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null
-
-    @Column(nullable = false)
-    val street1: String? = null
-
-    @Column
-    val street2: String? = null
-
-    @Column(nullable = false)
-    val city: String? = null
-
-    @Column(nullable = false)
-    val state: String? = null
-
-    @Column(nullable = false)
-    val country: String? = null
-
-    @Column(nullable = false)
-    val postcode: String? = null
-
-
-    //Note:  need to put a partial index on this so we have only 1 true per user.
-    //Can't do that in Hibernate, so run by hand:  CREATE UNIQUE INDEX address_unique_default_per_user
-    //ON address (user_id)
-    //WHERE is_default = true;
-    @Column(nullable = false)
-    val isDefault: Boolean? = null
-
+    var id: UUID? = null,
+    val street1: String? = null,
+    val street2: String? = null,
+    val city: String? = null,
+    val state: String? = null,
+    val country: String? = null,
+    val postcode: String? = null,
+    val isDefault: Boolean? = null,
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    var user: User? = null
-
-
-}
+    var user: User? = null,
+)

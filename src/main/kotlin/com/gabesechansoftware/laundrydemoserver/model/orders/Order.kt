@@ -18,7 +18,6 @@ import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.TimeZoneStorage
 import org.hibernate.annotations.TimeZoneStorageType
-import java.math.BigDecimal
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -34,49 +33,47 @@ enum class OrderState {
 
 @Entity
 @Table(name = "orders")
-class Order {
+class Order(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null
+    var id: UUID? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    var user: User? = null
+    var user: User? = null,
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    var state: OrderState? = null
+    var state: OrderState? = null,
 
     @OneToMany(fetch = FetchType.EAGER, cascade = [CascadeType.ALL])
     @JoinColumn(name = "order_id")
-    open var lines: Set<OrderLine>? = null
-
-    @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
-    @Column(nullable = false, columnDefinition = "TIMESTAMP(9)")
-    var submitted: OffsetDateTime? = null
-
-    @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
-    @Column(nullable = false, columnDefinition = "TIMESTAMP(9)")
-    var lastChange: OffsetDateTime? = null
+    var lines: MutableList<OrderLine> = mutableListOf(),
 
     @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
     @Column(columnDefinition = "TIMESTAMP(9)")
-    var completed: OffsetDateTime? = null
+    var submitted: OffsetDateTime? = null,
 
     @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
     @Column(columnDefinition = "TIMESTAMP(9)")
-    var scheduledPickup: OffsetDateTime? = null
+    var lastChange: OffsetDateTime? = null,
 
     @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
     @Column(columnDefinition = "TIMESTAMP(9)")
-    var scheduledDropoff: OffsetDateTime? = null
+    var completed: OffsetDateTime? = null,
+
+    @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
+    @Column(columnDefinition = "TIMESTAMP(9)")
+    var scheduledPickup: OffsetDateTime? = null,
+
+    @TimeZoneStorage(TimeZoneStorageType.NORMALIZE_UTC)
+    @Column(columnDefinition = "TIMESTAMP(9)")
+    var scheduledDropoff: OffsetDateTime? = null,
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dropoff_address_id", nullable = false)
-    var dropoff_address: Address? = null
+    var dropoffAddress: Address? = null,
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pickup_address_id", nullable = false)
-    var pickup_address: Address? = null
-
-}
+    var pickupAddress: Address? = null,
+)

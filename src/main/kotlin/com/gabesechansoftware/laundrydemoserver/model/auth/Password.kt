@@ -1,31 +1,27 @@
 package com.gabesechansoftware.laundrydemoserver.model.auth
 
 import com.gabesechansoftware.laundrydemoserver.model.user.User
-import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
-import jakarta.persistence.Index
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToOne
-import jakarta.persistence.SequenceGenerator
 import jakarta.persistence.Table
 import java.util.UUID
 
 @Entity
 @Table(name = "passwords")
-class Password {
+class Password(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null
+    var id: UUID? = null,
 
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
-    var user: User? = null
+    var user: User? = null,
 
-    @Column(nullable = false)
-    var hash: String? = null
+    var hash: String? = null,
 
-}
+ )

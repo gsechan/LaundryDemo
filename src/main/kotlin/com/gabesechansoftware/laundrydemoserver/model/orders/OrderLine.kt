@@ -1,19 +1,8 @@
 package com.gabesechansoftware.laundrydemoserver.model.orders
 
-import com.gabesechansoftware.laundrydemoserver.model.user.User
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import java.math.BigDecimal
-import java.util.UUID
+import java.util.*
 
 enum class ItemType {
     WASH_AND_FOLD,
@@ -23,35 +12,20 @@ enum class ItemType {
 
 @Entity
 @Table(name="order_lines")
-class OrderLine {
+class OrderLine(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null
+    var id: UUID? = null,
 
-    @Column
-    var nameInSubmittedLocale: String? = null
-    @Column(nullable = false)
-    var submittedLocale: String? = null
-
-    @Column
-    var nameInOrgLocale: String? = null
-    @Column(nullable = false)
-    var orgLocale: String? = null
-
-    @Column
-    var nameInEnglishLocale: String? = null
-
-    @Column(nullable = false)
-    var pricePerUnit: BigDecimal? = null
-
-    @Column  //null on this column means unknown.  Generally due to waiting for measurement
-    var quantity: BigDecimal? = null
-
-    @Column  //null on this column means unknown.  Generally due to waiting for measurement
-    var totalCost: BigDecimal? = null
+    var nameInSubmittedLocale: String? = null,
+    var submittedLocale: String? = null,
+    var nameInOrgLocale: String? = null,
+    var orgLocale: String? = null,
+    var nameInEnglishLocale: String? = null,
+    var pricePerUnit: BigDecimal? = null,
+    var quantity: BigDecimal? = null,  //Null here means unknown quantity (quantity TBD)
+    var totalCost: BigDecimal? = null, //Null here means we don't have a quantity yet to calculate this
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    var itemType: ItemType? = null
-
-}
+    var itemType: ItemType? = null,
+)

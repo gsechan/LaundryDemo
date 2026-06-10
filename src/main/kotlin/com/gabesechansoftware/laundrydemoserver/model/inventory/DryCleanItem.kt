@@ -15,19 +15,19 @@ import java.util.UUID
 
 @Entity
 @Table(name = "dry_clean_items")
-class DryCleanItem {
+class DryCleanItem(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null
+    var id: UUID? = null,
 
     @Column( name = "organization_id", nullable = false)
     @JoinColumn(name = "organization_id", foreignKey = ForeignKey(name = "fk_dry_clean_organization_id"))
-    var organization: UUID? = null
+    var organization: UUID? = null,
 
     @Column(nullable = false, precision = 10, scale = 2)
-    var price: BigDecimal? = null
+    var price: BigDecimal? = null,
 
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "item_id")
-    var names: List<DryCleanItemName> = emptyList()
-}
+    var names: MutableList<DryCleanItemName> = mutableListOf(),
+)

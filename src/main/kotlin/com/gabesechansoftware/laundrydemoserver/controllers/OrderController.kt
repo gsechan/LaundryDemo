@@ -10,7 +10,6 @@ import com.gabesechansoftware.laundrydemoserver.model.orders.OrderLine
 import com.gabesechansoftware.laundrydemoserver.model.orders.OrderState
 import com.gabesechansoftware.laundrydemoserver.model.user.User
 import com.gabesechansoftware.laundrydemoserver.repositories.AddressRepository
-import com.gabesechansoftware.laundrydemoserver.repositories.OrderRepository
 import com.gabesechansoftware.laundrydemoserver.services.DryCleanItemService
 import com.gabesechansoftware.laundrydemoserver.services.OrderService
 import com.gabesechansoftware.laundrydemoserver.services.WashFoldService
@@ -108,8 +107,8 @@ class OrderController(
             completed = null
             scheduledPickup = Instant.ofEpochMilli(request.scheduledPickup).atOffset(ZoneOffset.UTC)
             scheduledDropoff = Instant.ofEpochMilli(request.scheduledDropoff).atOffset(ZoneOffset.UTC)
-            pickup_address = addressRepository.getReferenceById(UUID.fromString(request.pickupAddress))
-            dropoff_address = addressRepository.getReferenceById(UUID.fromString(request.dropoffAddress))
+            pickupAddress = addressRepository.getReferenceById(UUID.fromString(request.pickupAddress))
+            dropoffAddress = addressRepository.getReferenceById(UUID.fromString(request.dropoffAddress))
 
             lines = request.lines.map { requestLine ->
                 val requestItemType = enumValueOf<ItemType>(requestLine.itemType)
@@ -172,7 +171,7 @@ class OrderController(
 
 
                 }
-            }.toSet()
+            }.toMutableSet()
         }
         orderService.createOrder(order)
         return NetworkResponse(PostOrderResponse(true, order.id.toString()))
@@ -203,8 +202,8 @@ class OrderController(
                         order.submitted!!.toInstant().toEpochMilli(),
                         order.scheduledPickup!!.toInstant().toEpochMilli(),
                         order.scheduledDropoff!!.toInstant().toEpochMilli(),
-                        order.pickup_address!!.id.toString(),
-                        order.dropoff_address!!.id.toString(),
+                        order.pickupAddress!!.id.toString(),
+                        order.dropoffAddress!!.id.toString(),
                         order.lines!!.map { line ->
                             GetOrderLine(
                                 line.id.toString(),

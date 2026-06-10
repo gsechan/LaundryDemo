@@ -6,15 +6,10 @@ import java.util.*
 
 @Entity
 @Table(name="organizations")
-class Organization {
+class Organization(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    open var id: UUID? = null
-
-    @Column(nullable = false)
-    open var name: String? = null
-
-    @Column
-    var defaultLocale: String? = null
-
-}
+    var id: UUID? = null,
+    var name: String? = null,
+    var defaultLocale: String? = null,
+)
