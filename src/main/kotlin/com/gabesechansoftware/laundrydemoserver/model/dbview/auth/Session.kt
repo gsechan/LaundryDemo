@@ -1,12 +1,11 @@
-package com.gabesechansoftware.laundrydemoserver.model.auth
+package com.gabesechansoftware.laundrydemoserver.model.dbview.auth
 
-import com.gabesechansoftware.laundrydemoserver.model.BaseEntity
-import com.gabesechansoftware.laundrydemoserver.model.user.User
+import com.gabesechansoftware.laundrydemoserver.model.dbview.BaseEntity
+import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import jakarta.persistence.*
 import org.hibernate.annotations.TimeZoneStorage
 import org.hibernate.annotations.TimeZoneStorageType
 import java.time.OffsetDateTime
-import java.util.UUID
 
 
 @Entity

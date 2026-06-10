@@ -1,6 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.services
 
-import com.gabesechansoftware.laundrydemoserver.model.auth.Password
+import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Password
 import com.gabesechansoftware.laundrydemoserver.repositories.PasswordRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

@@ -1,16 +1,12 @@
-package com.gabesechansoftware.laundrydemoserver.model.auth
+package com.gabesechansoftware.laundrydemoserver.model.dbview.auth
 
-import com.gabesechansoftware.laundrydemoserver.model.BaseEntity
-import com.gabesechansoftware.laundrydemoserver.model.user.User
+import com.gabesechansoftware.laundrydemoserver.model.dbview.BaseEntity
+import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
-import java.util.UUID
 
 @Entity
 @Table(name = "passwords")

@@ -1,9 +1,8 @@
-package com.gabesechansoftware.laundrydemoserver.model.orders
+package com.gabesechansoftware.laundrydemoserver.model.dbview.orders
 
-import com.gabesechansoftware.laundrydemoserver.model.BaseEntity
+import com.gabesechansoftware.laundrydemoserver.model.dbview.BaseEntity
 import jakarta.persistence.*
 import java.math.BigDecimal
-import java.util.*
 
 enum class ItemType {
     WASH_AND_FOLD,

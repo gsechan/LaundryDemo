@@ -1,4 +1,4 @@
-package com.gabesechansoftware.laundrydemoserver.model
+package com.gabesechansoftware.laundrydemoserver.model.dbview
 
 import jakarta.persistence.Id
 import jakarta.persistence.MappedSuperclass

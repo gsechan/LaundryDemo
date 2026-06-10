@@ -1,11 +1,7 @@
 package com.gabesechansoftware.laundrydemoserver.repositories
 
-import com.gabesechansoftware.laundrydemoserver.model.Organization
-import com.gabesechansoftware.laundrydemoserver.model.user.User
+import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
 import java.util.UUID
 
-interface UserRepository: JpaRepository<User, UUID>{
-
-}
+interface UserRepository: JpaRepository<User, UUID>

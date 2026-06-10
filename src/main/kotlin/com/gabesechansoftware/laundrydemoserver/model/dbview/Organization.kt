@@ -1,7 +1,6 @@
-package com.gabesechansoftware.laundrydemoserver.model
+package com.gabesechansoftware.laundrydemoserver.model.dbview
 
 import jakarta.persistence.*
-import java.util.*
 
 
 @Entity

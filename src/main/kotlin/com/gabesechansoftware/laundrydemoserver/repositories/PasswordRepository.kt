@@ -1,13 +1,10 @@
 package com.gabesechansoftware.laundrydemoserver.repositories
 
-import com.gabesechansoftware.laundrydemoserver.model.user.User
-import com.gabesechansoftware.laundrydemoserver.model.auth.Password
+import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Password
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import java.util.UUID
-
-data class UserAndPassword(val user: User, val password: Password)
 
 interface PasswordRepository: JpaRepository<Password, UUID>{
     @Query("""

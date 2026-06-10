@@ -1,7 +1,7 @@
 package com.gabesechansoftware.laundrydemoserver.services
 
-import com.gabesechansoftware.laundrydemoserver.model.inventory.DryCleanItem
-import com.gabesechansoftware.laundrydemoserver.model.inventory.DryCleanItemName
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItem
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItemName
 import com.gabesechansoftware.laundrydemoserver.repositories.DryCleanItemRepository
 import org.springframework.stereotype.Service
 import java.math.BigDecimal

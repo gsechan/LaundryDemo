@@ -1,6 +1,6 @@
-package com.gabesechansoftware.laundrydemoserver.model.inventory
+package com.gabesechansoftware.laundrydemoserver.model.dbview.catalog
 
-import com.gabesechansoftware.laundrydemoserver.model.BaseEntity
+import com.gabesechansoftware.laundrydemoserver.model.dbview.BaseEntity
 import jakarta.persistence.*
 import java.math.BigDecimal
 import java.util.*

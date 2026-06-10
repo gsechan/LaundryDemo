@@ -3,11 +3,12 @@ package com.gabesechansoftware.laundrydemoserver.controllers.auth
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
-import com.gabesechansoftware.laundrydemoserver.model.user.Address
-import com.gabesechansoftware.laundrydemoserver.model.user.User
-import org.springframework.beans.factory.annotation.Autowired
+import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomerFacing
+import com.gabesechansoftware.laundrydemoserver.model.customerview.User as CustomerUser
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
@@ -17,32 +18,16 @@ data class LoginRequest(val phone: String, val password: String, val organizatio
 
 data class LoginResponse(
     val session: String,
-    val user: LoginUser
+    val user: CustomerUser
 )
 
-data class LoginUser(
-    val name: String,
-    val email: String?,
-    val phone: String,
-    val addresses: List<LoginAddress>
-)
-
-data class LoginAddress(
-    val id: String,
-    val street1: String,
-    val street2: String?,
-    val city: String,
-    val state: String,
-    val country: String,
-    val postcode: String
-)
 
 data class CheckAuthRequest(val token: String)
 
 
 @RestController
 class LoginController(
-    @Autowired private val loginAuthenticator: LoginAuthenticator
+    private val loginAuthenticator: LoginAuthenticator
 ) {
 
     @PostMapping("/login")
@@ -54,7 +39,7 @@ class LoginController(
                 request.phone,
                 request.password
             )
-            return NetworkResponse(LoginResponse(session.token, session.user.toLoginUser()))
+            return NetworkResponse(LoginResponse(session.token, session.user.toCustomerFacing()))
         }
         catch (ex: Exception) {
             ex.printStackTrace()
@@ -62,22 +47,25 @@ class LoginController(
         }
     }
 
-    fun User.toLoginUser(): LoginUser {
-        val sorted = this.addresses?.sortedBy { if (it.isDefault!!) 0 else 1 } ?:emptyList()
-
-        return LoginUser(name!!, email, phone!!, sorted.map{it.toLoginAddress()})
-    }
-
-    fun Address.toLoginAddress(): LoginAddress {
-        return LoginAddress(id.toString(), street1!!, street2, city!!, state!!, country!!, postcode!!)
+    @GetMapping("/logout")
+    fun logout(@RequestHeader("Authorization") authHeader: String ): NetworkResponse<Unit> {
+        try {
+            val token = authHeader.substringAfter(" ")
+            loginAuthenticator.logout(token)
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+            return NetworkResponse(NetworkErrorType.BAD_AUTH, "Token invalid")
+        }
+        return NetworkResponse(Unit)
     }
 
     @PostMapping("/checkAuth")
     fun checkAuth(
-        @RequestBody request: CheckAuthRequest): NetworkResponse<LoginUser> {
+        @RequestBody request: CheckAuthRequest): NetworkResponse<CustomerUser> {
             try {
                 val user = loginAuthenticator.authenticateToken(request.token)
-                return NetworkResponse(  user.toLoginUser())
+                return NetworkResponse(  user.toCustomerFacing())
             }
             catch (ex: Exception) {
                 ex.printStackTrace()

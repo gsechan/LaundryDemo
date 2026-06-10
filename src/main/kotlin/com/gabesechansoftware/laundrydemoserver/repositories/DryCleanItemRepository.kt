@@ -1,6 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.repositories
 
-import com.gabesechansoftware.laundrydemoserver.model.inventory.DryCleanItem
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItem
 import org.springframework.data.jpa.repository.JpaRepository
 import java.util.UUID
 
