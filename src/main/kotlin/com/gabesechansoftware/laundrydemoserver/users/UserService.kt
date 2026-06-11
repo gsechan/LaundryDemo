@@ -2,6 +2,8 @@ package com.gabesechansoftware.laundrydemoserver.users
 
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomerFacing
+import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.OrganizationRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.UserRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
@@ -22,6 +24,7 @@ class UserService(
     private val userRepository: UserRepository,
     private val loginAuthenticator: LoginAuthenticator,
     private val organizationRepository: OrganizationRepository,
+    private val addressRepository: AddressRepository,
 ) {
 
     @Transactional
@@ -36,15 +39,7 @@ class UserService(
                 phone = user.phone
                 organization = organizationRepository.getReferenceById(org)
                 addresses = user.addresses.mapIndexed { index, customerAddress ->
-                    Address().apply {
-                        street1 = customerAddress.street1
-                        street2 = customerAddress.street2
-                        city = customerAddress.city
-                        state = customerAddress.state
-                        country = customerAddress.country
-                        postcode = customerAddress.postcode
-                        isDefault = index == 0
-                    }
+                    customerAddress.toAddress(null, index == 0)
                 }.toMutableList()
             }
             userRepository.save(dbUser)
@@ -71,6 +66,33 @@ class UserService(
 
     private fun validateAddress(address: CustomerAddress, errors: MutableList<String>) {
         //TODO
+    }
+
+    fun addAddress(user: User, address: CustomerAddress): Address {
+        val errors = mutableListOf<String>()
+        validateAddress(address, errors)
+        val hasOtherAddress = addressRepository.countAddressesByUser(user) > 0
+        val dbAddress = address.toAddress(user, !hasOtherAddress)
+        addressRepository.save(dbAddress)
+        user.addresses.add(dbAddress)
+        return dbAddress
+    }
+
+    fun getUser(userId: UUID): CustomerUser{
+        return userRepository.findById(userId).get().toCustomerFacing()
+    }
+
+    fun CustomerAddress.toAddress(user: User?, isDefault: Boolean): Address {
+        return Address().apply {
+            street1 = this@toAddress.street1
+            street2 = this@toAddress.street2
+            city = this@toAddress.city
+            state = this@toAddress.state
+            country = this@toAddress.country
+            postcode = this@toAddress.postcode
+            this.isDefault = isDefault
+            this.user = user
+        }
     }
 
 }
