@@ -8,6 +8,7 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.Organi
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.UserRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
+import com.gabesechansoftware.laundrydemoserver.model.validation.AddressValidator
 import com.gabesechansoftware.laundrydemoserver.model.validation.EmailValidator
 import com.gabesechansoftware.laundrydemoserver.model.validation.PhoneValidator
 import com.gabesechansoftware.laundrydemoserver.model.validation.validatePassword
@@ -25,8 +26,9 @@ class UserService(
     private val loginAuthenticator: LoginAuthenticator,
     private val organizationRepository: OrganizationRepository,
     private val addressRepository: AddressRepository,
+    private val addressValidator: AddressValidator = AddressValidator()
 ) {
-
+    
     @Transactional
     fun createUser(user: CustomerUser, password: String, org: UUID): User {
         val errors = mutableListOf<String>()
@@ -60,22 +62,24 @@ class UserService(
         phoneValidator.validatePhoneNumber(user.phone, errors)
         emailValidator.validateEmail(user.email!!, errors)
         user.addresses.forEach { address ->
-            validateAddress(address, errors)
+            addressValidator.validateCustomerAddress(address, errors)
         }
     }
 
-    private fun validateAddress(address: CustomerAddress, errors: MutableList<String>) {
-        //TODO
-    }
 
     fun addAddress(user: User, address: CustomerAddress): Address {
         val errors = mutableListOf<String>()
-        validateAddress(address, errors)
+        addressValidator.validateCustomerAddress(address, errors)
         val hasOtherAddress = addressRepository.countAddressesByUser(user) > 0
         val dbAddress = address.toAddress(user, !hasOtherAddress)
-        addressRepository.save(dbAddress)
-        user.addresses.add(dbAddress)
-        return dbAddress
+        if(errors.isEmpty()) {
+            addressRepository.save(dbAddress)
+            user.addresses.add(dbAddress)
+            return dbAddress
+        }
+        else {
+            throw APIErrorException(errors)
+        }
     }
 
     fun getUser(userId: UUID): CustomerUser{
