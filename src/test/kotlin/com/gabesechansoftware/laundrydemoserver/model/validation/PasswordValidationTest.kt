@@ -6,7 +6,7 @@ import kotlin.test.Test
 class PasswordValidationTest {
 
     val passwordValidator  = PasswordValidator()
-    
+
     @Test
     fun `too short adds an error`() {
         val errors = mutableListOf<String>()
