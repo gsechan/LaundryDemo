@@ -7,6 +7,7 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.Passwo
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.SessionRepository
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.AbstractValidatingPasswordEncoder
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -18,9 +19,8 @@ data class UserSession(val user: User, val token: String)
 class LoginAuthenticator(
     private val passwordRepo: PasswordRepository,
     private val sessionRepository: SessionRepository,
+    private val encoder: AbstractValidatingPasswordEncoder = BCryptPasswordEncoder(16)
 ) {
-
-    private val encoder = BCryptPasswordEncoder(16)
 
     fun authenticatePassword(org:UUID, phone: String, unhashed: String): User {
         val password = findPossiblePassword(org, phone)
