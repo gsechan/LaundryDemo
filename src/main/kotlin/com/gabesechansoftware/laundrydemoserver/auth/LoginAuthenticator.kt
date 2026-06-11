@@ -7,19 +7,17 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.Passwo
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.SessionRepository
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import org.springframework.security.crypto.password.AbstractValidatingPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 
-data class UserSession(val user: User, val token: String)
-
 @Component
 class LoginAuthenticator(
     private val passwordRepo: PasswordRepository,
     private val sessionRepository: SessionRepository,
-    private val encoder: AbstractValidatingPasswordEncoder = BCryptPasswordEncoder(16)
+    private val encoder: PasswordEncoder = BCryptPasswordEncoder(16)
 ) {
 
     fun authenticatePassword(org:UUID, phone: String, unhashed: String): User {
@@ -45,6 +43,7 @@ class LoginAuthenticator(
     fun authenticateToken(token: String): User {
         val session = getSessionForToken(token)
         if(session.expiration!!.toInstant().toEpochMilli() < Instant.now().toEpochMilli()) {
+            sessionRepository.deleteByToken(token)
             throw BadLoginException()
         }
         //Using a token refreshes expiration
@@ -53,13 +52,14 @@ class LoginAuthenticator(
     }
 
     fun logout(token: String) {
-        sessionRepository.delete(getSessionForToken(token))
+        sessionRepository.deleteByToken(token)
     }
 
 
     private fun getSessionForToken(token: String): Session {
         val sessions = sessionRepository.findByToken(token)
         if(sessions.size > 1) {
+            sessionRepository.deleteByToken(token)
             throw DatabaseDataInvalidException("More than one session exists with token $token")
         }
         if(sessions.isEmpty()) {

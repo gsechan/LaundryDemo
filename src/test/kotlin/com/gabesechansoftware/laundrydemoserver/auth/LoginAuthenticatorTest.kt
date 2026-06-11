@@ -1,24 +1,29 @@
 package com.gabesechansoftware.laundrydemoserver.auth
 
+import com.gabesechansoftware.laundrydemoserver.DatabaseDataInvalidException
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Password
+import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Session
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.PasswordRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.SessionRepository
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.assertNotNull
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 @ExtendWith(MockKExtension::class)
 class LoginAuthenticatorTest {
@@ -84,13 +89,83 @@ class LoginAuthenticatorTest {
         assertNotEquals(session1.token, session2.token)
     }
 
-    //AuthenticateToken-  session exists returns user, saves with updated expiration
-    //AuthenticateToken-  session does not exist, throws BAD_AUTH
-    //AuthenticateToken-  token exists twice, throws DatabaseDataInvalidException
-    //AuthenticateToken-  expired token, throws bad auth
+    @Test
+    fun `authenticateToken - if session exists for token, return user and update expiration`() {
+        val token = "21b669ee-867f-4748-b859-5058e928bf5b"
+        val expire = OffsetDateTime.now(ZoneOffset.UTC).plusDays(1)
+        val session = Session(user = user, token = token, expiration = expire)
+        every { sessionRepository.findByToken(token) } returns listOf(session)
+        every { sessionRepository.save(any()) } returnsArgument 0
 
-    //logout-  row deleted.   FIX NEEDED-  If the token exists twice, delete both.  Do we want to do that for Auth as well?
+        val result = authService.authenticateToken(token)
+        assertEquals(user, result)
+        verify { sessionRepository.save(session) }
+        assertTrue { session.expiration!!.isAfter(expire) }
+    }
 
-    //setPassword-  move to
+    @Test
+    fun `authenticateToken - if token has no session, throw BadLoginException`() {
+        val token = "21b669ee-867f-4748-b859-5058e928bf5b"
+        every { sessionRepository.findByToken(token) } returns emptyList()
+        every { sessionRepository.save(any()) } returnsArgument 0
+
+        assertThrows<BadAuthTokenException> {
+            authService.authenticateToken(token)
+        }
+    }
+
+    @Test
+    fun `authenticateToken - if token has 2 sessions, throw BadLoginException and delete both`() {
+        val token = "21b669ee-867f-4748-b859-5058e928bf5b"
+        val expire = OffsetDateTime.now(ZoneOffset.UTC).plusDays(1)
+        val session = Session(user = user, token = token, expiration = expire)
+        val session2 = Session(user = user, token = token, expiration = expire)
+        every { sessionRepository.findByToken(token) } returns listOf(session, session2)
+        every { sessionRepository.save(any()) } returnsArgument 0
+        every { sessionRepository.deleteByToken(any()) } returns  Unit
+
+        assertThrows<DatabaseDataInvalidException> {
+            authService.authenticateToken(token)
+        }
+        verify(exactly = 1) { sessionRepository.deleteByToken(token) }
+    }
+
+    @Test
+    fun `authenticateToken - expired token throws BadLoginException and deletes session`() {
+        val token = "21b669ee-867f-4748-b859-5058e928bf5b"
+        val expire = OffsetDateTime.now(ZoneOffset.UTC).minusDays(1)
+        val session = Session(user = user, token = token, expiration = expire)
+        every { sessionRepository.findByToken(token) } returns listOf(session)
+        every { sessionRepository.save(any()) } returnsArgument 0
+        every { sessionRepository.deleteByToken(any()) } returns  Unit
+
+        assertThrows<BadLoginException> {
+            authService.authenticateToken(token)
+        }
+        verify(exactly = 1) { sessionRepository.deleteByToken(token) }
+    }
+
+    @Test
+    fun `logout-  all rows deleted`() {
+        val token = "21b669ee-867f-4748-b859-5058e928bf5b"
+        every { sessionRepository.deleteByToken(any()) } returns  Unit
+
+        authService.logout(token)
+        verify { sessionRepository.deleteByToken(token) }
+    }
+
+    @Test
+    fun `setPasswordForUser-  password is saved, in an encoded form`() {
+        val encoder = mockk<PasswordEncoder>()
+        every { passwordRepo.save(any()) } returnsArgument 0
+        every { encoder.encode(any()) } returns hashedPassword
+        val service = LoginAuthenticator(passwordRepo, sessionRepository, encoder)
+        service.setPasswordForUser(user, unhashedPassword)
+
+        verify { passwordRepo.save(
+            match { it.hash == hashedPassword }
+        ) }
+        verify { encoder.encode(unhashedPassword) }
+    }
 
 }
