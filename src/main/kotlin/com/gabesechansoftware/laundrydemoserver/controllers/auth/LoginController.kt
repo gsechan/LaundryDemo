@@ -48,8 +48,10 @@ class LoginController(
         }
     }
 
+
     @GetMapping("/logout")
     fun logout(@RequestHeader("Authorization") authHeader: String ): NetworkResponse<Unit> {
+        //Can't use authenticated user because we need the actual token
         try {
             val token = authHeader.removePrefix("Bearer ")
             loginAuthenticator.logout(token)
