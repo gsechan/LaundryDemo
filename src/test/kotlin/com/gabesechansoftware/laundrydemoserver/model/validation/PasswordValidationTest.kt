@@ -5,17 +5,19 @@ import kotlin.test.Test
 
 class PasswordValidationTest {
 
+    val passwordValidator  = PasswordValidator()
+    
     @Test
     fun `too short adds an error`() {
         val errors = mutableListOf<String>()
-        validatePassword("1234567", errors)
+        passwordValidator.validatePassword("1234567", errors)
         assertNotEmpty(errors)
     }
 
     @Test
     fun `valid password allowed`() {
         val errors = mutableListOf<String>()
-        validatePassword("sdujh$(8uhNG", errors)
+        passwordValidator.validatePassword("sdujh$(8uhNG", errors)
         assertNotEmpty(errors)
     }
 
