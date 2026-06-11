@@ -17,6 +17,6 @@ fun findNameMatchingBestLocale(names: List<Transaltion>, locales: List<String>):
     return null
 }
 
-fun allSublocales(locale: String): List<String> {
+private fun allSublocales(locale: String): List<String> {
     return listOfNotNull(locale, locale.substringBefore("-").takeIf { it != locale })
 }
