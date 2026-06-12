@@ -103,7 +103,7 @@ class UserServiceTests {
         val mockValidator = mockk<AddressValidator>()
         val service = UserService(userRepository, loginAuthenticator, organizationRepository, addressRepository, mockValidator)
         every { addressRepository.save(any()) } returnsArgument 0
-        every { mockValidator.validateCustomerAddress(any(), any()) } answers { (args[1] as MutableList<String>).add("Error") }
+        every { mockValidator.validateAddress(any(), any()) } answers { (args[1] as MutableList<String>).add("Error") }
 
         assertThrows<APIErrorException> { service.addAddress(user, address) }
         verify (exactly = 0){ addressRepository.save(any()) }
@@ -113,6 +113,7 @@ class UserServiceTests {
     @Test
     fun `createUser-  invalid password throws exception`() {
         every { userRepository.save(any()) } returnsArgument 0
+        every { organizationRepository.getReferenceById(any()) } returns organization
 
         assertThrows<APIErrorException> { userService.createUser(uploadUser, "1234", organization.id) }
         verify (exactly = 0){ userRepository.save(any()) }
@@ -121,6 +122,7 @@ class UserServiceTests {
     @Test
     fun `createUser-  invalid user throws exception`() {
         every { userRepository.save(any()) } returnsArgument 0
+        every { organizationRepository.getReferenceById(any()) } returns organization
         val badUser = UploadUser("Gabe","test@example.com","31",mutableListOf())
         assertThrows<APIErrorException> { userService.createUser(badUser, "12345678", organization.id) }
         verify (exactly = 0){ userRepository.save(any()) }
@@ -129,6 +131,7 @@ class UserServiceTests {
     @Test
     fun `createUser-  too many addresses throws exception`() {
         every { userRepository.save(any()) } returnsArgument 0
+        every { organizationRepository.getReferenceById(any()) } returns organization
         val address =  UploadAddress("a","b","c","d","e","f")
         val addresses = listOf(address, address, address, address, address, address)
         assertThrows<APIErrorException> { userService.createUser(uploadUser.copy(addresses = addresses), "12345678", organization.id) }
@@ -139,10 +142,10 @@ class UserServiceTests {
     fun `createUser-  valid user passes`() {
         every { userRepository.save(any()) } returnsArgument 0
         every { organizationRepository.getReferenceById(any()) } returns organization
-        every { loginAuthenticator.setPasswordForUser(any(), any()) } just Runs
+        every { loginAuthenticator.createPasswordForUser(any(), any()) } just Runs
         val result =  userService.createUser(uploadUser, "12345678", organization.id)
         verify { userRepository.save(result) }
-        verify { loginAuthenticator.setPasswordForUser(user, "12345678") }
+        verify { loginAuthenticator.createPasswordForUser(user, "12345678") }
     }
 
 }

@@ -47,6 +47,12 @@ data class UploadAddress(
     }
 }
 
+data class PatchUser(
+    val name: String?,
+    val email: String?,
+    val phone: String?,
+    val password: String?
+)
 
 fun DBUser.toCustomer(): User {
     val sorted = this.addresses.sortedBy { if (it.isDefault!!) 0 else 1 }

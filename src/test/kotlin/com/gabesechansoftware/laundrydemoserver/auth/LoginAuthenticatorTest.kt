@@ -24,7 +24,6 @@ import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
-import kotlin.test.assertTrue
 
 @ExtendWith(MockKExtension::class)
 class LoginAuthenticatorTest {
@@ -171,7 +170,7 @@ class LoginAuthenticatorTest {
         every { passwordRepo.save(any()) } returnsArgument 0
         every { encoder.encode(any()) } returns hashedPassword
         val service = LoginAuthenticator(passwordRepo, sessionRepository, encoder)
-        service.setPasswordForUser(user, unhashedPassword)
+        service.createPasswordForUser(user, unhashedPassword)
 
         verify { passwordRepo.save(
             match { it.hash == hashedPassword }

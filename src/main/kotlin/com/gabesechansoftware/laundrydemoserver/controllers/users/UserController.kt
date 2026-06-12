@@ -1,10 +1,15 @@
 package com.gabesechansoftware.laundrydemoserver.controllers.users
 
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
+import com.gabesechansoftware.laundrydemoserver.auth.AuthenticatedUser
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
+import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.users.UserService
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import com.gabesechansoftware.laundrydemoserver.model.customerview.User as CustomerUser
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -22,6 +27,10 @@ data class CreateUserResponse(
     val user: CustomerUser
 )
 
+data class UpdateUserRequest(
+    val user: PatchUser?,
+)
+
 @RestController
 class UserController(
     private val userService: UserService,
@@ -36,6 +45,17 @@ class UserController(
         val resultUser = userService.createUser(user, password, orgId)
         val session = loginAuthenticator.createSession(resultUser)
         return NetworkResponse(CreateUserResponse(session.token!!, resultUser.toCustomer()))
+    }
+
+    @GetMapping("/users/me")
+    fun getLoggedInUser(@AuthenticatedUser user: User): NetworkResponse<CustomerUser> {
+        return NetworkResponse(user.toCustomer())
+    }
+
+    @PatchMapping("/users/me")
+    fun updateLoggedInUser(@RequestBody requst: UpdateUserRequest, @AuthenticatedUser user: User) {
+        userService.updateUser(user.id, requst.user?.name, requst.user?.email, requst.user?.phone, requst.user?.password)
+
     }
 
 }
