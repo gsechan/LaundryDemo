@@ -25,7 +25,7 @@ class DryCleanItemController(
         @AuthenticatedUser user: User,
         @RequestHeader("Accept-Language") locale: String,
     ): NetworkResponse<DryCleanItemsResponse> {
-        val  items = dryCleanItemService.getDryCleanItems(user.organization!!.id, locale).map { it.toCustomer(locale) }
+        val  items = dryCleanItemService.getDryCleanItems(user.organization!!.id).map { it.toCustomer(locale) }
         return NetworkResponse(DryCleanItemsResponse(items))
     }
 }

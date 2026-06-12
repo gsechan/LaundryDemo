@@ -13,7 +13,7 @@ class DryCleanItemService(
     private val dryCleanItemRepository: DryCleanItemRepository,
     private val translationPicker: TranslationPicker = TranslationPicker(),
 ) {
-     fun getDryCleanItems(org: UUID, locale:String): List<DryCleanItem> {
+     fun getDryCleanItems(org: UUID): List<DryCleanItem> {
           return dryCleanItemRepository.findByOrganization(org)
 
      }
