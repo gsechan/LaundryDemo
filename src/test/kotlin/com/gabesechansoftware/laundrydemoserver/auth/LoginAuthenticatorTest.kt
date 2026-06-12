@@ -1,6 +1,7 @@
 package com.gabesechansoftware.laundrydemoserver.auth
 
 import com.gabesechansoftware.laundrydemoserver.DatabaseDataInvalidException
+import com.gabesechansoftware.laundrydemoserver.TimeSource
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Password
 import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Session
@@ -70,12 +71,16 @@ class LoginAuthenticatorTest {
     @Test
     fun `createSession - saves and returns a user session`() {
         every { sessionRepository.save(any()) } returnsArgument 0
+        val timeSource = mockk<TimeSource>()
+        val now = OffsetDateTime.now(ZoneOffset.UTC)
+        every { timeSource.now() } returns now
+        val service = LoginAuthenticator(passwordRepo, sessionRepository, timeSource = timeSource)
 
-        val session = authService.createSession(user)
+        val session = service.createSession(user)
         assertNotNull(session.token)
         assertEquals(user, session.user)
         assertNotNull(session.expiration)
-        assert(OffsetDateTime.now(ZoneOffset.UTC).isBefore(session.expiration))
+        assertEquals(now.plusYears(1), session.expiration)
 
         verify(exactly = 1) { sessionRepository.save(session) }
     }
@@ -92,15 +97,21 @@ class LoginAuthenticatorTest {
     @Test
     fun `authenticateToken - if session exists for token, return user and update expiration`() {
         val token = "21b669ee-867f-4748-b859-5058e928bf5b"
-        val expire = OffsetDateTime.now(ZoneOffset.UTC).plusDays(1)
-        val session = Session(user = user, token = token, expiration = expire)
+        val expire = OffsetDateTime.now(ZoneOffset.UTC)
+        val session = Session(user = user, token = token, expiration = expire.plusDays(1))
         every { sessionRepository.findByToken(token) } returns listOf(session)
         every { sessionRepository.save(any()) } returnsArgument 0
 
-        val result = authService.authenticateToken(token)
+        //We mock the time source so we can measure the exact expiration date its set to.  Otherwise, this test
+        //would only be able to test if the expiration date moved forward at all, or be flaky based on runtime
+        val timeSource = mockk<TimeSource>()
+        every { timeSource.now() } returns expire
+        val service = LoginAuthenticator(passwordRepo, sessionRepository, timeSource = timeSource)
+
+        val result = service.authenticateToken(token)
         assertEquals(user, result)
         verify { sessionRepository.save(session) }
-        assertTrue { session.expiration!!.isAfter(expire) }
+        assertEquals(  expire.plusYears(1), session.expiration )
     }
 
     @Test

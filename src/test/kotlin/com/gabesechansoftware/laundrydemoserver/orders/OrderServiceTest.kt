@@ -1,6 +1,7 @@
 package com.gabesechansoftware.laundrydemoserver.orders
 
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
+import com.gabesechansoftware.laundrydemoserver.TimeSource
 import com.gabesechansoftware.laundrydemoserver.assertSize
 import com.gabesechansoftware.laundrydemoserver.catalog.DryCleanItemService
 import com.gabesechansoftware.laundrydemoserver.catalog.WashFoldService
@@ -19,9 +20,7 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.Addres
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.OrderRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
-import com.gabesechansoftware.laundrydemoserver.model.validation.AddressValidator
 import com.gabesechansoftware.laundrydemoserver.model.validation.OrderValidator
-import com.gabesechansoftware.laundrydemoserver.users.UserService
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -34,7 +33,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import kotlin.collections.List
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -200,13 +198,16 @@ class OrderServiceTest {
             pickupAddress.id.toString(),
             dropoffAddress.id.toString(),
         )
+        val timeSource = mockk<TimeSource>()
+        every { timeSource.now() } returns now
+        val service = OrderService(orderRepository, addressRepository, washFoldService, dryCleanItemService, timeSource = timeSource)
 
-
-        val result = orderService.postUserOrder(uploadOrder, user, "en-US")
+        val result = service.postUserOrder(uploadOrder, user, "en-US")
         verify{ orderRepository.save(any()) }
         assertEquals(user, result.user)
         assertEquals(OrderState.SUBMITTED, result.state)
-        assertEquals(result.lastChange, result.submitted)
+        assertEquals(now, result.lastChange )
+        assertEquals(now, result.submitted )
         assertEquals(null, result.completed)
         assertEquals(scheduledPickup.toInstant().toEpochMilli(), result.scheduledPickup!!.toInstant().toEpochMilli())
         assertEquals(scheduledDropff.toInstant().toEpochMilli(), result.scheduledDropoff!!.toInstant().toEpochMilli())

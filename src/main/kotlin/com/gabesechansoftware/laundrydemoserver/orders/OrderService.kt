@@ -1,6 +1,7 @@
 package com.gabesechansoftware.laundrydemoserver.orders
 
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
+import com.gabesechansoftware.laundrydemoserver.TimeSource
 import com.gabesechansoftware.laundrydemoserver.catalog.DryCleanItemService
 import com.gabesechansoftware.laundrydemoserver.catalog.WashFoldService
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrder
@@ -28,6 +29,7 @@ class OrderService(
     private val washFoldService: WashFoldService,
     private val dryCleanItemService: DryCleanItemService,
     private val orderValidator: OrderValidator = OrderValidator(),
+    private val timeSource: TimeSource = TimeSource(),
 ) {
 
     fun getAllOrdersForCustomerView(user: User): List<CustomerOrder> {
@@ -37,7 +39,7 @@ class OrderService(
 
     fun postUserOrder(uploadOrder: UploadOrder, authedUser: User, locale: String): Order {
         val org = authedUser.organization!!
-        val now = OffsetDateTime.now(ZoneOffset.UTC)
+        val now = timeSource.now()
         val errors = mutableListOf<String>()
         orderValidator.validateUploadOrder(uploadOrder, errors)
         val order = Order().apply {

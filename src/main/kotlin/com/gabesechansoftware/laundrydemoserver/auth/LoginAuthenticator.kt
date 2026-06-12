@@ -1,6 +1,7 @@
 package com.gabesechansoftware.laundrydemoserver.auth
 
 import com.gabesechansoftware.laundrydemoserver.DatabaseDataInvalidException
+import com.gabesechansoftware.laundrydemoserver.TimeSource
 import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Password
 import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Session
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.PasswordRepository
@@ -11,14 +12,14 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 
 @Component
 class LoginAuthenticator(
     private val passwordRepo: PasswordRepository,
     private val sessionRepository: SessionRepository,
-    private val encoder: PasswordEncoder = BCryptPasswordEncoder(16)
+    private val encoder: PasswordEncoder = BCryptPasswordEncoder(16),
+    private val timeSource: TimeSource = TimeSource(),
 ) {
 
     fun authenticatePassword(org:UUID, phone: String, unhashed: String): User {
@@ -31,7 +32,7 @@ class LoginAuthenticator(
 
     fun createSession(user: User): Session {
         val token = UUID.randomUUID().toString()
-        val expireAt = OffsetDateTime.now(ZoneOffset.UTC).plusYears(1)
+        val expireAt = timeSource.now().plusYears(1)
         val session = Session().apply {
             this.token = token
             this.user = user
@@ -48,7 +49,7 @@ class LoginAuthenticator(
             throw BadLoginException()
         }
         //Using a token refreshes expiration
-        updateExpiration(session, OffsetDateTime.now(ZoneOffset.UTC).plusYears(1))
+        updateExpiration(session, timeSource.now().plusYears(1))
         return session.user!!
     }
 

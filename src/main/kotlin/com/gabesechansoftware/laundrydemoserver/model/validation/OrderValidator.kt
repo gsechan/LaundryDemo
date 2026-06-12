@@ -1,16 +1,15 @@
 package com.gabesechansoftware.laundrydemoserver.model.validation
 
+import com.gabesechansoftware.laundrydemoserver.TimeSource
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrder
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.ItemType
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
-class OrderValidator {
+class OrderValidator(private val timeSource: TimeSource = TimeSource()) {
     fun validateUploadOrder(order: UploadOrder, errors: MutableList<String>) {
         if (order.lines.isEmpty()) {
             errors.add("There must be at least one line in an order")
         }
-        val now = OffsetDateTime.now(ZoneOffset.UTC)
+        val now = timeSource.now()
         if(order.scheduledPickup < now.toInstant().toEpochMilli()) {
             //TODO:  When we set up a real timeslot system, make sure we pick a valid timeslot
             errors.add("Pickup must be in the future")
