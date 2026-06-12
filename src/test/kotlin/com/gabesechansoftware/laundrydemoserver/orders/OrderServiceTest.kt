@@ -7,7 +7,6 @@ import com.gabesechansoftware.laundrydemoserver.catalog.DryCleanItemService
 import com.gabesechansoftware.laundrydemoserver.catalog.WashFoldService
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrder
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrderLine
-import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
 import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItem
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItemName
