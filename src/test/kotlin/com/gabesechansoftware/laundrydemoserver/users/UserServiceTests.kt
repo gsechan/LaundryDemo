@@ -3,7 +3,7 @@ package com.gabesechansoftware.laundrydemoserver.users
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.assertSize
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
-import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomerFacing
+import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
 import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.OrganizationRepository
@@ -117,7 +117,7 @@ class UserServiceTests {
     fun `createUser-  invalid password throws exception`() {
         every { userRepository.save(any()) } returnsArgument 0
 
-        assertThrows<APIErrorException> { userService.createUser(user.toCustomerFacing(), "1234", organization.id) }
+        assertThrows<APIErrorException> { userService.createUser(user.toCustomer(), "1234", organization.id) }
         verify (exactly = 0){ userRepository.save(any()) }
     }
 
@@ -125,7 +125,7 @@ class UserServiceTests {
     fun `createUser-  invalid user throws exception`() {
         every { userRepository.save(any()) } returnsArgument 0
         val badUser = User("Gabe","test@example.com","31",organization,mutableListOf())
-        assertThrows<APIErrorException> { userService.createUser(badUser.toCustomerFacing(), "12345678", organization.id) }
+        assertThrows<APIErrorException> { userService.createUser(badUser.toCustomer(), "12345678", organization.id) }
         verify (exactly = 0){ userRepository.save(any()) }
     }
 
@@ -133,7 +133,7 @@ class UserServiceTests {
     fun `createUser-  too many adddresses throws exception`() {
         every { userRepository.save(any()) } returnsArgument 0
         repeat(6) {user.addresses.add(Address("a","b","c","d","e","f", false))}
-        assertThrows<APIErrorException> { userService.createUser(user.toCustomerFacing(), "12345678", organization.id) }
+        assertThrows<APIErrorException> { userService.createUser(user.toCustomer(), "12345678", organization.id) }
         verify (exactly = 0){ userRepository.save(any()) }
     }
 
@@ -142,7 +142,7 @@ class UserServiceTests {
         every { userRepository.save(any()) } returnsArgument 0
         every { organizationRepository.getReferenceById(any()) } returns organization
         every { loginAuthenticator.setPasswordForUser(any(), any()) } just Runs
-        val result =  userService.createUser(user.toCustomerFacing(), "12345678", organization.id)
+        val result =  userService.createUser(user.toCustomer(), "12345678", organization.id)
         verify { userRepository.save(result) }
         verify { loginAuthenticator.setPasswordForUser(user, "12345678") }
     }

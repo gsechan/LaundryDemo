@@ -3,7 +3,7 @@ package com.gabesechansoftware.laundrydemoserver.controllers.auth
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
-import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomerFacing
+import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
 import com.gabesechansoftware.laundrydemoserver.model.customerview.User as CustomerUser
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -40,7 +40,7 @@ class LoginController(
                 request.password
             )
             val session = loginAuthenticator.createSession(user)
-            return NetworkResponse(LoginResponse(session.token!!, session.user!!.toCustomerFacing()))
+            return NetworkResponse(LoginResponse(session.token!!, session.user!!.toCustomer()))
         }
         catch (ex: Exception) {
             ex.printStackTrace()
@@ -68,7 +68,7 @@ class LoginController(
         @RequestBody request: CheckAuthRequest): NetworkResponse<CustomerUser> {
             try {
                 val user = loginAuthenticator.authenticateToken(request.token)
-                return NetworkResponse(  user.toCustomerFacing())
+                return NetworkResponse(  user.toCustomer())
             }
             catch (ex: Exception) {
                 ex.printStackTrace()

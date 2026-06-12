@@ -2,7 +2,7 @@ package com.gabesechansoftware.laundrydemoserver.controllers.users
 
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import com.gabesechansoftware.laundrydemoserver.auth.AuthenticatedUser
-import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomerFacing
+import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.users.UserService
 import com.gabesechansoftware.laundrydemoserver.model.customerview.Address as CustomerAddress
@@ -24,7 +24,7 @@ class AddressController(private val userService: UserService) {
         @AuthenticatedUser authedUser: User,
     ) : NetworkResponse<PostAddressResponse> {
         userService.addAddress(authedUser, request.address)
-        val user = authedUser.toCustomerFacing()
+        val user = authedUser.toCustomer()
         return NetworkResponse(PostAddressResponse(user))
     }
 }

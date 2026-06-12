@@ -20,12 +20,12 @@ data class Address(
     val postcode: String
 )
 
-fun DBUser.toCustomerFacing(): User {
+fun DBUser.toCustomer(): User {
     val sorted = this.addresses.sortedBy { if (it.isDefault!!) 0 else 1 }
 
-    return User(name!!, email, phone!!, sorted.map{it.toCustomerFacing()})
+    return User(name!!, email, phone!!, sorted.map{it.toCustomer()})
 }
 
-fun DBAddress.toCustomerFacing(): Address {
+fun DBAddress.toCustomer(): Address {
     return Address(id.toString(), street1!!, street2, city!!, state!!, country!!, postcode!!)
 }

@@ -4,9 +4,9 @@ import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.catalog.DryCleanItemService
 import com.gabesechansoftware.laundrydemoserver.catalog.WashFoldService
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrder
+import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.customerview.Order as CustomerOrder
-import com.gabesechansoftware.laundrydemoserver.model.customerview.OrderLine as CustomerOrderLine
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderLine
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
@@ -32,29 +32,7 @@ class OrderService(
 
     fun getAllOrdersForCustomerView(user: User): List<CustomerOrder> {
         val orders = orderRepository.findByUser(user)
-        return orders.map { order ->
-            CustomerOrder(
-                order.id.toString(),
-                order.state.toString(),
-                order.completed?.toInstant()?.toEpochMilli(),
-                order.lastChange!!.toInstant().toEpochMilli(),
-                order.submitted!!.toInstant().toEpochMilli(),
-                order.scheduledPickup!!.toInstant().toEpochMilli(),
-                order.scheduledDropoff!!.toInstant().toEpochMilli(),
-                order.pickupAddress!!.id.toString(),
-                order.dropoffAddress!!.id.toString(),
-                order.lines.map { line ->
-                    CustomerOrderLine(
-                        line.id.toString(),
-                        line.itemType.toString(),
-                        line.nameInSubmittedLocale ?: line.nameInEnglishLocale ?: "Unknown Item",
-                        line.pricePerUnit.toString(),
-                        line.quantity?.toString(),
-                        line.totalCost?.toString()
-                    )
-                }
-            )
-        }
+        return orders.map { order -> order.toCustomer() }
     }
 
     fun postUserOrder(uploadOrder: UploadOrder, authedUser: User, locale: String): Order {

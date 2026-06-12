@@ -2,7 +2,7 @@ package com.gabesechansoftware.laundrydemoserver.controllers.users
 
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
-import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomerFacing
+import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
 import com.gabesechansoftware.laundrydemoserver.users.UserService
 import com.gabesechansoftware.laundrydemoserver.model.customerview.User as CustomerUser
 import org.springframework.web.bind.annotation.PostMapping
@@ -34,7 +34,7 @@ class UserController(
         val password = request.password
         val resultUser = userService.createUser(user, password, orgId)
         val session = loginAuthenticator.createSession(resultUser)
-        return NetworkResponse(CreateUserResponse(session.token!!, resultUser.toCustomerFacing()))
+        return NetworkResponse(CreateUserResponse(session.token!!, resultUser.toCustomer()))
     }
 
 }
