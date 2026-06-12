@@ -1,8 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.orders
 
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
-import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
-import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import com.gabesechansoftware.laundrydemoserver.catalog.DryCleanItemService
 import com.gabesechansoftware.laundrydemoserver.catalog.WashFoldService
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrder
@@ -15,6 +13,7 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.OrderRepository
+import com.gabesechansoftware.laundrydemoserver.model.validation.OrderValidator
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.Instant
@@ -28,6 +27,7 @@ class OrderService(
     private val addressRepository: AddressRepository,
     private val washFoldService: WashFoldService,
     private val dryCleanItemService: DryCleanItemService,
+    private val orderValidator: OrderValidator = OrderValidator(),
 ) {
 
     fun getAllOrdersForCustomerView(user: User): List<CustomerOrder> {
@@ -43,7 +43,7 @@ class OrderService(
                 order.scheduledDropoff!!.toInstant().toEpochMilli(),
                 order.pickupAddress!!.id.toString(),
                 order.dropoffAddress!!.id.toString(),
-                order.lines!!.map { line ->
+                order.lines.map { line ->
                     CustomerOrderLine(
                         line.id.toString(),
                         line.itemType.toString(),
@@ -61,10 +61,7 @@ class OrderService(
         val org = authedUser.organization!!
         val now = OffsetDateTime.now(ZoneOffset.UTC)
         val errors = mutableListOf<String>()
-
-        if (uploadOrder.lines.isEmpty()) {
-            errors.add("There must be at least one line in an order")
-        }
+        orderValidator.validateUploadOrder(uploadOrder, errors)
         val order = Order().apply {
             user = authedUser
             state = OrderState.SUBMITTED
@@ -84,34 +81,33 @@ class OrderService(
                 var nameInSubmitLocale: String? = null
                 var nameInOrgsLocale: String? = null
                 var nameInDefaultLocale: String? = null
-                if (requestItemType == ItemType.WASH_AND_FOLD) {
-                    pricePerUnit = washFoldService.washFoldPriceInternal(org.id).price!!
-                    if (requestLine.quantity != null) {
-                        errors.add("Wash and Fold lines must not have a quantity")
+                when(requestItemType) {
+                    ItemType.WASH_AND_FOLD -> {
+                        pricePerUnit = washFoldService.washFoldPriceInternal(org.id).price!!
+                        quantity = null
+                        totalCost = null
+                        nameInSubmitLocale = "Wash and fold"
+                        nameInOrgsLocale = "Wash and fold"
+                        nameInDefaultLocale = "Wash and fold"
                     }
-                    quantity = null
-                    totalCost = null
-                    nameInSubmitLocale = "Wash and fold"
-                    nameInOrgsLocale = "Wash and fold"
-                    nameInDefaultLocale = "Wash and fold"
 
-                } else if (requestItemType == ItemType.DRY_CLEANING) {
-                    if (requestLine.quantity == null) {
-                        errors.add("Dry cleaning lines must have a quantity")
+                    ItemType.DRY_CLEANING -> {
+                        val dryCleanItem = dryCleanItemService.getDryCleanItem(
+                            org.id,
+                            UUID.fromString(requestLine.itemId)
+                        )
+                        pricePerUnit = dryCleanItem.price!!
+                        quantity = BigDecimal(requestLine.quantity)
+                        totalCost = quantity.times(pricePerUnit)
+
+                        nameInSubmitLocale = dryCleanItemService.getDryCleanItemNameForLocale(dryCleanItem, locale)
+                        nameInOrgsLocale =
+                            dryCleanItemService.getDryCleanItemNameForLocale(dryCleanItem, org.defaultLocale!!)
+                        nameInDefaultLocale = dryCleanItemService.getDryCleanItemNameForLocale(dryCleanItem, "en-US")
                     }
-                    val dryCleanItem = dryCleanItemService.getDryCleanItem(
-                        org.id,
-                        UUID.fromString(requestLine.itemId)
-                    )
-                    pricePerUnit = dryCleanItem.price!!
-                    quantity = BigDecimal(requestLine.quantity)
-                    totalCost = quantity.times(pricePerUnit)
-
-                    nameInSubmitLocale = dryCleanItemService.getDryCleanItemNameForLocale(dryCleanItem, locale)
-                    nameInOrgsLocale = dryCleanItemService.getDryCleanItemNameForLocale(dryCleanItem, org.defaultLocale!!)
-                    nameInDefaultLocale = dryCleanItemService.getDryCleanItemNameForLocale(dryCleanItem, "en-US")
-                } else {
-                    errors.add("Unknown item type")
+                    else -> {
+                        errors.add("Unknown item type")
+                    }
                 }
                 OrderLine().apply {
                     itemType = requestItemType

@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 @Component
@@ -30,7 +31,7 @@ class LoginAuthenticator(
 
     fun createSession(user: User): Session {
         val token = UUID.randomUUID().toString()
-        val expireAt = OffsetDateTime.now().plusYears(1)
+        val expireAt = OffsetDateTime.now(ZoneOffset.UTC).plusYears(1)
         val session = Session().apply {
             this.token = token
             this.user = user
@@ -47,7 +48,7 @@ class LoginAuthenticator(
             throw BadLoginException()
         }
         //Using a token refreshes expiration
-        updateExpiration(session, OffsetDateTime.now().plusYears(1))
+        updateExpiration(session, OffsetDateTime.now(ZoneOffset.UTC).plusYears(1))
         return session.user!!
     }
 
