@@ -21,7 +21,7 @@ data class Address(
 )
 
 fun DBUser.toCustomerFacing(): User {
-    val sorted = this.addresses?.sortedBy { if (it.isDefault!!) 0 else 1 } ?:emptyList()
+    val sorted = this.addresses.sortedBy { if (it.isDefault!!) 0 else 1 }
 
     return User(name!!, email, phone!!, sorted.map{it.toCustomerFacing()})
 }

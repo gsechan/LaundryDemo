@@ -7,7 +7,7 @@ import org.apache.commons.validator.routines.EmailValidator as ApacheValidator
 
 
 class EmailValidatorTest {
-    val apache = ApacheValidator.getInstance()
+    val apache = ApacheValidator.getInstance()!!
 
     val emailValidator = EmailValidator(apache)
 

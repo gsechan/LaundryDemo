@@ -32,6 +32,12 @@ class UserService(
         val errors = mutableListOf<String>()
         passwordValidator.validatePassword(password, errors)
         userValidator.validateUser(user, errors)
+        user.addresses.forEach {
+            addressValidator.validateCustomerAddress(it, errors)
+        }
+        if(user.addresses.size > 5) {
+            errors.add("Too many addresses")
+        }
         if(errors.isEmpty()) {
             val dbUser = User().apply {
                 name = user.name
@@ -57,7 +63,7 @@ class UserService(
         addressValidator.validateCustomerAddress(address, errors)
         val count = addressRepository.countAddressesByUser(user)
         val hasOtherAddress = count > 0
-        if(count > 5) {
+        if(count >= 5) {
             errors.add("Too many addresses")
         }
         val dbAddress = address.toAddress(user, !hasOtherAddress)

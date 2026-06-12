@@ -18,10 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith
 import java.time.OffsetDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @ExtendWith(MockKExtension::class)
 class LoginControllerTest {
@@ -46,7 +44,7 @@ class LoginControllerTest {
     val user = User(name, email, phone, organization, mutableListOf(address))
 
     val token = "token"
-    val expiration = OffsetDateTime.now()
+    val expiration = OffsetDateTime.now()!!
     val session = Session(user, token, expiration)
 
     @Test
@@ -88,7 +86,6 @@ class LoginControllerTest {
     @Test
     fun `logout-  if authenticator throws, return an error`() {
         every { authenticator.logout(token) } throws BadLoginException()
-        val request = LoginRequest("phone", "password", "org")
 
         val response = controller.logout(token)
         assertEquals(NetworkErrorType.BAD_AUTH.toString(), response.errorType)
@@ -99,7 +96,6 @@ class LoginControllerTest {
     @Test
     fun `logout-  if authenticator succeeds, return Success`() {
         every { authenticator.logout(token) } returns Unit
-        val request = LoginRequest("phone", "password", "org")
 
         val response = controller.logout(token)
         assertEquals(NetworkErrorType.NONE.toString(), response.errorType)
