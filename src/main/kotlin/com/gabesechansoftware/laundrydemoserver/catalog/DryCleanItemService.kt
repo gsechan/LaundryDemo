@@ -2,7 +2,6 @@ package com.gabesechansoftware.laundrydemoserver.catalog
 
 import com.gabesechansoftware.laundrydemoserver.Transaltion
 import com.gabesechansoftware.laundrydemoserver.findNameMatchingBestLocale
-import com.gabesechansoftware.laundrydemoserver.model.customerview.DryCleanItem as CustomerDryCleanItem
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItem
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.DryCleanItemRepository
 import org.springframework.stereotype.Service
@@ -13,13 +12,8 @@ import java.util.UUID
 class DryCleanItemService(
      private val dryCleanItemRepository: DryCleanItemRepository,
 ) {
-     fun getCustomerDryCleanItems(org: UUID, locale:String): List<CustomerDryCleanItem> {
-          return dryCleanItemRepository.findByOrganization(org).map { item->
-               val locales = listOf(locale, "en-US")
-               val translations = item.names.map { Transaltion(it.name!!, it.locale!!) }
-               val name = findNameMatchingBestLocale(translations, locales) ?: "Unknown Item"
-               CustomerDryCleanItem(item.id.toString(), name, item.price.toString())
-          }
+     fun getDryCleanItems(org: UUID, locale:String): List<DryCleanItem> {
+          return dryCleanItemRepository.findByOrganization(org)
 
      }
 

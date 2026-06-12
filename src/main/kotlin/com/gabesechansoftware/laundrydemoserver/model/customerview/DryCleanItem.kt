@@ -1,7 +1,18 @@
 package com.gabesechansoftware.laundrydemoserver.model.customerview
 
+import com.gabesechansoftware.laundrydemoserver.Transaltion
+import com.gabesechansoftware.laundrydemoserver.findNameMatchingBestLocale
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItem as DBDryCleanItem
+
 data class DryCleanItem(
     val id: String,
     val name: String,
     val price: String
 )
+
+fun DBDryCleanItem.toCustomer(locale: String): DryCleanItem {
+    val locales = listOf(locale, "en-US")
+    val translations = names.map { Transaltion(it.name!!, it.locale!!) }
+    val name = findNameMatchingBestLocale(translations, locales) ?: "Unknown Item"
+    return DryCleanItem(id.toString(), name, price.toString())
+}
