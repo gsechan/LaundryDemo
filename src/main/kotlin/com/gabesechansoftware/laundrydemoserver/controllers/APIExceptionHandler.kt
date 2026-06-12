@@ -1,6 +1,7 @@
 package com.gabesechansoftware.laundrydemoserver.controllers
 
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
+import com.gabesechansoftware.laundrydemoserver.EntityDoesNotExistException
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import org.springframework.http.HttpStatus
@@ -13,6 +14,11 @@ class APIExceptionHandler {
     @ExceptionHandler(APIErrorException::class)
     fun handleAPIError(ex: APIErrorException): ResponseEntity<NetworkResponse<Unit>> {
         return ResponseEntity.status(HttpStatus.OK).body(NetworkResponse(NetworkErrorType.API_SPECIFIC_ERROR, ex.errors))
+    }
+
+    @ExceptionHandler(EntityDoesNotExistException::class)
+    fun handleAPIError(ex: EntityDoesNotExistException): ResponseEntity<NetworkResponse<Unit>> {
+        return ResponseEntity.status(HttpStatus.OK).body(NetworkResponse(NetworkErrorType.ENTITY_DOES_NOT_EXIST, ex.message!!))
     }
 
 }
