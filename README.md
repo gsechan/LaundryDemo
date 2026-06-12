@@ -13,7 +13,7 @@ Every item that is uploaded from a user has a validator in models.validation.  T
 
 ## Controllers
 
-Controllers are all places in the controllers package.  Each controller  is in charge of 1 closely related set of endpoints provided to the user.  They should not have any business logic that's in the Services.  Their responsibility is to take data from the request and send it to the service, and take data from the Service and send it to the user.  It is responsible for any model conversion to specific forms, but not for gathering, filtering, or validating data.
+Controllers are all places in the controllers package.  Each controller  is in charge of 1 closely related set of endpoints provided to the user.  They should not have any business logic that's in the Services.  Their responsibility is to take data from the request and send it to the service, and take data from the Service and send it to the user.  It is responsible for any model conversion to specific forms, but not for gathering, filtering, or validating data.  In some cases where data is needed from multiple tables, the service may take over conversion as well, as doing it in the controller would require the controller to know too much about the db.
 
 ## Services
 

@@ -32,7 +32,6 @@ data class Order(
 )
 
 data class OrderLine(
-    val id: String,
     val itemType: String,
     val name: String,
     val pricePerUnit: String,
@@ -57,9 +56,8 @@ fun DBOrder.toCustomer(): Order {
 
 fun DBOrderLine.toCustomer(): OrderLine {
     return OrderLine(
-        this.id.toString(),
         this.itemType!!.toString(),
-        this.nameInEnglishLocale ?: this.nameInEnglishLocale ?: "Unknown Item",
+        this.nameInSubmittedLocale ?: this.nameInEnglishLocale ?: "Unknown item",
         this.pricePerUnit!!.toString(),
         this.quantity?.toString(),
         this.totalCost?.toString()
