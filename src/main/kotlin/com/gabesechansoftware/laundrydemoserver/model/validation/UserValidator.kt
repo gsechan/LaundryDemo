@@ -1,6 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.model.validation
 
-import com.gabesechansoftware.laundrydemoserver.model.customerview.User as CustomerUser
+import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadUser
 
 class UserValidator(
     private val phoneValidator: PhoneValidator = PhoneValidator(),
@@ -8,7 +8,7 @@ class UserValidator(
     private val addressValidator: AddressValidator = AddressValidator(),
 ) {
 
-    fun validateUser(user: CustomerUser, errors: MutableList<String>) {
+    fun validateUser(user: UploadUser, errors: MutableList<String>) {
         if(user.name.length < 2) {
             errors.add("Name too short")
         }
@@ -16,6 +16,11 @@ class UserValidator(
         emailValidator.validateEmail(user.email!!, errors)
         user.addresses.forEach { address ->
             addressValidator.validateCustomerAddress(address, errors)
+        }
+
+        //If this constraint is changed, must also change in UserService
+        if(user.addresses.size > 5) {
+            errors.add("Too many addresses")
         }
     }
 }

@@ -2,6 +2,8 @@ package com.gabesechansoftware.laundrydemoserver.users
 
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadAddress
+import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadUser
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.OrganizationRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.UserRepository
@@ -11,8 +13,6 @@ import com.gabesechansoftware.laundrydemoserver.model.validation.AddressValidato
 import com.gabesechansoftware.laundrydemoserver.model.validation.PasswordValidator
 import com.gabesechansoftware.laundrydemoserver.model.validation.UserValidator
 import jakarta.transaction.Transactional
-import com.gabesechansoftware.laundrydemoserver.model.customerview.Address as CustomerAddress
-import com.gabesechansoftware.laundrydemoserver.model.customerview.User as CustomerUser
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -28,26 +28,12 @@ class UserService(
 ) {
 
     @Transactional
-    fun createUser(user: CustomerUser, password: String, org: UUID): User {
+    fun createUser(user: UploadUser, password: String, org: UUID): User {
         val errors = mutableListOf<String>()
         passwordValidator.validatePassword(password, errors)
         userValidator.validateUser(user, errors)
-        user.addresses.forEach {
-            addressValidator.validateCustomerAddress(it, errors)
-        }
-        if(user.addresses.size > 5) {
-            errors.add("Too many addresses")
-        }
         if(errors.isEmpty()) {
-            val dbUser = User().apply {
-                name = user.name
-                email = user.email
-                phone = user.phone
-                organization = organizationRepository.getReferenceById(org)
-                addresses = user.addresses.mapIndexed { index, customerAddress ->
-                    customerAddress.toAddress(null, index == 0)
-                }.toMutableList()
-            }
+            val dbUser = user.toDBUser(organizationRepository.getReferenceById(org))
             userRepository.save(dbUser)
             loginAuthenticator.setPasswordForUser(dbUser, password)
             return dbUser
@@ -58,15 +44,20 @@ class UserService(
     }
 
 
-    fun addAddress(user: User, address: CustomerAddress): Address {
+    fun addAddress(user: User, address: UploadAddress): Address {
         val errors = mutableListOf<String>()
         addressValidator.validateCustomerAddress(address, errors)
-        val count = addressRepository.countAddressesByUser(user)
+        val count = user.addresses.size
         val hasOtherAddress = count > 0
+
+        /* TODO:  This constraint now needs to be known by the user validator and here.  Can we consolidate?
+         If we added the address to user now and validated him, that would work.  But validator works on uploaduser, would need to
+         either duplicate functionality there or convert-  this is less duplication and avoids conversion
+         */
         if(count >= 5) {
             errors.add("Too many addresses")
         }
-        val dbAddress = address.toAddress(user, !hasOtherAddress)
+        val dbAddress = address.toDBAddress(user, !hasOtherAddress)
         if(errors.isEmpty()) {
             addressRepository.save(dbAddress)
             user.addresses.add(dbAddress)
@@ -74,19 +65,6 @@ class UserService(
         }
         else {
             throw APIErrorException(errors)
-        }
-    }
-
-    private fun CustomerAddress.toAddress(user: User?, isDefault: Boolean): Address {
-        return Address().apply {
-            street1 = this@toAddress.street1
-            street2 = this@toAddress.street2
-            city = this@toAddress.city
-            state = this@toAddress.state
-            country = this@toAddress.country
-            postcode = this@toAddress.postcode
-            this.isDefault = isDefault
-            this.user = user
         }
     }
 

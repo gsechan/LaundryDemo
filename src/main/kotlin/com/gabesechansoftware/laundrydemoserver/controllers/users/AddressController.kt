@@ -2,6 +2,7 @@ package com.gabesechansoftware.laundrydemoserver.controllers.users
 
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import com.gabesechansoftware.laundrydemoserver.auth.AuthenticatedUser
+import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadAddress
 import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.users.UserService
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
-data class PostAddressRequest(val address: CustomerAddress)
+data class PostAddressRequest(val address: UploadAddress)
 data class PostAddressResponse(val user:CustomerUser)
 
 

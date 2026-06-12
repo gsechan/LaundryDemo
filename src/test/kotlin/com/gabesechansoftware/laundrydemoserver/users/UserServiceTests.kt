@@ -3,13 +3,13 @@ package com.gabesechansoftware.laundrydemoserver.users
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.assertSize
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
-import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
+import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadAddress
+import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadUser
 import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.OrganizationRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.UserRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
-import com.gabesechansoftware.laundrydemoserver.model.customerview.Address as CustomerAddress
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.validation.AddressValidator
 import io.mockk.Runs
@@ -45,7 +45,8 @@ class UserServiceTests {
 
     private val organization = Organization("Laundry", "en-US")
     private val user = User("Gabe","test@example.com","3128675309",organization,mutableListOf())
-    private val address = CustomerAddress("1","street1", "street2", "city", "state", "country", "code")
+    private val uploadUser = UploadUser("Gabe","test@example.com","3128675309",mutableListOf())
+    private val address = UploadAddress("street1", "street2", "city", "state", "country", "code")
 
     @BeforeTest
     fun setUp() {
@@ -54,7 +55,6 @@ class UserServiceTests {
 
     @Test
     fun `addAddress-  valid and no pre-existing addresses, adds as default`() {
-        every { addressRepository.countAddressesByUser(any()) } returns 0
         every { addressRepository.save(any()) } returnsArgument 0
 
         val result = userService.addAddress(user, address)
@@ -73,9 +73,8 @@ class UserServiceTests {
 
     @Test
     fun `addAddress-  valid with a pre-existing addresses, adds non-default`() {
-        every { addressRepository.countAddressesByUser(any()) } returns 1
         every { addressRepository.save(any()) } returnsArgument 0
-
+        user.addresses.add(address.toDBAddress(null, true))
         val result = userService.addAddress(user, address)
 
         verify { addressRepository.save(result) }
@@ -86,13 +85,12 @@ class UserServiceTests {
         assertEquals(address.country, result.country)
         assertEquals(address.postcode, result.postcode)
         assertFalse( result.isDefault!!)
-        assertSize(1, user.addresses)
-        assertEquals(result, user.addresses[0])
+        assertSize(2, user.addresses)
+        assertEquals(result, user.addresses[1])
     }
 
     @Test
     fun `addAddress-  valid with too many addresses, throws exception`() {
-        every { addressRepository.countAddressesByUser(any()) } returns 5
         every { addressRepository.save(any()) } returnsArgument 0
         repeat(5) {user.addresses.add(Address())}
 
@@ -104,7 +102,6 @@ class UserServiceTests {
     fun `addAddress-  validator failure throws exception`() {
         val mockValidator = mockk<AddressValidator>()
         val service = UserService(userRepository, loginAuthenticator, organizationRepository, addressRepository, mockValidator)
-        every { addressRepository.countAddressesByUser(any()) } returns 0
         every { addressRepository.save(any()) } returnsArgument 0
         every { mockValidator.validateCustomerAddress(any(), any()) } answers { (args[1] as MutableList<String>).add("Error") }
 
@@ -117,23 +114,24 @@ class UserServiceTests {
     fun `createUser-  invalid password throws exception`() {
         every { userRepository.save(any()) } returnsArgument 0
 
-        assertThrows<APIErrorException> { userService.createUser(user.toCustomer(), "1234", organization.id) }
+        assertThrows<APIErrorException> { userService.createUser(uploadUser, "1234", organization.id) }
         verify (exactly = 0){ userRepository.save(any()) }
     }
 
     @Test
     fun `createUser-  invalid user throws exception`() {
         every { userRepository.save(any()) } returnsArgument 0
-        val badUser = User("Gabe","test@example.com","31",organization,mutableListOf())
-        assertThrows<APIErrorException> { userService.createUser(badUser.toCustomer(), "12345678", organization.id) }
+        val badUser = UploadUser("Gabe","test@example.com","31",mutableListOf())
+        assertThrows<APIErrorException> { userService.createUser(badUser, "12345678", organization.id) }
         verify (exactly = 0){ userRepository.save(any()) }
     }
 
     @Test
-    fun `createUser-  too many adddresses throws exception`() {
+    fun `createUser-  too many addresses throws exception`() {
         every { userRepository.save(any()) } returnsArgument 0
-        repeat(6) {user.addresses.add(Address("a","b","c","d","e","f", false))}
-        assertThrows<APIErrorException> { userService.createUser(user.toCustomer(), "12345678", organization.id) }
+        val address =  UploadAddress("a","b","c","d","e","f")
+        val addresses = listOf(address, address, address, address, address, address)
+        assertThrows<APIErrorException> { userService.createUser(uploadUser.copy(addresses = addresses), "12345678", organization.id) }
         verify (exactly = 0){ userRepository.save(any()) }
     }
 
@@ -142,7 +140,7 @@ class UserServiceTests {
         every { userRepository.save(any()) } returnsArgument 0
         every { organizationRepository.getReferenceById(any()) } returns organization
         every { loginAuthenticator.setPasswordForUser(any(), any()) } just Runs
-        val result =  userService.createUser(user.toCustomer(), "12345678", organization.id)
+        val result =  userService.createUser(uploadUser, "12345678", organization.id)
         verify { userRepository.save(result) }
         verify { loginAuthenticator.setPasswordForUser(user, "12345678") }
     }

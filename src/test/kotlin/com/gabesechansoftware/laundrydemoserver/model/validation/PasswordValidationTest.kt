@@ -1,5 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.model.validation
 
+import com.gabesechansoftware.laundrydemoserver.assertEmpty
 import com.gabesechansoftware.laundrydemoserver.assertNotEmpty
 import kotlin.test.Test
 
@@ -18,7 +19,7 @@ class PasswordValidationTest {
     fun `valid password allowed`() {
         val errors = mutableListOf<String>()
         passwordValidator.validatePassword("sdujh$(8uhNG", errors)
-        assertNotEmpty(errors)
+        assertEmpty(errors)
     }
 
 }

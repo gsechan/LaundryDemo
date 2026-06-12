@@ -2,6 +2,7 @@ package com.gabesechansoftware.laundrydemoserver.controllers.users
 
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
 import com.gabesechansoftware.laundrydemoserver.users.UserService
 import com.gabesechansoftware.laundrydemoserver.model.customerview.User as CustomerUser
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
 data class CreateUserRequest(
-    val user: CustomerUser,
+    val user: UploadUser,
     val password: String,
     val org: String,
 )

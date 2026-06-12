@@ -108,7 +108,6 @@ class OrderConversionTests {
         assertOrderLineEqual(line, result.lines[0])
 
     }
-    //Order, just test equality
 
     fun assertOrderLineEqual(dbline: DBOrderLine, customerLine: OrderLine) {
         assertEquals(dbline.itemType.toString(), customerLine.itemType)
