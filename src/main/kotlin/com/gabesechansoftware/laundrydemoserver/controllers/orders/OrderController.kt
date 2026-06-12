@@ -5,6 +5,7 @@ import com.gabesechansoftware.laundrydemoserver.auth.AuthenticatedUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.Order as CustomerOrder
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrder
+import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
 import com.gabesechansoftware.laundrydemoserver.orders.OrderService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -39,7 +40,7 @@ class OrderController(
     fun allOrders(
         @AuthenticatedUser authedUser: User,
     ): NetworkResponse<List<CustomerOrder>> {
-        val orders = orderService.getAllOrdersForCustomerView(authedUser)
-        return NetworkResponse(orders)
+        val orders = orderService.getAllOrders(authedUser)
+        return NetworkResponse(orders.map { it.toCustomer()})
     }
 }

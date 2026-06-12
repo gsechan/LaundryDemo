@@ -135,10 +135,10 @@ class OrderServiceTest {
     fun `getAllOrdersForCustomerView-  returns orders successfully and converted`() {
         every { orderRepository.findByUser(any()) } returns listOf(order1, order2)
 
-        val result = orderService.getAllOrdersForCustomerView(user)
+        val result = orderService.getAllOrders(user)
         assertSize(2, result)
-        assertEquals(order1.toCustomer(), result[0])
-        assertEquals(order2.toCustomer(), result[1])
+        assertEquals(order1, result[0])
+        assertEquals(order2, result[1])
     }
 
     @Test

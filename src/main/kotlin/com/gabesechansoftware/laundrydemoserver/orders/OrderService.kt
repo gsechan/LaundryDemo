@@ -18,7 +18,6 @@ import com.gabesechansoftware.laundrydemoserver.model.validation.OrderValidator
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.Instant
-import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
@@ -32,9 +31,8 @@ class OrderService(
     private val timeSource: TimeSource = TimeSource(),
 ) {
 
-    fun getAllOrdersForCustomerView(user: User): List<CustomerOrder> {
-        val orders = orderRepository.findByUser(user)
-        return orders.map { order -> order.toCustomer() }
+    fun getAllOrders(user: User): List<Order> {
+        return orderRepository.findByUser(user)
     }
 
     fun postUserOrder(uploadOrder: UploadOrder, authedUser: User, locale: String): Order {
