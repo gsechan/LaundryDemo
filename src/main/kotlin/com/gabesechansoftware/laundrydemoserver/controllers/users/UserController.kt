@@ -28,7 +28,7 @@ data class CreateUserResponse(
 )
 
 data class UpdateUserRequest(
-    val user: PatchUser?,
+    val user: PatchUser,
 )
 
 @RestController
@@ -53,9 +53,9 @@ class UserController(
     }
 
     @PatchMapping("/users/me")
-    fun updateLoggedInUser(@RequestBody requst: UpdateUserRequest, @AuthenticatedUser user: User) {
-        userService.updateUser(user, requst.user?.name, requst.user?.email, requst.user?.phone, requst.user?.password)
-
+    fun updateLoggedInUser(@RequestBody requst: UpdateUserRequest, @AuthenticatedUser user: User): NetworkResponse<CustomerUser> {
+        userService.updateUser(user, requst.user.name, requst.user.email, requst.user.phone, requst.user.password)
+        return NetworkResponse(user.toCustomer())
     }
 
 }
