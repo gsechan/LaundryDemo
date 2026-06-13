@@ -19,7 +19,7 @@ data class PostOrderRequest(
 )
 
 
-data class PostOrderResponse(val success: Boolean, val orderId: String)
+data class PostOrderResponse(val order: CustomerOrder)
 
 @RestController
 class OrderController(
@@ -33,7 +33,7 @@ class OrderController(
         @RequestHeader("Accept-Language") locale: String,
     ): NetworkResponse<PostOrderResponse> {
         val order = orderService.postUserOrder(request.order, authedUser, locale)
-        return NetworkResponse(PostOrderResponse(true, order.id.toString()))
+        return NetworkResponse(PostOrderResponse( order.toCustomer()))
     }
 
     @GetMapping("/orders")

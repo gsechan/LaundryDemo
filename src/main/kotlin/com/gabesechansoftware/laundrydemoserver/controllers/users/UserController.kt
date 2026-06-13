@@ -53,8 +53,8 @@ class UserController(
     }
 
     @PatchMapping("/users/me")
-    fun updateLoggedInUser(@RequestBody requst: UpdateUserRequest, @AuthenticatedUser user: User): NetworkResponse<CustomerUser> {
-        userService.updateUser(user, requst.user.name, requst.user.email, requst.user.phone, requst.user.password)
+    fun updateLoggedInUser(@RequestBody request: UpdateUserRequest, @AuthenticatedUser user: User): NetworkResponse<CustomerUser> {
+        userService.updateUser(user, request.user.name, request.user.email, request.user.phone, request.user.password)
         return NetworkResponse(user.toCustomer())
     }
 

@@ -23,13 +23,13 @@ data class TimeRange(val startTime: Long, val endTime:Long) //Start and end of a
 class AvailableTimesController {
     @GetMapping("/availableTimes")
     fun availableTimes(): NetworkResponse<AvailableTimesResponse> {
-        val today = LocalDate.now(ZoneOffset.UTC).atStartOfDay()
-        val todayMs = today.toInstant(ZoneOffset.UTC).toEpochMilli()
+        val tomorrow = LocalDate.now(ZoneOffset.UTC).atStartOfDay().plusDays(1)
+        val tomorrowMs = tomorrow.toInstant(ZoneOffset.UTC).toEpochMilli()
         return NetworkResponse(
             AvailableTimesResponse(
                 pickup = listOf(
                     AvailableDateTime(
-                        date = todayMs,
+                        date = tomorrowMs,
                         times = listOf(
                             TimeRange(9*60*60*1000, 10*60*60*1000),
                             TimeRange(10*60*60*1000, 11*60*60*1000),
@@ -38,13 +38,13 @@ class AvailableTimesController {
                             )
                     ),
                     AvailableDateTime(
-                        date = today.plusDays(1).toInstant(ZoneOffset.UTC).toEpochMilli(),
+                        date = tomorrow.plusDays(1).toInstant(ZoneOffset.UTC).toEpochMilli(),
                         times = listOf(
                             TimeRange(10*60*60*1000, 11*60*60*1000),
                             )
                     ),
                     AvailableDateTime(
-                        date = today.plusDays(3).toInstant(ZoneOffset.UTC).toEpochMilli(),
+                        date = tomorrow.plusDays(3).toInstant(ZoneOffset.UTC).toEpochMilli(),
                         times = listOf(
                             TimeRange(10*60*60*1000, 11*60*60*1000),
                         )
@@ -53,7 +53,7 @@ class AvailableTimesController {
                 ),
                 delivery = listOf(
                     AvailableDateTime(
-                        date = todayMs,
+                        date = tomorrowMs,
                         times = listOf(
                             TimeRange(9*60*60*1000, 10*60*60*1000),
                             TimeRange(10*60*60*1000, 11*60*60*1000),
@@ -62,13 +62,13 @@ class AvailableTimesController {
                             )
                     ),
                     AvailableDateTime(
-                        date = today.plusDays(5).toInstant(ZoneOffset.UTC).toEpochMilli(),
+                        date = tomorrow.plusDays(5).toInstant(ZoneOffset.UTC).toEpochMilli(),
                         times = listOf(
                             TimeRange(10*60*60*1000, 11*60*60*1000),
                         )
                     ),
                     AvailableDateTime(
-                        date = today.plusDays(6).toInstant(ZoneOffset.UTC).toEpochMilli(),
+                        date = tomorrow.plusDays(6).toInstant(ZoneOffset.UTC).toEpochMilli(),
                         times = listOf(
                             TimeRange(10*60*60*1000, 11*60*60*1000),
                         )

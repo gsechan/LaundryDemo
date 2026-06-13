@@ -9,6 +9,7 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.Passwo
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.SessionRepository
 import com.gabesechansoftware.laundrydemoserver.model.validation.PasswordValidator
+import jakarta.transaction.Transactional
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
@@ -56,6 +57,7 @@ class LoginAuthenticator(
         return session.user!!
     }
 
+    @Transactional
     fun logout(token: String) {
         sessionRepository.deleteByToken(token)
     }
