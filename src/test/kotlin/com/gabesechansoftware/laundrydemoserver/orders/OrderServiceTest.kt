@@ -61,66 +61,72 @@ class OrderServiceTest {
     private val organization = Organization("Laundry", "es-ES")
     private val pickupAddress = Address( street1 = "1")
     private val dropoffAddress = Address( street1 = "2")
-    private val user = User("Gabe","test@example.com","3128675309",organization,mutableListOf(pickupAddress, dropoffAddress))
+    private val user = User(
+        name = "Gabe",
+        email = "test@example.com",
+        phone = "3128675309",
+        organization = organization,
+        addresses = mutableListOf(pickupAddress, dropoffAddress),
+    )
     private val line1 = OrderLine(
-        "pants",
-        "en-US",
-        "pants",
-        "en-US",
-        "pants",
-        BigDecimal("1.00"),
-        BigDecimal("2.00"),
-        BigDecimal("2.00"),
-        ItemType.DRY_CLEANING,
+        nameInSubmittedLocale = "pants",
+        submittedLocale = "en-US",
+        nameInOrgLocale = "pants",
+        orgLocale = "en-US",
+        nameInEnglishLocale = "pants",
+        pricePerUnit = BigDecimal("1.00"),
+        quantity = BigDecimal("2.00"),
+        totalCost = BigDecimal("2.00"),
+        itemType = ItemType.DRY_CLEANING,
     )
     private val line2 = OrderLine(
-        "shirts",
-        "en-US",
-        "shirts",
-        "en-US",
-        "shirts",
-        BigDecimal("1.00"),
-        BigDecimal("2.00"),
-        BigDecimal("2.00"),
-        ItemType.DRY_CLEANING,
+        nameInSubmittedLocale = "shirts",
+        submittedLocale = "en-US",
+        nameInOrgLocale = "shirts",
+        orgLocale = "en-US",
+        nameInEnglishLocale = "shirts",
+        pricePerUnit = BigDecimal("1.00"),
+        quantity = BigDecimal("2.00"),
+        totalCost = BigDecimal("2.00"),
+        itemType = ItemType.DRY_CLEANING,
     )
     private val line3 = OrderLine(
-        "dress",
-        "en-US",
-        "dress",
-        "en-US",
-        "dress",
-        BigDecimal("1.00"),
-        null,
-        null,
-        ItemType.WASH_AND_FOLD,
+        nameInSubmittedLocale = "dress",
+        submittedLocale = "en-US",
+        nameInOrgLocale = "dress",
+        orgLocale = "en-US",
+        nameInEnglishLocale = "dress",
+        pricePerUnit = BigDecimal("1.00"),
+        quantity = null,
+        totalCost = null,
+        itemType = ItemType.WASH_AND_FOLD,
     )
 
 
     val order1 = Order(
-        user,
-        OrderState.SUBMITTED,
-        mutableListOf(line1, line2),
-        submitted,
-        lastChange,
-        completed,
-        scheduledPickup,
-        scheduledDropff,
-        dropoffAddress,
-        pickupAddress,
+        user = user,
+        state = OrderState.SUBMITTED,
+        lines = mutableListOf(line1, line2),
+        submitted = submitted,
+        lastChange = lastChange,
+        completed = completed,
+        scheduledPickup = scheduledPickup,
+        scheduledDropoff = scheduledDropff,
+        dropoffAddress = dropoffAddress,
+        pickupAddress = pickupAddress,
     )
 
     val order2 = Order(
-        user,
-        OrderState.SUBMITTED,
-        mutableListOf(line3),
-        submitted,
-        lastChange,
-        completed,
-        scheduledPickup,
-        scheduledDropff,
-        dropoffAddress,
-        pickupAddress,
+        user = user,
+        state = OrderState.SUBMITTED,
+        lines = mutableListOf(line3),
+        submitted = submitted,
+        lastChange = lastChange,
+        completed = completed,
+        scheduledPickup = scheduledPickup,
+        scheduledDropoff = scheduledDropff,
+        dropoffAddress = dropoffAddress,
+        pickupAddress = pickupAddress,
     )
 
     private val washFoldPrice = Item(organization.id, BigDecimal(1.0), mutableListOf(), ItemType.WASH_AND_FOLD)
@@ -171,7 +177,12 @@ class OrderServiceTest {
             } answers { (args[1] as MutableList<String>).add("Error") }
             every { orderRepository.save(any<Order>()) } returnsArgument 0
             val service =
-                OrderService(orderRepository, addressRepository,  itemService, mockValidator)
+                OrderService(
+                    orderRepository = orderRepository,
+                    addressRepository = addressRepository,
+                    itemService = itemService,
+                    orderValidator = mockValidator,
+                )
 
             val uploadLine1 = UploadOrderLine(
                 "1d6b04c5-fcae-45af-8782-9af3f980d5b1", null
@@ -180,11 +191,11 @@ class OrderServiceTest {
                 "3dbcaa3b-af68-4939-8fc1-22b44da261fb", "10.00"
             )
             val uploadOrder = UploadOrder(
-                listOf(uploadLine1, uploadLine2),
-                scheduledPickup.toInstant().toEpochMilli(),
-                scheduledDropff.toInstant().toEpochMilli(),
-                pickupAddress.id.toString(),
-                dropoffAddress.id.toString(),
+                lines = listOf(uploadLine1, uploadLine2),
+                scheduledPickup = scheduledPickup.toInstant().toEpochMilli(),
+                scheduledDropoff = scheduledDropff.toInstant().toEpochMilli(),
+                pickupAddress = pickupAddress.id.toString(),
+                dropoffAddress = dropoffAddress.id.toString(),
             )
 
             assertThrows<APIErrorException> {
@@ -226,19 +237,19 @@ class OrderServiceTest {
                 "3dbcaa3b-af68-4939-8fc1-22b44da261fb", "10.00"
             )
             val uploadOrder = UploadOrder(
-                listOf(uploadLine1, uploadLine2),
-                scheduledPickup.toInstant().toEpochMilli(),
-                scheduledDropff.toInstant().toEpochMilli(),
-                pickupAddress.id.toString(),
-                dropoffAddress.id.toString(),
+                lines = listOf(uploadLine1, uploadLine2),
+                scheduledPickup = scheduledPickup.toInstant().toEpochMilli(),
+                scheduledDropoff = scheduledDropff.toInstant().toEpochMilli(),
+                pickupAddress = pickupAddress.id.toString(),
+                dropoffAddress = dropoffAddress.id.toString(),
             )
             val timeSource = mockk<TimeSource>()
             every { timeSource.now() } returns now
             val service = OrderService(
-                orderRepository,
-                addressRepository,
-                itemService,
-                timeSource = timeSource
+                orderRepository = orderRepository,
+                addressRepository = addressRepository,
+                itemService = itemService,
+                timeSource = timeSource,
             )
 
             val result = service.postUserOrder(uploadOrder, user, "en-US")

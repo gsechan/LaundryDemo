@@ -34,7 +34,7 @@ class UserControllerTest {
         val org = Organization()
         val uploadUser = UploadUser("Gabe", "test@example.com", "3128675309", emptyList())
         val request = CreateUserRequest(uploadUser, "password", org.id.toString())
-        val user = User("Gabe", "test@example.com", "3128675309" )
+        val user = User(name = "Gabe", email = "test@example.com", phone = "3128675309")
         val session = Session(user, "ddd", TimeSource().now())
         every { userService.createUser(any(), any(), any()) } returns user
         every { loginAuthenticator.createSession(any()) } returns session
@@ -46,7 +46,7 @@ class UserControllerTest {
 
     @Test
     fun `getLoggedInUser returns converted user`() {
-        val user = User("Gabe", "test@example.com", "3128675309" )
+        val user = User(name = "Gabe", email = "test@example.com", phone = "3128675309")
         val result = userController.getLoggedInUser(user)
         assertEquals(NetworkErrorType.NONE.toString(), result.errorType)
         assertEquals(user.name, result.data!!.name)
@@ -54,8 +54,8 @@ class UserControllerTest {
 
     @Test
     fun `updateLoggedInUser returns converted user`() {
-        val user = User("Gabe", "test@example.com", "3128675309" )
-        every { userService.updateUser(any(), any(), any(), any(), any()) } returns user
+        val user = User(name = "Gabe", email = "test@example.com", phone = "3128675309")
+        every { userService.updateUser(user = any(), newName = any(), newEmail = any(), newPhone = any(), newPassword = any()) } returns user
         val patchUser = PatchUser(null, null, null, null)
         val request = UpdateUserRequest(patchUser)
         val result = userController.updateLoggedInUser(request, user)

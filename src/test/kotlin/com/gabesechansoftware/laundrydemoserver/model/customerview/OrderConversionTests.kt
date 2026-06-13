@@ -18,13 +18,13 @@ class OrderConversionTests {
     @Test
     fun `Order line converts with submitted locale name`() {
         val line = DBOrderLine(
-            "pants", "en-US",
-            "pantalones", "es-US",
-            "default",
-            BigDecimal.TWO,
-            BigDecimal.TEN,
-            BigDecimal.TEN.times(BigDecimal.TWO),
-            ItemType.DRY_CLEANING
+            nameInSubmittedLocale = "pants", submittedLocale = "en-US",
+            nameInOrgLocale = "pantalones", orgLocale = "es-US",
+            nameInEnglishLocale = "default",
+            pricePerUnit = BigDecimal.TWO,
+            quantity = BigDecimal.TEN,
+            totalCost = BigDecimal.TEN.times(BigDecimal.TWO),
+            itemType = ItemType.DRY_CLEANING
         )
 
         val result = line.toCustomer()
@@ -35,13 +35,13 @@ class OrderConversionTests {
     @Test
     fun `Order line converts with english locale name`() {
         val line = DBOrderLine(
-            null, "en-US",
-            "pantalones", "es-US",
-            "default",
-            BigDecimal.TWO,
-            BigDecimal.TEN,
-            BigDecimal.TEN.times(BigDecimal.TWO),
-            ItemType.DRY_CLEANING
+            nameInSubmittedLocale = null, submittedLocale = "en-US",
+            nameInOrgLocale = "pantalones", orgLocale = "es-US",
+            nameInEnglishLocale = "default",
+            pricePerUnit = BigDecimal.TWO,
+            quantity = BigDecimal.TEN,
+            totalCost = BigDecimal.TEN.times(BigDecimal.TWO),
+            itemType = ItemType.DRY_CLEANING
         )
 
         val result = line.toCustomer()
@@ -53,13 +53,13 @@ class OrderConversionTests {
     @Test
     fun `Order line converts with unknown item name`() {
         val line = DBOrderLine(
-            null, "en-US",
-            "pantalones", "es-US",
-            null,
-            BigDecimal.TWO,
-            BigDecimal.TEN,
-            BigDecimal.TEN.times(BigDecimal.TWO),
-            ItemType.DRY_CLEANING
+            nameInSubmittedLocale = null, submittedLocale = "en-US",
+            nameInOrgLocale = "pantalones", orgLocale = "es-US",
+            nameInEnglishLocale = null,
+            pricePerUnit = BigDecimal.TWO,
+            quantity = BigDecimal.TEN,
+            totalCost = BigDecimal.TEN.times(BigDecimal.TWO),
+            itemType = ItemType.DRY_CLEANING
         )
 
         val result = line.toCustomer()
@@ -71,13 +71,13 @@ class OrderConversionTests {
     @Test
     fun `Order line converts with null quantity and total price`() {
         val line = DBOrderLine(
-            null, "en-US",
-            "pantalones", "es-US",
-            null,
-            BigDecimal.TWO,
-            null,
-            null,
-            ItemType.DRY_CLEANING
+            nameInSubmittedLocale = null, submittedLocale = "en-US",
+            nameInOrgLocale = "pantalones", orgLocale = "es-US",
+            nameInEnglishLocale = null,
+            pricePerUnit = BigDecimal.TWO,
+            quantity = null,
+            totalCost = null,
+            itemType = ItemType.DRY_CLEANING
         )
 
         val result = line.toCustomer()
@@ -90,25 +90,25 @@ class OrderConversionTests {
         val timeSouce = TimeSource()
         val now = timeSouce.now()
         val line = DBOrderLine(
-            null, "en-US",
-            "pantalones", "es-US",
-            "default",
-            BigDecimal.TWO,
-            BigDecimal.TEN,
-            BigDecimal.TEN.times(BigDecimal.TWO),
-            ItemType.DRY_CLEANING
+            nameInSubmittedLocale = null, submittedLocale = "en-US",
+            nameInOrgLocale = "pantalones", orgLocale = "es-US",
+            nameInEnglishLocale = "default",
+            pricePerUnit = BigDecimal.TWO,
+            quantity = BigDecimal.TEN,
+            totalCost = BigDecimal.TEN.times(BigDecimal.TWO),
+            itemType = ItemType.DRY_CLEANING
         )
         val order = DBOrder(
-            User(),
-            OrderState.SUBMITTED,
-            mutableListOf(line),
-            now,
-            now.plusDays(1),
-            now.plusDays(2),
-            now.plusDays(3),
-            now.plusDays(4),
-            Address(),
-            Address(),
+            user = User(),
+            state = OrderState.SUBMITTED,
+            lines = mutableListOf(line),
+            submitted = now,
+            lastChange = now.plusDays(1),
+            completed = now.plusDays(2),
+            scheduledPickup = now.plusDays(3),
+            scheduledDropoff = now.plusDays(4),
+            dropoffAddress = Address(),
+            pickupAddress = Address(),
         )
         val result = order.toCustomer()
 
@@ -132,25 +132,25 @@ class OrderConversionTests {
         val timeSouce = TimeSource()
         val now = timeSouce.now()
         val line = DBOrderLine(
-            null, "en-US",
-            "pantalones", "es-US",
-            "default",
-            BigDecimal.TWO,
-            BigDecimal.TEN,
-            BigDecimal.TEN.times(BigDecimal.TWO),
-            ItemType.DRY_CLEANING
+            nameInSubmittedLocale = null, submittedLocale = "en-US",
+            nameInOrgLocale = "pantalones", orgLocale = "es-US",
+            nameInEnglishLocale = "default",
+            pricePerUnit = BigDecimal.TWO,
+            quantity = BigDecimal.TEN,
+            totalCost = BigDecimal.TEN.times(BigDecimal.TWO),
+            itemType = ItemType.DRY_CLEANING
         )
         val order = DBOrder(
-            User(),
-            OrderState.SUBMITTED,
-            mutableListOf(line),
-            now,
-            now.plusDays(1),
-            null,
-            now.plusDays(3),
-            now.plusDays(4),
-            Address(),
-            Address(),
+            user = User(),
+            state = OrderState.SUBMITTED,
+            lines = mutableListOf(line),
+            submitted = now,
+            lastChange = now.plusDays(1),
+            completed = null,
+            scheduledPickup = now.plusDays(3),
+            scheduledDropoff = now.plusDays(4),
+            dropoffAddress = Address(),
+            pickupAddress = Address(),
         )
         val result = order.toCustomer()
 

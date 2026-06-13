@@ -30,7 +30,7 @@ data class UploadUser(
     fun toDBUser(org: Organization): DBUser {
         // Use null as user, db will assign user when it uploads via hibernate save
         val convertedAddresses = addresses.mapIndexed { index, address -> address.toDBAddress(null, index == 0) }.toMutableList()
-        return DBUser(name, email, phone, org, convertedAddresses )
+        return DBUser(name = name, email = email, phone = phone, organization = org, addresses = convertedAddresses)
     }
 }
 
@@ -43,7 +43,16 @@ data class UploadAddress(
     val postcode: String
 ) {
     fun toDBAddress(user: DBUser?, isDefault: Boolean): DBAddress {
-        return DBAddress(street1, street2, city, state, country, postcode, isDefault, user)
+        return DBAddress(
+            street1 = street1,
+            street2 = street2,
+            city = city,
+            state = state,
+            country = country,
+            postcode = postcode,
+            isDefault = isDefault,
+            user = user,
+        )
     }
 }
 
@@ -61,5 +70,13 @@ fun DBUser.toCustomer(): User {
 }
 
 fun DBAddress.toCustomer(): Address {
-    return Address(id.toString(), street1!!, street2, city!!, state!!, country!!, postcode!!)
+    return Address(
+        id = id.toString(),
+        street1 = street1!!,
+        street2 = street2,
+        city = city!!,
+        state = state!!,
+        country = country!!,
+        postcode = postcode!!,
+    )
 }

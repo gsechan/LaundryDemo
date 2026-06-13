@@ -88,7 +88,7 @@ class LoginAuthenticatorTest {
         val timeSource = mockk<TimeSource>()
         val now = OffsetDateTime.now(ZoneOffset.UTC)
         every { timeSource.now() } returns now
-        val service = LoginAuthenticator(passwordRepo, sessionRepository, timeSource = timeSource)
+        val service = LoginAuthenticator(passwordRepo = passwordRepo, sessionRepository = sessionRepository, timeSource = timeSource)
 
         val session = service.createSession(user)
         assertNotNull(session.token)
@@ -120,7 +120,7 @@ class LoginAuthenticatorTest {
         //would only be able to test if the expiration date moved forward at all, or be flaky based on runtime
         val timeSource = mockk<TimeSource>()
         every { timeSource.now() } returns expire
-        val service = LoginAuthenticator(passwordRepo, sessionRepository, timeSource = timeSource)
+        val service = LoginAuthenticator(passwordRepo = passwordRepo, sessionRepository = sessionRepository, timeSource = timeSource)
 
         val result = service.authenticateToken(token)
         assertEquals(user, result)
@@ -184,7 +184,7 @@ class LoginAuthenticatorTest {
         val encoder = mockk<PasswordEncoder>()
         every { passwordRepo.save(any()) } returnsArgument 0
         every { encoder.encode(any()) } returns hashedPassword
-        val service = LoginAuthenticator(passwordRepo, sessionRepository, encoder)
+        val service = LoginAuthenticator(passwordRepo = passwordRepo, sessionRepository = sessionRepository, encoder = encoder)
         service.createPasswordForUser(user, unhashedPassword)
 
         verify { passwordRepo.save(
@@ -199,7 +199,7 @@ class LoginAuthenticatorTest {
         every { passwordRepo.save(any()) } returnsArgument 0
         every { validator.validatePassword(any(), any()) } answers {(args[1] as MutableList<String>).add("Error")}
 
-        val service = LoginAuthenticator(passwordRepo, sessionRepository, passwordValidator = validator)
+        val service = LoginAuthenticator(passwordRepo = passwordRepo, sessionRepository = sessionRepository, passwordValidator = validator)
         assertThrows<APIErrorException> {
             service.createPasswordForUser(user, unhashedPassword)
         }
@@ -220,7 +220,7 @@ class LoginAuthenticatorTest {
         every { validator.validatePassword(any(), any()) } answers {(args[1] as MutableList<String>).add("Error")}
         every { passwordRepo.findByOrganizationIdAndPhone(any(), any()) } returns Password()
 
-        val service = LoginAuthenticator(passwordRepo, sessionRepository, passwordValidator = validator)
+        val service = LoginAuthenticator(passwordRepo = passwordRepo, sessionRepository = sessionRepository, passwordValidator = validator)
         assertThrows<APIErrorException> {
             service.updatePasswordForUser(user, unhashedPassword)
         }
@@ -233,7 +233,7 @@ class LoginAuthenticatorTest {
         every { passwordRepo.findByOrganizationIdAndPhone(any(), any()) } returns Password()
         every { passwordRepo.save(any()) } returnsArgument 0
 
-        val service = LoginAuthenticator(passwordRepo, sessionRepository, encoder)
+        val service = LoginAuthenticator(passwordRepo = passwordRepo, sessionRepository = sessionRepository, encoder = encoder)
         service.updatePasswordForUser(user, unhashedPassword)
 
         verify { passwordRepo.save(match { it.hash == hashedPassword }) }

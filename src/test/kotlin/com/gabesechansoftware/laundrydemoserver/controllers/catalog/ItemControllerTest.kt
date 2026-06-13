@@ -28,7 +28,7 @@ class ItemControllerTest {
     @Test
     fun `getItems returns a converted version of the returned values`() {
         val org = Organization()
-        val user = User("Gabe", "test@example.com", "3128675309", org, mutableListOf())
+        val user = User(name = "Gabe", email = "test@example.com", phone = "3128675309", organization = org, addresses = mutableListOf())
         val name1 = ItemName(null, name = "Pants", locale = "en-US")
         val item1 = Item(org.id, BigDecimal.ONE, mutableListOf(name1), ItemType.DRY_CLEANING)
         val name2 = ItemName(null, name = "Wash and fold", locale = "en-US")
@@ -44,7 +44,7 @@ class ItemControllerTest {
     @Test
     fun `getItems returns an empty list when there are no items`() {
         val org = Organization()
-        val user = User("Gabe", "test@example.com", "3128675309", org, mutableListOf())
+        val user = User(name = "Gabe", email = "test@example.com", phone = "3128675309", organization = org, addresses = mutableListOf())
         every { itemService.getItems(org.id) } returns emptyList()
 
         val result = controller.getItems(user, "en-US")

@@ -18,7 +18,7 @@ class UserValidatorTest {
     @Test
     fun `name is invalid, an error is added`() {
         val org = Organization()
-        val user = User("a","test@example.com","3128675309",org,mutableListOf())
+        val user = User(name = "a", email = "test@example.com", phone = "3128675309", organization = org, addresses = mutableListOf())
         val errors = mutableListOf<String>()
         validator.validateUser(user, errors)
         assertNotEmpty(errors)
@@ -27,7 +27,7 @@ class UserValidatorTest {
     @Test
     fun `name is null, an error is added`() {
         val org = Organization()
-        val user = User(null,"test@example.com","3128675309",org,mutableListOf())
+        val user = User(name = null, email = "test@example.com", phone = "3128675309", organization = org, addresses = mutableListOf())
         val errors = mutableListOf<String>()
         validator.validateUser(user, errors)
         assertNotEmpty(errors)
@@ -36,7 +36,7 @@ class UserValidatorTest {
     @Test
     fun `phone is invalid, an error is added`() {
         val org = Organization()
-        val user = User("Gabe","test@example.com","123",org,mutableListOf())
+        val user = User(name = "Gabe", email = "test@example.com", phone = "123", organization = org, addresses = mutableListOf())
         val errors = mutableListOf<String>()
         validator.validateUser(user, errors)
         assertNotEmpty(errors)
@@ -46,7 +46,7 @@ class UserValidatorTest {
     @Test
     fun `phone is null, an error is added`() {
         val org = Organization()
-        val user = User("Gabe","test@example.com", null,org,mutableListOf())
+        val user = User(name = "Gabe", email = "test@example.com", phone = null, organization = org, addresses = mutableListOf())
         val errors = mutableListOf<String>()
         validator.validateUser(user, errors)
         assertNotEmpty(errors)
@@ -57,7 +57,7 @@ class UserValidatorTest {
     @Test
     fun `email is invalid, an error is added`() {
         val org = Organization()
-        val user = User("Gabe","xxx", "3128675309", org,mutableListOf())
+        val user = User(name = "Gabe", email = "xxx", phone = "3128675309", organization = org, addresses = mutableListOf())
         val errors = mutableListOf<String>()
         validator.validateUser(user, errors)
         assertNotEmpty(errors)
@@ -67,7 +67,7 @@ class UserValidatorTest {
     @Test
     fun `all valid, no errors`() {
         val org = Organization()
-        val user = User("Gabe","test@example.com","3128675309", org,mutableListOf())
+        val user = User(name = "Gabe", email = "test@example.com", phone = "3128675309", organization = org, addresses = mutableListOf())
         val errors = mutableListOf<String>()
         validator.validateUser(user, errors)
         assertEmpty(errors)
@@ -76,7 +76,7 @@ class UserValidatorTest {
     @Test
     fun `all valid with null email, no errors`() {
         val org = Organization()
-        val user = User("Gabe", null,"3128675309", org,mutableListOf())
+        val user = User(name = "Gabe", email = null, phone = "3128675309", organization = org, addresses = mutableListOf())
         val errors = mutableListOf<String>()
         validator.validateUser(user, errors)
         assertEmpty(errors)
@@ -85,8 +85,8 @@ class UserValidatorTest {
     @Test
     fun `too many addresses, adds an error`() {
         val org = Organization()
-        val address = Address("st",null,"city","state","country", "p")
-        val user = User("Gabe","test@example.com","3128675309", org, mutableListOf(address, address, address, address, address, address))
+        val address = Address(street1 = "st", street2 = null, city = "city", state = "state", country = "country", postcode = "p")
+        val user = User(name = "Gabe", email = "test@example.com", phone = "3128675309", organization = org, addresses = mutableListOf(address, address, address, address, address, address))
         val errors = mutableListOf<String>()
         validator.validateUser(user, errors)
         assertNotEmpty(errors)
@@ -97,8 +97,8 @@ class UserValidatorTest {
         val org = Organization()
         val addressValidator = mockk<AddressValidator>()
         every { addressValidator.validateAddress(any(), any()) } answers { (args[1] as MutableList<String>).add("Error") }
-        val address = Address("st",null,"city","state","country", "p")
-        val user = User("Gabe","test@example.com","3128675309",org, mutableListOf(address))
+        val address = Address(street1 = "st", street2 = null, city = "city", state = "state", country = "country", postcode = "p")
+        val user = User(name = "Gabe", email = "test@example.com", phone = "3128675309", organization = org, addresses = mutableListOf(address))
         val errors = mutableListOf<String>()
         val userValidator = UserValidator(addressValidator = addressValidator)
         userValidator.validateUser(user, errors)
@@ -108,8 +108,8 @@ class UserValidatorTest {
     @Test
     fun `organization is null, adds an error`() {
         val org = Organization()
-        val address = Address("st",null,"city","state","country", "p")
-        val user = User("Gabe","test@example.com","3128675309", null, mutableListOf(address, address, address, address, address, address))
+        val address = Address(street1 = "st", street2 = null, city = "city", state = "state", country = "country", postcode = "p")
+        val user = User(name = "Gabe", email = "test@example.com", phone = "3128675309", organization = null, addresses = mutableListOf(address, address, address, address, address, address))
         val errors = mutableListOf<String>()
         validator.validateUser(user, errors)
         assertNotEmpty(errors)

@@ -89,26 +89,26 @@ data class OrderLine(
 
 fun DBOrder.toCustomer(): Order {
     return Order(
-        id.toString(),
-        state!!.toString(),
-        completed?.toInstant()?.toEpochMilli(),
-        lastChange!!.toInstant().toEpochMilli(),
-        submitted!!.toInstant().toEpochMilli(),
-        scheduledPickup!!.toInstant().toEpochMilli(),
-        scheduledDropoff!!.toInstant().toEpochMilli(),
-        pickupAddress!!.id.toString(),
-        dropoffAddress!!.id.toString(),
-        lines.map { it.toCustomer() },
+        id = id.toString(),
+        state = state!!.toString(),
+        completed = completed?.toInstant()?.toEpochMilli(),
+        lastChange = lastChange!!.toInstant().toEpochMilli(),
+        submitted = submitted!!.toInstant().toEpochMilli(),
+        scheduledPickup = scheduledPickup!!.toInstant().toEpochMilli(),
+        scheduledDropoff = scheduledDropoff!!.toInstant().toEpochMilli(),
+        pickupAddressId = pickupAddress!!.id.toString(),
+        dropoffAddressId = dropoffAddress!!.id.toString(),
+        lines = lines.map { it.toCustomer() },
     )
 }
 
 fun DBOrderLine.toCustomer(): OrderLine {
     return OrderLine(
-        itemType!!.toString(),
-        nameInSubmittedLocale ?: this.nameInEnglishLocale ?: "Unknown item",
-        pricePerUnit!!.toString(),
-        quantity?.toString(),
-        totalCost?.toString()
+        itemType = itemType!!.toString(),
+        name = nameInSubmittedLocale ?: this.nameInEnglishLocale ?: "Unknown item",
+        pricePerUnit = pricePerUnit!!.toString(),
+        quantity = quantity?.toString(),
+        totalCost = totalCost?.toString()
     )
 }
 

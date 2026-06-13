@@ -10,16 +10,16 @@ import kotlin.test.assertEquals
 class UserConversionTests {
     @Test
     fun `toCustomer on Address converts correctly`() {
-        val address = DBAddress("s1","s2","city", "state", "country", "postalCode", true)
+        val address = DBAddress(street1 = "s1", street2 = "s2", city = "city", state = "state", country = "country", postcode = "postalCode", isDefault = true)
         val result = address.toCustomer()
         assertAddressEqual(address, result)
     }
 
     @Test
     fun `toCustomer on User converts correctly`() {
-        val address = DBAddress("s1","s2","city", "state", "country", "postalCode", true)
+        val address = DBAddress(street1 = "s1", street2 = "s2", city = "city", state = "state", country = "country", postcode = "postalCode", isDefault = true)
         val organization = Organization("Laundry","en-us")
-        val user = DBUser("Gabe","test@example.com", "3128675309", organization,mutableListOf(address) )
+        val user = DBUser(name = "Gabe", email = "test@example.com", phone = "3128675309", organization = organization, addresses = mutableListOf(address))
 
         val result = user.toCustomer()
         assertEquals(user.name, result.name)
@@ -32,10 +32,10 @@ class UserConversionTests {
 
     @Test
     fun `toCustomer on User puts default address first`() {
-        val address = DBAddress("s1","s2","city", "state", "country", "postalCode", false)
-        val address2 = DBAddress("s2","s2","city", "state", "country", "postalCode", true)
+        val address = DBAddress(street1 = "s1", street2 = "s2", city = "city", state = "state", country = "country", postcode = "postalCode", isDefault = false)
+        val address2 = DBAddress(street1 = "s2", street2 = "s2", city = "city", state = "state", country = "country", postcode = "postalCode", isDefault = true)
         val organization = Organization("Laundry","en-us")
-        val user = DBUser("Gabe","test@example.com", "3128675309", organization,mutableListOf(address, address2) )
+        val user = DBUser(name = "Gabe", email = "test@example.com", phone = "3128675309", organization = organization, addresses = mutableListOf(address, address2))
 
         val result = user.toCustomer()
         assertEquals(user.name, result.name)

@@ -31,8 +31,8 @@ class AddressControllerTest {
     fun `addAddress returns a converted version of the returned value`() {
         val org = Organization()
         val uploadAddress = UploadAddress("s1","s2", "city", "state", "country", "postcode")
-        val address = Address("s1","s2", "city", "state", "country", "postcode")
-        val user = User("Gabe", "test@example.com", "3128675309", org, mutableListOf())
+        val address = Address(street1 = "s1", street2 = "s2", city = "city", state = "state", country = "country", postcode = "postcode")
+        val user = User(name = "Gabe", email = "test@example.com", phone = "3128675309", organization = org, addresses = mutableListOf())
         every { userService.addAddress(any(),any()) } returns address
 
         val request = PostAddressRequest(uploadAddress)

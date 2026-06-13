@@ -49,7 +49,15 @@ class OrderControllerTests {
         val order1 = Order(state = OrderState.SUBMITTED, user = user, lines = mutableListOf(), scheduledPickup = now, scheduledDropoff = now,
             submitted = now, lastChange = now, dropoffAddress = Address(), pickupAddress = Address())
         every { orderService.postUserOrder(any(), any(), any()) } returns order1
-        val request = PostOrderRequest(UploadOrder(emptyList(), 0L, 0L, "", ""))
+        val request = PostOrderRequest(
+            UploadOrder(
+                lines = emptyList(),
+                scheduledPickup = 0L,
+                scheduledDropoff = 0L,
+                pickupAddress = "",
+                dropoffAddress = "",
+            )
+        )
         val result = orderController.newOrder(user, request, "en-US")
         assertEquals(NetworkErrorType.NONE.toString(), result.errorType)
         assertEquals(order1.id.toString(), result.data!!.order.id)

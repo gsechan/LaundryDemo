@@ -45,7 +45,7 @@ class UserServiceTests {
     private lateinit var userService: UserService
 
     private val organization = Organization("Laundry", "en-US")
-    private val user = User("Gabe","test@example.com","3128675309",organization,mutableListOf())
+    private val user = User(name = "Gabe", email = "test@example.com", phone = "3128675309", organization = organization, addresses = mutableListOf())
     private val uploadUser = UploadUser("Gabe","test@example.com","3128675309",mutableListOf())
     private val address = UploadAddress("street1", "street2", "city", "state", "country", "code")
 
@@ -102,7 +102,13 @@ class UserServiceTests {
     @Test
     fun `addAddress-  validator failure throws exception`() {
         val mockValidator = mockk<AddressValidator>()
-        val service = UserService(userRepository, loginAuthenticator, organizationRepository, addressRepository, mockValidator)
+        val service = UserService(
+            userRepository = userRepository,
+            loginAuthenticator = loginAuthenticator,
+            organizationRepository = organizationRepository,
+            addressRepository = addressRepository,
+            addressValidator = mockValidator,
+        )
         every { addressRepository.save(any()) } returnsArgument 0
         every { mockValidator.validateAddress(any(), any()) } answers { (args[1] as MutableList<String>).add("Error") }
 
@@ -145,17 +151,23 @@ class UserServiceTests {
         val validator = mockk<UserValidator>()
         every { validator.validateUser(any(), any()) } answers {(args[1] as MutableList<String>).add("Error")}
 
-        val service = UserService(userRepository, loginAuthenticator, organizationRepository, addressRepository, userValidator = validator)
+        val service = UserService(
+            userRepository = userRepository,
+            loginAuthenticator = loginAuthenticator,
+            organizationRepository = organizationRepository,
+            addressRepository = addressRepository,
+            userValidator = validator,
+        )
 
         assertThrows<APIErrorException> {
-            service.updateUser(user, "Me", "me@me.com", "3128675309", "newpassword")
+            service.updateUser(user = user, newName = "Me", newEmail = "me@me.com", newPhone = "3128675309", newPassword = "newpassword")
         }
     }
 
     @Test
     fun `updateUser-  name changes are saved`() {
         every { userRepository.save(any()) } returnsArgument 0
-        val result = userService.updateUser(user, "Me", null, null, null)
+        val result = userService.updateUser(user = user, newName = "Me", newEmail = null, newPhone = null, newPassword = null)
         assertEquals("Me", result.name)
         assertEquals("test@example.com", result.email)
         assertEquals("3128675309", result.phone)
@@ -167,7 +179,7 @@ class UserServiceTests {
     @Test
     fun `updateUser-  email changes are saved`() {
         every { userRepository.save(any()) } returnsArgument 0
-        val result = userService.updateUser(user, null, "me@example.com", null, null)
+        val result = userService.updateUser(user = user, newName = null, newEmail = "me@example.com", newPhone = null, newPassword = null)
         assertEquals("Gabe", result.name)
         assertEquals("me@example.com", result.email)
         assertEquals("3128675309", result.phone)
@@ -179,7 +191,7 @@ class UserServiceTests {
     @Test
     fun `updateUser-  phone changes are saved`() {
         every { userRepository.save(any()) } returnsArgument 0
-        val result = userService.updateUser(user, null, null, "3125882300", null)
+        val result = userService.updateUser(user = user, newName = null, newEmail = null, newPhone = "3125882300", newPassword = null)
         assertEquals("Gabe", result.name)
         assertEquals("test@example.com", result.email)
         assertEquals("3125882300", result.phone)
@@ -192,7 +204,7 @@ class UserServiceTests {
     fun `updateUser-  password changes are saved`() {
         every { userRepository.save(any()) } returnsArgument 0
         every { loginAuthenticator.updatePasswordForUser(any(), any()) } just Runs
-        val result = userService.updateUser(user, null, null, null, "newpassword")
+        val result = userService.updateUser(user = user, newName = null, newEmail = null, newPhone = null, newPassword = "newpassword")
         assertEquals("Gabe", result.name)
         assertEquals("test@example.com", result.email)
         assertEquals("3128675309", result.phone)

@@ -35,13 +35,13 @@ class LoginControllerTest {
     val state = "Illinois"
     val country = "USA"
     val postCode = "10022"
-    val address = Address(street1, street2, city, state, country, postCode)
+    val address = Address(street1 = street1, street2 = street2, city = city, state = state, country = country, postcode = postCode)
 
     val name = "Gabe"
     val email = "test@example.com"
     val phone = "3128675309"
     val organization = Organization("My Laundry", "en-US")
-    val user = User(name, email, phone, organization, mutableListOf(address))
+    val user = User(name = name, email = email, phone = phone, organization = organization, addresses = mutableListOf(address))
 
     val token = "token"
     val expiration = OffsetDateTime.now()!!
