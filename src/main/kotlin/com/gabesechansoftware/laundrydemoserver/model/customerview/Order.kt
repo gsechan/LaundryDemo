@@ -1,7 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.model.customerview
 
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.itemNameForLocale
-import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
 import java.math.BigDecimal
 import java.time.Instant
@@ -41,12 +40,11 @@ data class UploadOrder(
 data class UploadOrderLine(
     val itemId: String,
     val quantity: String?,
-    val itemType: String,
 ) {
     fun toDBOrderLine(item: DBItem, submittedLocale: String, orgLocale: String,
        ): DBOrderLine {
 
-        val requestItemType = enumValueOf<ItemType>(itemType)
+        val requestItemType = item.itemType
         val pricePerUnit = item.price
         val quantity =  quantity?.let { BigDecimal(it) }
         val totalCost = quantity?.times(pricePerUnit!!)

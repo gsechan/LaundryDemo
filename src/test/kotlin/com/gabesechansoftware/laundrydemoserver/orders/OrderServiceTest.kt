@@ -31,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.itemNameForLocale
@@ -122,7 +123,7 @@ class OrderServiceTest {
         pickupAddress,
     )
 
-    private val washFoldPrice = Item(organization.id, BigDecimal(1.0), mutableListOf())
+    private val washFoldPrice = Item(organization.id, BigDecimal(1.0), mutableListOf(), ItemType.WASH_AND_FOLD)
     val dryCleanItemName1 = ItemName(null, "Englsh", "en-US")
     val dryCleanItemName2 = ItemName(null, "Spanish", "es-ES")
     private val dryCleanItem = Item(organization.id, BigDecimal(1.0), mutableListOf(dryCleanItemName1, dryCleanItemName2))
@@ -173,10 +174,10 @@ class OrderServiceTest {
                 OrderService(orderRepository, addressRepository,  itemService, mockValidator)
 
             val uploadLine1 = UploadOrderLine(
-                "1d6b04c5-fcae-45af-8782-9af3f980d5b1", null, "WASH_AND_FOLD"
+                "1d6b04c5-fcae-45af-8782-9af3f980d5b1", null
             )
             val uploadLine2 = UploadOrderLine(
-                "3dbcaa3b-af68-4939-8fc1-22b44da261fb", "10.00", "DRY_CLEANING"
+                "3dbcaa3b-af68-4939-8fc1-22b44da261fb", "10.00"
             )
             val uploadOrder = UploadOrder(
                 listOf(uploadLine1, uploadLine2),
@@ -200,7 +201,8 @@ class OrderServiceTest {
 
             every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
             every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress
-            every { itemService.getItem(any(), any()) } returns dryCleanItem
+            every { itemService.getItem(any(), UUID.fromString("1d6b04c5-fcae-45af-8782-9af3f980d5b1")) } returns washFoldPrice
+            every { itemService.getItem(any(), UUID.fromString("3dbcaa3b-af68-4939-8fc1-22b44da261fb")) } returns dryCleanItem
             every {
                 itemNameForLocale(
                     any(),
@@ -218,10 +220,10 @@ class OrderServiceTest {
             every { orderRepository.save(any<Order>()) } returnsArgument 0
 
             val uploadLine1 = UploadOrderLine(
-                "1d6b04c5-fcae-45af-8782-9af3f980d5b1", null, "WASH_AND_FOLD"
+                "1d6b04c5-fcae-45af-8782-9af3f980d5b1", null
             )
             val uploadLine2 = UploadOrderLine(
-                "3dbcaa3b-af68-4939-8fc1-22b44da261fb", "10.00", "DRY_CLEANING"
+                "3dbcaa3b-af68-4939-8fc1-22b44da261fb", "10.00"
             )
             val uploadOrder = UploadOrder(
                 listOf(uploadLine1, uploadLine2),
@@ -281,46 +283,4 @@ class OrderServiceTest {
             assertEquals(ItemType.DRY_CLEANING, line.itemType)
         }
     }
-
-    @Test
-    fun `postUserOrder- line type other than wash and dry fails`() {
-        mockkStatic("com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemKt") {
-
-            every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
-            every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress
-            every { itemService.getItem(any(), any()) } returns dryCleanItem
-            every {
-                itemNameForLocale(
-                    any(),
-                    eq("en-US"),
-                    any()
-                )
-            } returns dryCleanItemName1.name
-            every {
-                itemNameForLocale(
-                    any(),
-                    eq("es-ES"),
-                    any()
-                )
-            } returns dryCleanItemName2.name
-
-            val uploadLine1 = UploadOrderLine(
-                "1d6b04c5-fcae-45af-8782-9af3f980d5b1", null, "OTHER"
-            )
-            val uploadOrder = UploadOrder(
-                listOf(uploadLine1),
-                scheduledPickup.toInstant().toEpochMilli(),
-                scheduledDropff.toInstant().toEpochMilli(),
-                pickupAddress.id.toString(),
-                dropoffAddress.id.toString(),
-            )
-
-            assertThrows<APIErrorException> {
-                orderService.postUserOrder(uploadOrder, user, "en-US")
-            }
-            verify(exactly = 0) { orderRepository.save(any()) }
-        }
-    }
-
-
 }
