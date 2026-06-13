@@ -8,10 +8,10 @@ import com.gabesechansoftware.laundrydemoserver.catalog.WashFoldService
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrder
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrderLine
 import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization
-import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItem
-import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItemName
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.Item
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemName
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.WashFoldPrice
-import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.ItemType
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderLine
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
@@ -128,9 +128,9 @@ class OrderServiceTest {
     )
 
     private val washFoldPrice = WashFoldPrice(BigDecimal(1.0), BigDecimal(2.0), organization.id)
-    val dryCleanItemName1 = DryCleanItemName(null, "Englsh", "en-US")
-    val dryCleanItemName2 = DryCleanItemName(null, "Spanish", "es-ES")
-    private val dryCleanItem = DryCleanItem(organization.id, BigDecimal(1.0), mutableListOf(dryCleanItemName1, dryCleanItemName2))
+    val dryCleanItemName1 = ItemName(null, "Englsh", "en-US")
+    val dryCleanItemName2 = ItemName(null, "Spanish", "es-ES")
+    private val dryCleanItem = Item(organization.id, BigDecimal(1.0), mutableListOf(dryCleanItemName1, dryCleanItemName2))
 
 
     @Test
@@ -145,7 +145,7 @@ class OrderServiceTest {
 
     @Test
     fun `postUserOrder- validator fails then we throw`() {
-        mockkStatic("com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItemKt") {
+        mockkStatic("com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemKt") {
             // test code here
 
             every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
@@ -202,7 +202,7 @@ class OrderServiceTest {
 
     @Test
     fun `postUserOrder- valid data is saved and converted`() {
-        mockkStatic("com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItemKt") {
+        mockkStatic("com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemKt") {
 
             every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
             every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress
@@ -292,7 +292,7 @@ class OrderServiceTest {
 
     @Test
     fun `postUserOrder- line type other than wash and dry fails`() {
-        mockkStatic("com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItemKt") {
+        mockkStatic("com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemKt") {
 
             every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
             every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress

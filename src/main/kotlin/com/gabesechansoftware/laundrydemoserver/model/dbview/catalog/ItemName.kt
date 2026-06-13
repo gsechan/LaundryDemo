@@ -7,8 +7,8 @@ import jakarta.persistence.Table
 import java.util.UUID
 
 @Entity
-@Table(name = "dry_clean_item_names")
-class DryCleanItemName(
+@Table(name = "item_names")
+class ItemName(
 
     @Column(name = "item_id", nullable = false)
     var itemId: UUID? = null,

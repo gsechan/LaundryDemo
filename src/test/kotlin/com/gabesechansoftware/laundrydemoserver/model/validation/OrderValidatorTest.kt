@@ -3,7 +3,7 @@ package com.gabesechansoftware.laundrydemoserver.model.validation
 import com.gabesechansoftware.laundrydemoserver.TimeSource
 import com.gabesechansoftware.laundrydemoserver.assertEmpty
 import com.gabesechansoftware.laundrydemoserver.assertNotEmpty
-import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.ItemType
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderLine
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState

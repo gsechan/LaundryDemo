@@ -1,7 +1,7 @@
 package com.gabesechansoftware.laundrydemoserver.model.customerview
 
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.getDryCleanItemNameForLocale
-import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.ItemType
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
 import java.math.BigDecimal
 import java.time.Instant
@@ -12,7 +12,7 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address as DBA
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User as DBUser
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order as DBOrder
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderLine as DBOrderLine
-import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItem as DBDryCleanItem
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.Item as DBItem
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.WashFoldPrice as DBWashFoldPrice
 
 data class UploadOrder(
@@ -44,7 +44,7 @@ data class UploadOrderLine(
     val quantity: String?,
     val itemType: String,
 ) {
-    fun toDBOrderLine(dryCleanItem: DBDryCleanItem, submittedLocale: String, orgLocale: String,
+    fun toDBOrderLine(dryCleanItem: DBItem, submittedLocale: String, orgLocale: String,
        ): DBOrderLine {
 
         val requestItemType = enumValueOf<ItemType>(itemType)
