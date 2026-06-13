@@ -1,7 +1,7 @@
 package com.gabesechansoftware.laundrydemoserver.model.validation
 
 import com.gabesechansoftware.laundrydemoserver.TimeSource
-import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.ItemType
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order
 
 class OrderValidator(private val timeSource: TimeSource = TimeSource()) {

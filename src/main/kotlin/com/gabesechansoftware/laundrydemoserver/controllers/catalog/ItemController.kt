@@ -2,8 +2,8 @@ package com.gabesechansoftware.laundrydemoserver.controllers.catalog
 
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import com.gabesechansoftware.laundrydemoserver.auth.AuthenticatedUser
-import com.gabesechansoftware.laundrydemoserver.catalog.DryCleanItemService
-import com.gabesechansoftware.laundrydemoserver.model.customerview.DryCleanItem
+import com.gabesechansoftware.laundrydemoserver.catalog.ItemService
+import com.gabesechansoftware.laundrydemoserver.model.customerview.Item
 import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import org.springframework.web.bind.annotation.GetMapping
@@ -11,21 +11,21 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RestController
 
 
-data class DryCleanItemsResponse(
-    val items: List<DryCleanItem>
+data class ItemsResponse(
+    val items: List<Item>
 )
 
 
 @RestController
-class DryCleanItemController(
-    private val dryCleanItemService: DryCleanItemService,
+class ItemController(
+    private val itemService: ItemService,
 ) {
-    @GetMapping("/dryCleanItem")
-    fun dryCleanItem(
+    @GetMapping("/items")
+    fun getItems(
         @AuthenticatedUser user: User,
         @RequestHeader("Accept-Language") locale: String,
-    ): NetworkResponse<DryCleanItemsResponse> {
-        val  items = dryCleanItemService.getDryCleanItems(user.organization!!.id).map { it.toCustomer(locale) }
-        return NetworkResponse(DryCleanItemsResponse(items))
+    ): NetworkResponse<ItemsResponse> {
+        val  items = itemService.getItems(user.organization!!.id).map { it.toCustomer(locale) }
+        return NetworkResponse(ItemsResponse(items))
     }
 }

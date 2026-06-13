@@ -5,6 +5,8 @@ import com.gabesechansoftware.laundrydemoserver.TranslationPicker
 import com.gabesechansoftware.laundrydemoserver.model.dbview.BaseEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.ForeignKey
 import jakarta.persistence.JoinColumn
@@ -14,11 +16,11 @@ import java.math.BigDecimal
 import java.util.UUID
 
 @Entity
-@Table(name = "dry_clean_items")
-class DryCleanItem(
+@Table(name = "items")
+class Item(
 
     @Column( name = "organization_id", nullable = false)
-    @JoinColumn(name = "organization_id", foreignKey = ForeignKey(name = "fk_dry_clean_organization_id"))
+    @JoinColumn(name = "organization_id", foreignKey = ForeignKey(name = "fk_items_orangization_id"))
     var organization: UUID? = null,
 
     @Column(nullable = false, precision = 10, scale = 2)
@@ -26,16 +28,20 @@ class DryCleanItem(
 
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "item_id")
-    var names: MutableList<DryCleanItemName> = mutableListOf(),
+    var names: MutableList<ItemName> = mutableListOf(),
+
+    @Column(name = "item_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    var itemType: ItemType = ItemType.DRY_CLEANING,
 
 ): BaseEntity()
 
-fun getDryCleanItemNameForLocale(
-    dryCleanItem: DryCleanItem,
+fun itemNameForLocale(
+    item: Item,
     locale: String,
     translationPicker: TranslationPicker = TranslationPicker()
 ): String? {
     val locales = listOf(locale)
-    val translations = dryCleanItem.names.map { Transaltion(it.name!!, it.locale!!) }
+    val translations = item.names.map { Transaltion(it.name!!, it.locale!!) }
     return translationPicker.findNameMatchingBestLocale(translations, locales)
 }

@@ -3,15 +3,13 @@ package com.gabesechansoftware.laundrydemoserver.orders
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.TimeSource
 import com.gabesechansoftware.laundrydemoserver.assertSize
-import com.gabesechansoftware.laundrydemoserver.catalog.DryCleanItemService
-import com.gabesechansoftware.laundrydemoserver.catalog.WashFoldService
+import com.gabesechansoftware.laundrydemoserver.catalog.ItemService
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrder
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrderLine
 import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization
-import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItem
-import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItemName
-import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.WashFoldPrice
-import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.ItemType
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.Item
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemName
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderLine
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
@@ -33,9 +31,10 @@ import org.junit.jupiter.api.extension.ExtendWith
 import java.math.BigDecimal
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.getDryCleanItemNameForLocale
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.itemNameForLocale
 
 
 @ExtendWith(MockKExtension::class)
@@ -51,10 +50,7 @@ class OrderServiceTest {
     lateinit var addressRepository: AddressRepository
 
     @MockK
-    lateinit var washFoldService: WashFoldService
-
-    @MockK
-    lateinit var dryCleanItemService: DryCleanItemService
+    lateinit var itemService: ItemService
 
     private val now = OffsetDateTime.now(ZoneOffset.UTC)
     private val submitted = now.minusDays(2)
@@ -127,10 +123,10 @@ class OrderServiceTest {
         pickupAddress,
     )
 
-    private val washFoldPrice = WashFoldPrice(BigDecimal(1.0), BigDecimal(2.0), organization.id)
-    val dryCleanItemName1 = DryCleanItemName(null, "Englsh", "en-US")
-    val dryCleanItemName2 = DryCleanItemName(null, "Spanish", "es-ES")
-    private val dryCleanItem = DryCleanItem(organization.id, BigDecimal(1.0), mutableListOf(dryCleanItemName1, dryCleanItemName2))
+    private val washFoldPrice = Item(organization.id, BigDecimal(1.0), mutableListOf(), ItemType.WASH_AND_FOLD)
+    val dryCleanItemName1 = ItemName(null, "Englsh", "en-US")
+    val dryCleanItemName2 = ItemName(null, "Spanish", "es-ES")
+    private val dryCleanItem = Item(organization.id, BigDecimal(1.0), mutableListOf(dryCleanItemName1, dryCleanItemName2))
 
 
     @Test
@@ -145,22 +141,21 @@ class OrderServiceTest {
 
     @Test
     fun `postUserOrder- validator fails then we throw`() {
-        mockkStatic("com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItemKt") {
+        mockkStatic("com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemKt") {
             // test code here
 
             every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
             every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress
-            every { washFoldService.washFoldPriceInternal(any()) } returns washFoldPrice
-            every { dryCleanItemService.getDryCleanItem(any(), any()) } returns dryCleanItem
+            every { itemService.getItem(any(), any()) } returns dryCleanItem
             every {
-                getDryCleanItemNameForLocale(
+                itemNameForLocale(
                     any(),
                     eq("en-US"),
                     any()
                 )
             } returns dryCleanItemName1.name
             every {
-                getDryCleanItemNameForLocale(
+                itemNameForLocale(
                     any(),
                     eq("es-ES"),
                     any()
@@ -176,13 +171,13 @@ class OrderServiceTest {
             } answers { (args[1] as MutableList<String>).add("Error") }
             every { orderRepository.save(any<Order>()) } returnsArgument 0
             val service =
-                OrderService(orderRepository, addressRepository,  dryCleanItemService, washFoldService, mockValidator)
+                OrderService(orderRepository, addressRepository,  itemService, mockValidator)
 
             val uploadLine1 = UploadOrderLine(
-                "1d6b04c5-fcae-45af-8782-9af3f980d5b1", null, "WASH_AND_FOLD"
+                "1d6b04c5-fcae-45af-8782-9af3f980d5b1", null
             )
             val uploadLine2 = UploadOrderLine(
-                "3dbcaa3b-af68-4939-8fc1-22b44da261fb", "10.00", "DRY_CLEANING"
+                "3dbcaa3b-af68-4939-8fc1-22b44da261fb", "10.00"
             )
             val uploadOrder = UploadOrder(
                 listOf(uploadLine1, uploadLine2),
@@ -202,21 +197,21 @@ class OrderServiceTest {
 
     @Test
     fun `postUserOrder- valid data is saved and converted`() {
-        mockkStatic("com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItemKt") {
+        mockkStatic("com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemKt") {
 
             every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
             every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress
-            every { washFoldService.washFoldPriceInternal(any()) } returns washFoldPrice
-            every { dryCleanItemService.getDryCleanItem(any(), any()) } returns dryCleanItem
+            every { itemService.getItem(any(), UUID.fromString("1d6b04c5-fcae-45af-8782-9af3f980d5b1")) } returns washFoldPrice
+            every { itemService.getItem(any(), UUID.fromString("3dbcaa3b-af68-4939-8fc1-22b44da261fb")) } returns dryCleanItem
             every {
-                getDryCleanItemNameForLocale(
+                itemNameForLocale(
                     any(),
                     eq("en-US"),
                     any()
                 )
             } returns dryCleanItemName1.name
             every {
-                getDryCleanItemNameForLocale(
+                itemNameForLocale(
                     any(),
                     eq("es-ES"),
                     any()
@@ -225,10 +220,10 @@ class OrderServiceTest {
             every { orderRepository.save(any<Order>()) } returnsArgument 0
 
             val uploadLine1 = UploadOrderLine(
-                "1d6b04c5-fcae-45af-8782-9af3f980d5b1", null, "WASH_AND_FOLD"
+                "1d6b04c5-fcae-45af-8782-9af3f980d5b1", null
             )
             val uploadLine2 = UploadOrderLine(
-                "3dbcaa3b-af68-4939-8fc1-22b44da261fb", "10.00", "DRY_CLEANING"
+                "3dbcaa3b-af68-4939-8fc1-22b44da261fb", "10.00"
             )
             val uploadOrder = UploadOrder(
                 listOf(uploadLine1, uploadLine2),
@@ -242,8 +237,7 @@ class OrderServiceTest {
             val service = OrderService(
                 orderRepository,
                 addressRepository,
-                dryCleanItemService,
-                washFoldService,
+                itemService,
                 timeSource = timeSource
             )
 
@@ -267,11 +261,11 @@ class OrderServiceTest {
 
             assertSize(2, result.lines)
             var line = result.lines[0]
-            assertEquals("Wash and fold", line.nameInSubmittedLocale)
+            assertEquals(dryCleanItemName1.name, line.nameInSubmittedLocale)
             assertEquals("en-US", line.submittedLocale)
-            assertEquals("Wash and fold", line.nameInOrgLocale)
+            assertEquals(dryCleanItemName2.name, line.nameInOrgLocale)
             assertEquals(organization.defaultLocale, line.orgLocale)
-            assertEquals("Wash and fold", line.nameInEnglishLocale)
+            assertEquals(dryCleanItemName1.name, line.nameInEnglishLocale)
             assertEquals(washFoldPrice.price, line.pricePerUnit)
             assertNull(line.quantity)
             assertNull(line.totalCost)
@@ -289,47 +283,4 @@ class OrderServiceTest {
             assertEquals(ItemType.DRY_CLEANING, line.itemType)
         }
     }
-
-    @Test
-    fun `postUserOrder- line type other than wash and dry fails`() {
-        mockkStatic("com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItemKt") {
-
-            every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
-            every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress
-            every { washFoldService.washFoldPriceInternal(any()) } returns washFoldPrice
-            every { dryCleanItemService.getDryCleanItem(any(), any()) } returns dryCleanItem
-            every {
-                getDryCleanItemNameForLocale(
-                    any(),
-                    eq("en-US"),
-                    any()
-                )
-            } returns dryCleanItemName1.name
-            every {
-                getDryCleanItemNameForLocale(
-                    any(),
-                    eq("es-ES"),
-                    any()
-                )
-            } returns dryCleanItemName2.name
-
-            val uploadLine1 = UploadOrderLine(
-                "1d6b04c5-fcae-45af-8782-9af3f980d5b1", null, "OTHER"
-            )
-            val uploadOrder = UploadOrder(
-                listOf(uploadLine1),
-                scheduledPickup.toInstant().toEpochMilli(),
-                scheduledDropff.toInstant().toEpochMilli(),
-                pickupAddress.id.toString(),
-                dropoffAddress.id.toString(),
-            )
-
-            assertThrows<APIErrorException> {
-                orderService.postUserOrder(uploadOrder, user, "en-US")
-            }
-            verify(exactly = 0) { orderRepository.save(any()) }
-        }
-    }
-
-
 }

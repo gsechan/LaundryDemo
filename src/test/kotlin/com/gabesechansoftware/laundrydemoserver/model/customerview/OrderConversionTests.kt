@@ -2,7 +2,7 @@ package com.gabesechansoftware.laundrydemoserver.model.customerview
 
 import com.gabesechansoftware.laundrydemoserver.TimeSource
 import com.gabesechansoftware.laundrydemoserver.assertSize
-import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.ItemType
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User

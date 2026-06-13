@@ -1,14 +1,9 @@
 package com.gabesechansoftware.laundrydemoserver.model.dbview.orders
 
 import com.gabesechansoftware.laundrydemoserver.model.dbview.BaseEntity
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import jakarta.persistence.*
 import java.math.BigDecimal
-
-enum class ItemType {
-    WASH_AND_FOLD,
-    DRY_CLEANING,
-    OTHER,
-}
 
 @Entity
 @Table(name="order_lines")
