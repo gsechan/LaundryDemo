@@ -1,5 +1,7 @@
 package com.gabesechansoftware.laundrydemoserver.model.dbview.catalog
 
+import com.gabesechansoftware.laundrydemoserver.Transaltion
+import com.gabesechansoftware.laundrydemoserver.TranslationPicker
 import com.gabesechansoftware.laundrydemoserver.model.dbview.BaseEntity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -25,4 +27,15 @@ class DryCleanItem(
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "item_id")
     var names: MutableList<DryCleanItemName> = mutableListOf(),
+
 ): BaseEntity()
+
+fun getDryCleanItemNameForLocale(
+    dryCleanItem: DryCleanItem,
+    locale: String,
+    translationPicker: TranslationPicker = TranslationPicker()
+): String? {
+    val locales = listOf(locale)
+    val translations = dryCleanItem.names.map { Transaltion(it.name!!, it.locale!!) }
+    return translationPicker.findNameMatchingBestLocale(translations, locales)
+}
