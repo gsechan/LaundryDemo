@@ -4,13 +4,11 @@ import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.TimeSource
 import com.gabesechansoftware.laundrydemoserver.assertSize
 import com.gabesechansoftware.laundrydemoserver.catalog.DryCleanItemService
-import com.gabesechansoftware.laundrydemoserver.catalog.WashFoldService
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrder
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrderLine
 import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.Item
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemName
-import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.WashFoldPrice
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderLine
@@ -49,9 +47,6 @@ class OrderServiceTest {
 
     @MockK
     lateinit var addressRepository: AddressRepository
-
-    @MockK
-    lateinit var washFoldService: WashFoldService
 
     @MockK
     lateinit var dryCleanItemService: DryCleanItemService
@@ -127,7 +122,7 @@ class OrderServiceTest {
         pickupAddress,
     )
 
-    private val washFoldPrice = WashFoldPrice(BigDecimal(1.0), BigDecimal(2.0), organization.id)
+    private val washFoldPrice = Item(organization.id, BigDecimal(1.0), mutableListOf())
     val dryCleanItemName1 = ItemName(null, "Englsh", "en-US")
     val dryCleanItemName2 = ItemName(null, "Spanish", "es-ES")
     private val dryCleanItem = Item(organization.id, BigDecimal(1.0), mutableListOf(dryCleanItemName1, dryCleanItemName2))
@@ -150,7 +145,6 @@ class OrderServiceTest {
 
             every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
             every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress
-            every { washFoldService.washFoldPriceInternal(any()) } returns washFoldPrice
             every { dryCleanItemService.getDryCleanItem(any(), any()) } returns dryCleanItem
             every {
                 getDryCleanItemNameForLocale(
@@ -176,7 +170,7 @@ class OrderServiceTest {
             } answers { (args[1] as MutableList<String>).add("Error") }
             every { orderRepository.save(any<Order>()) } returnsArgument 0
             val service =
-                OrderService(orderRepository, addressRepository,  dryCleanItemService, washFoldService, mockValidator)
+                OrderService(orderRepository, addressRepository,  dryCleanItemService, mockValidator)
 
             val uploadLine1 = UploadOrderLine(
                 "1d6b04c5-fcae-45af-8782-9af3f980d5b1", null, "WASH_AND_FOLD"
@@ -206,7 +200,6 @@ class OrderServiceTest {
 
             every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
             every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress
-            every { washFoldService.washFoldPriceInternal(any()) } returns washFoldPrice
             every { dryCleanItemService.getDryCleanItem(any(), any()) } returns dryCleanItem
             every {
                 getDryCleanItemNameForLocale(
@@ -243,7 +236,6 @@ class OrderServiceTest {
                 orderRepository,
                 addressRepository,
                 dryCleanItemService,
-                washFoldService,
                 timeSource = timeSource
             )
 
@@ -267,11 +259,11 @@ class OrderServiceTest {
 
             assertSize(2, result.lines)
             var line = result.lines[0]
-            assertEquals("Wash and fold", line.nameInSubmittedLocale)
+            assertEquals(dryCleanItemName1.name, line.nameInSubmittedLocale)
             assertEquals("en-US", line.submittedLocale)
-            assertEquals("Wash and fold", line.nameInOrgLocale)
+            assertEquals(dryCleanItemName2.name, line.nameInOrgLocale)
             assertEquals(organization.defaultLocale, line.orgLocale)
-            assertEquals("Wash and fold", line.nameInEnglishLocale)
+            assertEquals(dryCleanItemName1.name, line.nameInEnglishLocale)
             assertEquals(washFoldPrice.price, line.pricePerUnit)
             assertNull(line.quantity)
             assertNull(line.totalCost)
@@ -296,7 +288,6 @@ class OrderServiceTest {
 
             every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
             every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress
-            every { washFoldService.washFoldPriceInternal(any()) } returns washFoldPrice
             every { dryCleanItemService.getDryCleanItem(any(), any()) } returns dryCleanItem
             every {
                 getDryCleanItemNameForLocale(

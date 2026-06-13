@@ -13,7 +13,6 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User as DBUser
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order as DBOrder
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderLine as DBOrderLine
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.Item as DBItem
-import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.WashFoldPrice as DBWashFoldPrice
 
 data class UploadOrder(
     val lines: List<UploadOrderLine>,
@@ -49,35 +48,11 @@ data class UploadOrderLine(
 
         val requestItemType = enumValueOf<ItemType>(itemType)
         val pricePerUnit = dryCleanItem.price
-        val quantity =  BigDecimal(quantity!!)
-        val totalCost = quantity.times(pricePerUnit!!)
+        val quantity =  quantity?.let { BigDecimal(it) }
+        val totalCost = quantity?.times(pricePerUnit!!)
         val nameInSubmitLocale = getDryCleanItemNameForLocale(dryCleanItem, submittedLocale)
         val nameInOrgsLocale = getDryCleanItemNameForLocale(dryCleanItem, orgLocale)
         val nameInDefaultLocale = getDryCleanItemNameForLocale(dryCleanItem, "en-US")
-
-        return DBOrderLine(
-            itemType = requestItemType,
-            pricePerUnit =  pricePerUnit,
-            quantity = quantity,
-            totalCost = totalCost,
-            nameInSubmittedLocale = nameInSubmitLocale,
-            submittedLocale = submittedLocale,
-            nameInOrgLocale = nameInOrgsLocale,
-            orgLocale = orgLocale,
-            nameInEnglishLocale = nameInDefaultLocale
-        )
-    }
-
-    fun toDBOrderLine(washFoldPrice: DBWashFoldPrice, submittedLocale: String, orgLocale: String,
-    ): DBOrderLine {
-
-        val requestItemType = enumValueOf<ItemType>(itemType)
-        val pricePerUnit = washFoldPrice.price
-        val quantity =  null
-        val totalCost = null
-        val nameInSubmitLocale = "Wash and fold"
-        val nameInOrgsLocale = "Wash and fold"
-        val nameInDefaultLocale = "Wash and fold"
 
         return DBOrderLine(
             itemType = requestItemType,
