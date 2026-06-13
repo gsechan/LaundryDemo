@@ -21,6 +21,12 @@ class BaseEntityTests {
     }
 
     @Test
+    fun `equals is false when called directly with a null argument`() {
+        val entity = Organization()
+        assertFalse(entity.equals(null))
+    }
+
+    @Test
     fun `equals is false for different types`() {
         val entity = Organization()
         val user  = User().apply { id = entity.id }

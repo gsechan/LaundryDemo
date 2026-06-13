@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import kotlin.String
 import kotlin.test.BeforeTest
+import kotlin.test.assertContains
 
 class OrderValidatorTest {
     val validator = OrderValidator()
@@ -320,5 +321,44 @@ class OrderValidatorTest {
 
         validator.validateOrder(order, errors, false)
         assertEmpty(errors)
+    }
+
+    @Test
+    fun `completed before submitted, that specific error is added`() {
+        val errors = mutableListOf<String>()
+        order.completed = order.submitted!!.minusDays(1)
+
+        validator.validateOrder(order, errors, true)
+        assertContains(errors, "The completed date must be before the submitted")
+    }
+
+    @Test
+    fun `completed after lastChange, that specific error is added`() {
+        val errors = mutableListOf<String>()
+        order.submitted = null
+        order.completed = order.lastChange!!.plusDays(1)
+
+        validator.validateOrder(order, errors, true)
+        assertContains(errors, "The completed date must be before the submitted")
+    }
+
+    @Test
+    fun `unknown item type, an error is added`() {
+        val errors = mutableListOf<String>()
+        val lineOther = OrderLine(
+            nameInSubmittedLocale = "misc",
+            submittedLocale = "en-US",
+            nameInOrgLocale = "misc",
+            orgLocale = "es-ES",
+            nameInEnglishLocale = "misc",
+            pricePerUnit = BigDecimal.ONE,
+            quantity = BigDecimal.ONE,
+            totalCost = BigDecimal.ONE,
+            itemType = ItemType.OTHER
+        )
+        order.lines.add(lineOther)
+
+        validator.validateOrder(order, errors, true)
+        assertContains(errors, "Unknown item type ${ItemType.OTHER}")
     }
 }
