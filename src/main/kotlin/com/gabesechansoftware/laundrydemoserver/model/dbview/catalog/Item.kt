@@ -36,12 +36,12 @@ class Item(
 
 ): BaseEntity()
 
-fun getDryCleanItemNameForLocale(
-    dryCleanItem: Item,
+fun itemNameForLocale(
+    item: Item,
     locale: String,
     translationPicker: TranslationPicker = TranslationPicker()
 ): String? {
     val locales = listOf(locale)
-    val translations = dryCleanItem.names.map { Transaltion(it.name!!, it.locale!!) }
+    val translations = item.names.map { Transaltion(it.name!!, it.locale!!) }
     return translationPicker.findNameMatchingBestLocale(translations, locales)
 }

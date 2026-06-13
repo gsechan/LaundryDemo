@@ -3,7 +3,7 @@ package com.gabesechansoftware.laundrydemoserver.orders
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.TimeSource
 import com.gabesechansoftware.laundrydemoserver.assertSize
-import com.gabesechansoftware.laundrydemoserver.catalog.DryCleanItemService
+import com.gabesechansoftware.laundrydemoserver.catalog.ItemService
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrder
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrderLine
 import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization
@@ -33,7 +33,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.getDryCleanItemNameForLocale
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.itemNameForLocale
 
 
 @ExtendWith(MockKExtension::class)
@@ -49,7 +49,7 @@ class OrderServiceTest {
     lateinit var addressRepository: AddressRepository
 
     @MockK
-    lateinit var dryCleanItemService: DryCleanItemService
+    lateinit var itemService: ItemService
 
     private val now = OffsetDateTime.now(ZoneOffset.UTC)
     private val submitted = now.minusDays(2)
@@ -145,16 +145,16 @@ class OrderServiceTest {
 
             every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
             every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress
-            every { dryCleanItemService.getDryCleanItem(any(), any()) } returns dryCleanItem
+            every { itemService.getItem(any(), any()) } returns dryCleanItem
             every {
-                getDryCleanItemNameForLocale(
+                itemNameForLocale(
                     any(),
                     eq("en-US"),
                     any()
                 )
             } returns dryCleanItemName1.name
             every {
-                getDryCleanItemNameForLocale(
+                itemNameForLocale(
                     any(),
                     eq("es-ES"),
                     any()
@@ -170,7 +170,7 @@ class OrderServiceTest {
             } answers { (args[1] as MutableList<String>).add("Error") }
             every { orderRepository.save(any<Order>()) } returnsArgument 0
             val service =
-                OrderService(orderRepository, addressRepository,  dryCleanItemService, mockValidator)
+                OrderService(orderRepository, addressRepository,  itemService, mockValidator)
 
             val uploadLine1 = UploadOrderLine(
                 "1d6b04c5-fcae-45af-8782-9af3f980d5b1", null, "WASH_AND_FOLD"
@@ -200,16 +200,16 @@ class OrderServiceTest {
 
             every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
             every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress
-            every { dryCleanItemService.getDryCleanItem(any(), any()) } returns dryCleanItem
+            every { itemService.getItem(any(), any()) } returns dryCleanItem
             every {
-                getDryCleanItemNameForLocale(
+                itemNameForLocale(
                     any(),
                     eq("en-US"),
                     any()
                 )
             } returns dryCleanItemName1.name
             every {
-                getDryCleanItemNameForLocale(
+                itemNameForLocale(
                     any(),
                     eq("es-ES"),
                     any()
@@ -235,7 +235,7 @@ class OrderServiceTest {
             val service = OrderService(
                 orderRepository,
                 addressRepository,
-                dryCleanItemService,
+                itemService,
                 timeSource = timeSource
             )
 
@@ -288,16 +288,16 @@ class OrderServiceTest {
 
             every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
             every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress
-            every { dryCleanItemService.getDryCleanItem(any(), any()) } returns dryCleanItem
+            every { itemService.getItem(any(), any()) } returns dryCleanItem
             every {
-                getDryCleanItemNameForLocale(
+                itemNameForLocale(
                     any(),
                     eq("en-US"),
                     any()
                 )
             } returns dryCleanItemName1.name
             every {
-                getDryCleanItemNameForLocale(
+                itemNameForLocale(
                     any(),
                     eq("es-ES"),
                     any()

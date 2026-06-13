@@ -2,7 +2,7 @@ package com.gabesechansoftware.laundrydemoserver.orders
 
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.TimeSource
-import com.gabesechansoftware.laundrydemoserver.catalog.DryCleanItemService
+import com.gabesechansoftware.laundrydemoserver.catalog.ItemService
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrder
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
@@ -16,7 +16,7 @@ import java.util.UUID
 class OrderService(
     private val orderRepository: OrderRepository,
     private val addressRepository: AddressRepository,
-    private val dryCleanItemService: DryCleanItemService,
+    private val itemService: ItemService,
     private val orderValidator: OrderValidator = OrderValidator(),
     private val timeSource: TimeSource = TimeSource(),
 ) {
@@ -36,8 +36,8 @@ class OrderService(
             addressRepository.getReferenceById(UUID.fromString(uploadOrder.dropoffAddress))
         )
         order.lines.addAll(uploadOrder.lines.map {
-            val dryCleanItem = dryCleanItemService.getDryCleanItem(org.id, UUID.fromString(it.itemId))
-            it.toDBOrderLine(dryCleanItem, locale, org.defaultLocale!!)
+            val item = itemService.getItem(org.id, UUID.fromString(it.itemId))
+            it.toDBOrderLine(item, locale, org.defaultLocale!!)
         }.toMutableList())
         orderValidator.validateOrder(order, errors, true)
 

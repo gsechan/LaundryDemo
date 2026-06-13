@@ -1,6 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.model.customerview
 
-import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.getDryCleanItemNameForLocale
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.itemNameForLocale
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
 import java.math.BigDecimal
@@ -43,16 +43,16 @@ data class UploadOrderLine(
     val quantity: String?,
     val itemType: String,
 ) {
-    fun toDBOrderLine(dryCleanItem: DBItem, submittedLocale: String, orgLocale: String,
+    fun toDBOrderLine(item: DBItem, submittedLocale: String, orgLocale: String,
        ): DBOrderLine {
 
         val requestItemType = enumValueOf<ItemType>(itemType)
-        val pricePerUnit = dryCleanItem.price
+        val pricePerUnit = item.price
         val quantity =  quantity?.let { BigDecimal(it) }
         val totalCost = quantity?.times(pricePerUnit!!)
-        val nameInSubmitLocale = getDryCleanItemNameForLocale(dryCleanItem, submittedLocale)
-        val nameInOrgsLocale = getDryCleanItemNameForLocale(dryCleanItem, orgLocale)
-        val nameInDefaultLocale = getDryCleanItemNameForLocale(dryCleanItem, "en-US")
+        val nameInSubmitLocale = itemNameForLocale(item, submittedLocale)
+        val nameInOrgsLocale = itemNameForLocale(item, orgLocale)
+        val nameInDefaultLocale = itemNameForLocale(item, "en-US")
 
         return DBOrderLine(
             itemType = requestItemType,
