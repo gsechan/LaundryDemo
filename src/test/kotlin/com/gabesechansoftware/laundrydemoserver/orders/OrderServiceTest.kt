@@ -236,4 +236,32 @@ class OrderServiceTest {
         assertEquals(BigDecimal(uploadLine2.quantity).times(dryCleanItem.price!!), line.totalCost)
         assertEquals(ItemType.DRY_CLEANING, line.itemType)
     }
+
+    @Test
+    fun `postUserOrder- line type other than wash and dry fails`() {
+        every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
+        every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress
+        every { washFoldService.washFoldPriceInternal(any()) } returns washFoldPrice
+        every { dryCleanItemService.getDryCleanItem(any(), any()) } returns dryCleanItem
+        every { dryCleanItemService.getDryCleanItemNameForLocale(any(), eq("en-US")) } returns dryCleanItemName1.name
+        every { dryCleanItemService.getDryCleanItemNameForLocale(any(), eq("es-ES")) } returns dryCleanItemName2.name
+
+        val uploadLine1 = UploadOrderLine(
+            "1d6b04c5-fcae-45af-8782-9af3f980d5b1", null, "OTHER"
+        )
+        val uploadOrder = UploadOrder(
+            listOf(uploadLine1),
+            scheduledPickup.toInstant().toEpochMilli(),
+            scheduledDropff.toInstant().toEpochMilli(),
+            pickupAddress.id.toString(),
+            dropoffAddress.id.toString(),
+        )
+
+        assertThrows<APIErrorException> {
+            orderService.postUserOrder(uploadOrder, user, "en-US")
+        }
+        verify(exactly = 0) { orderRepository.save(any()) }
+    }
+
+
 }

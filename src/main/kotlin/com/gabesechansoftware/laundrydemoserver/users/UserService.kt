@@ -24,7 +24,6 @@ class UserService(
     private val organizationRepository: OrganizationRepository,
     private val addressRepository: AddressRepository,
     private val addressValidator: AddressValidator = AddressValidator(),
-    private val passwordValidator: PasswordValidator = PasswordValidator(),
     private val userValidator: UserValidator = UserValidator(),
 ) {
 
@@ -32,7 +31,6 @@ class UserService(
     fun createUser(user: UploadUser, password: String, org: UUID): User {
         val errors = mutableListOf<String>()
         val dbUser = user.toDBUser(organizationRepository.getReferenceById(org))
-        passwordValidator.validatePassword(password, errors)
         userValidator.validateUser(dbUser, errors)
         if(errors.isEmpty()) {
             userRepository.save(dbUser)
@@ -71,30 +69,20 @@ class UserService(
     }
 
     @Transactional
-    fun updateUser(userId: UUID, newName: String?, newEmail: String?, newPhone: String?, newPassword: String?): User {
-        val row = userRepository.findById(userId)
+    fun updateUser(user:User, newName: String?, newEmail: String?, newPhone: String?, newPassword: String?): User {
         val errors = mutableListOf<String>()
-        if(row.isPresent) {
-            val user = row.get()
-            newName?.let { user.name = it }
-            newEmail?.let { user.name = it }
-            newPhone?.let { user.name = it }
-            userValidator.validateUser(user, errors)
-            if(newPassword != null) {
-                passwordValidator.validatePassword(newPassword, errors)
-            }
-            if(errors.isNotEmpty()) {
-                throw APIErrorException(errors)
-            }
-            userRepository.save(user)
-            if(newPassword != null) {
-                loginAuthenticator.updatePasswordForUser(user, newPassword)
-            }
-            return user
+        newName?.let { user.name = it }
+        newEmail?.let { user.email = it }
+        newPhone?.let { user.phone = it }
+        userValidator.validateUser(user, errors)
+        if(errors.isNotEmpty()) {
+            throw APIErrorException(errors)
         }
-        else {
-            throw EntityDoesNotExistException("User ${userId.toString()} does not exist")
+        userRepository.save(user)
+        if(newPassword != null) {
+            loginAuthenticator.updatePasswordForUser(user, newPassword)
         }
+        return user
     }
 
 }

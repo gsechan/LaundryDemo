@@ -54,7 +54,7 @@ class UserController(
 
     @PatchMapping("/users/me")
     fun updateLoggedInUser(@RequestBody requst: UpdateUserRequest, @AuthenticatedUser user: User) {
-        userService.updateUser(user.id, requst.user?.name, requst.user?.email, requst.user?.phone, requst.user?.password)
+        userService.updateUser(user, requst.user?.name, requst.user?.email, requst.user?.phone, requst.user?.password)
 
     }
 

@@ -1,12 +1,15 @@
 package com.gabesechansoftware.laundrydemoserver.auth
 
+import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.DatabaseDataInvalidException
 import com.gabesechansoftware.laundrydemoserver.TimeSource
+import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Password
 import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Session
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.PasswordRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.SessionRepository
+import com.gabesechansoftware.laundrydemoserver.model.validation.PasswordValidator
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
@@ -39,12 +42,12 @@ class LoginAuthenticatorTest {
 
     private val bcrypt = BCryptPasswordEncoder()
     private val orgId = UUID.randomUUID()
-    private val userId = UUID.randomUUID()
     private val phone = "2067140469"
     private val unhashedPassword = "password123"
     private val hashedPassword = bcrypt.encode(unhashedPassword)
 
-    private val user = User(phone = phone).apply { id = userId }
+    private val org = Organization()
+    private val user = User(phone = phone, organization = org)
     private val password = Password(hash = hashedPassword, user = user)
 
     @Test
@@ -59,6 +62,18 @@ class LoginAuthenticatorTest {
     @Test
     fun `authenticatePassword - non matching password throws BadLoginException`() {
         every { passwordRepo.findByOrganizationIdAndPhone(orgId, phone) } returns password
+
+        assertThrows<BadLoginException> {
+            authService.authenticatePassword(orgId, phone, "wrong")
+        }
+
+        verify(exactly = 0) { sessionRepository.save(any()) }
+    }
+
+
+    @Test
+    fun `authenticatePassword - no password found throws BadLoginException`() {
+        every { passwordRepo.findByOrganizationIdAndPhone(orgId, phone) } returns null
 
         assertThrows<BadLoginException> {
             authService.authenticatePassword(orgId, phone, "wrong")
@@ -165,7 +180,7 @@ class LoginAuthenticatorTest {
     }
 
     @Test
-    fun `setPasswordForUser-  password is saved, in an encoded form`() {
+    fun `createPasswordForUser-  password is saved, in an encoded form`() {
         val encoder = mockk<PasswordEncoder>()
         every { passwordRepo.save(any()) } returnsArgument 0
         every { encoder.encode(any()) } returns hashedPassword
@@ -176,6 +191,52 @@ class LoginAuthenticatorTest {
             match { it.hash == hashedPassword }
         ) }
         verify { encoder.encode(unhashedPassword) }
+    }
+
+    @Test
+    fun `createPasswordForUser-  invalid password throws APIException`() {
+        val validator = mockk<PasswordValidator>()
+        every { passwordRepo.save(any()) } returnsArgument 0
+        every { validator.validatePassword(any(), any()) } answers {(args[1] as MutableList<String>).add("Error")}
+
+        val service = LoginAuthenticator(passwordRepo, sessionRepository, passwordValidator = validator)
+        assertThrows<APIErrorException> {
+            service.createPasswordForUser(user, unhashedPassword)
+        }
+    }
+
+    @Test
+    fun `updatePasswordForUser-  if previous password does not exist, throw`() {
+        every { passwordRepo.findByOrganizationIdAndPhone(any(), any()) } returns null
+
+        assertThrows<DatabaseDataInvalidException> {
+            authService.updatePasswordForUser(user, unhashedPassword)
+        }
+    }
+
+    @Test
+    fun `updatePasswordForUser-  if validator fails, throw`() {
+        val validator = mockk<PasswordValidator>()
+        every { validator.validatePassword(any(), any()) } answers {(args[1] as MutableList<String>).add("Error")}
+        every { passwordRepo.findByOrganizationIdAndPhone(any(), any()) } returns Password()
+
+        val service = LoginAuthenticator(passwordRepo, sessionRepository, passwordValidator = validator)
+        assertThrows<APIErrorException> {
+            service.updatePasswordForUser(user, unhashedPassword)
+        }
+    }
+
+    @Test
+    fun `updatePasswordForUser-  if everything valid, write to db`() {
+        val encoder = mockk<PasswordEncoder>()
+        every { encoder.encode(any()) } returns hashedPassword
+        every { passwordRepo.findByOrganizationIdAndPhone(any(), any()) } returns Password()
+        every { passwordRepo.save(any()) } returnsArgument 0
+
+        val service = LoginAuthenticator(passwordRepo, sessionRepository, encoder)
+        service.updatePasswordForUser(user, unhashedPassword)
+
+        verify { passwordRepo.save(match { it.hash == hashedPassword }) }
     }
 
 }

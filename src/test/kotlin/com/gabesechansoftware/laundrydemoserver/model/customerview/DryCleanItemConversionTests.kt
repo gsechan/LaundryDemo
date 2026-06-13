@@ -1,12 +1,8 @@
 package com.gabesechansoftware.laundrydemoserver.model.customerview
 
-import com.gabesechansoftware.laundrydemoserver.TranslationPicker
 import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItem
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.DryCleanItemName
-import io.mockk.every
-import io.mockk.mockk
-import org.aspectj.weaver.ast.Or
 import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -26,6 +22,15 @@ class DryCleanItemConversionTests {
         assertEquals(dryCleanItem.id.toString(), result.id)
         assertEquals(dryCleanItem.price.toString(), result.price)
         assertEquals(name2.name, result.name)
+    }
+
+    @Test
+    fun `Test unknown item returned on no locale match`() {
+        val organization = Organization()
+        val dryCleanItem = DryCleanItem(organization.id, BigDecimal.ONE, mutableListOf())
+
+        val result = dryCleanItem.toCustomer("en-CA")
+        assertEquals("Unknown Item", result.name)
     }
 
 }

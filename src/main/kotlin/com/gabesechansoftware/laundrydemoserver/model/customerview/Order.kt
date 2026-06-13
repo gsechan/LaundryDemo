@@ -44,23 +44,23 @@ fun DBOrder.toCustomer(): Order {
         id.toString(),
         state!!.toString(),
         completed?.toInstant()?.toEpochMilli(),
-        lastChange?.toInstant()?.toEpochMilli()!!,
-        submitted?.toInstant()?.toEpochMilli()!!,
-        scheduledPickup?.toInstant()?.toEpochMilli()!!,
-        scheduledDropoff?.toInstant()?.toEpochMilli()!!,
-        pickupAddress?.id?.toString()!!,
-        dropoffAddress?.id?.toString()!!,
+        lastChange!!.toInstant().toEpochMilli(),
+        submitted!!.toInstant().toEpochMilli(),
+        scheduledPickup!!.toInstant().toEpochMilli(),
+        scheduledDropoff!!.toInstant().toEpochMilli(),
+        pickupAddress!!.id.toString(),
+        dropoffAddress!!.id.toString(),
         lines.map { it.toCustomer() },
     )
 }
 
 fun DBOrderLine.toCustomer(): OrderLine {
     return OrderLine(
-        this.itemType!!.toString(),
-        this.nameInSubmittedLocale ?: this.nameInEnglishLocale ?: "Unknown item",
-        this.pricePerUnit!!.toString(),
-        this.quantity?.toString(),
-        this.totalCost?.toString()
+        itemType!!.toString(),
+        nameInSubmittedLocale ?: this.nameInEnglishLocale ?: "Unknown item",
+        pricePerUnit!!.toString(),
+        quantity?.toString(),
+        totalCost?.toString()
     )
 }
 

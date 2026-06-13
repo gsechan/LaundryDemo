@@ -12,6 +12,7 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.UserRe
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.validation.AddressValidator
+import com.gabesechansoftware.laundrydemoserver.model.validation.UserValidator
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -111,15 +112,6 @@ class UserServiceTests {
     }
 
     @Test
-    fun `createUser-  invalid password throws exception`() {
-        every { userRepository.save(any()) } returnsArgument 0
-        every { organizationRepository.getReferenceById(any()) } returns organization
-
-        assertThrows<APIErrorException> { userService.createUser(uploadUser, "1234", organization.id) }
-        verify (exactly = 0){ userRepository.save(any()) }
-    }
-
-    @Test
     fun `createUser-  invalid user throws exception`() {
         every { userRepository.save(any()) } returnsArgument 0
         every { organizationRepository.getReferenceById(any()) } returns organization
@@ -146,6 +138,67 @@ class UserServiceTests {
         val result =  userService.createUser(uploadUser, "12345678", organization.id)
         verify { userRepository.save(result) }
         verify { loginAuthenticator.createPasswordForUser(user, "12345678") }
+    }
+
+    @Test
+    fun `updateUser-  invalid user throws exception`() {
+        val validator = mockk<UserValidator>()
+        every { validator.validateUser(any(), any()) } answers {(args[1] as MutableList<String>).add("Error")}
+
+        val service = UserService(userRepository, loginAuthenticator, organizationRepository, addressRepository, userValidator = validator)
+
+        assertThrows<APIErrorException> {
+            service.updateUser(user, "Me", "me@me.com", "3128675309", "newpassword")
+        }
+    }
+
+    @Test
+    fun `updateUser-  name changes are saved`() {
+        every { userRepository.save(any()) } returnsArgument 0
+        val result = userService.updateUser(user, "Me", null, null, null)
+        assertEquals("Me", result.name)
+        assertEquals("test@example.com", result.email)
+        assertEquals("3128675309", result.phone)
+
+        verify { userRepository.save(result) }
+        verify(exactly = 0){ loginAuthenticator.updatePasswordForUser(any(), any()) }
+    }
+
+    @Test
+    fun `updateUser-  email changes are saved`() {
+        every { userRepository.save(any()) } returnsArgument 0
+        val result = userService.updateUser(user, null, "me@example.com", null, null)
+        assertEquals("Gabe", result.name)
+        assertEquals("me@example.com", result.email)
+        assertEquals("3128675309", result.phone)
+
+        verify { userRepository.save(result) }
+        verify(exactly = 0){ loginAuthenticator.updatePasswordForUser(any(), any()) }
+    }
+
+    @Test
+    fun `updateUser-  phone changes are saved`() {
+        every { userRepository.save(any()) } returnsArgument 0
+        val result = userService.updateUser(user, null, null, "3125882300", null)
+        assertEquals("Gabe", result.name)
+        assertEquals("test@example.com", result.email)
+        assertEquals("3125882300", result.phone)
+
+        verify { userRepository.save(result) }
+        verify(exactly = 0){ loginAuthenticator.updatePasswordForUser(any(), any()) }
+    }
+
+    @Test
+    fun `updateUser-  password changes are saved`() {
+        every { userRepository.save(any()) } returnsArgument 0
+        every { loginAuthenticator.updatePasswordForUser(any(), any()) } just Runs
+        val result = userService.updateUser(user, null, null, null, "newpassword")
+        assertEquals("Gabe", result.name)
+        assertEquals("test@example.com", result.email)
+        assertEquals("3128675309", result.phone)
+
+        verify { userRepository.save(result) }
+        verify(exactly = 1){ loginAuthenticator.updatePasswordForUser(user, "newpassword") }
     }
 
 }

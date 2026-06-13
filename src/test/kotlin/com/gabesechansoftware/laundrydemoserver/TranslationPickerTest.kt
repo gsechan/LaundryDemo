@@ -77,4 +77,10 @@ class TranslationPickerTest {
         assertNull(result)
     }
 
+    @Test
+    fun `findNameMatchingBestLocale - can match a language only locale`() {
+        val result = translationPicker.findNameMatchingBestLocale(listOf(translationEn), listOf("es-ES", "en"))
+        assertEquals(translationEn.name, result)
+    }
+
 }

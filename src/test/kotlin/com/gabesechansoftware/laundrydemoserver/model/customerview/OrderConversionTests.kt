@@ -9,6 +9,7 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order as DBOrder
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderLine as DBOrderLine
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNull
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 
@@ -68,6 +69,23 @@ class OrderConversionTests {
     }
 
     @Test
+    fun `Order line converts with null quantity and total price`() {
+        val line = DBOrderLine(
+            null, "en-US",
+            "pantalones", "es-US",
+            null,
+            BigDecimal.TWO,
+            null,
+            null,
+            ItemType.DRY_CLEANING
+        )
+
+        val result = line.toCustomer()
+        assertNull(result.quantity)
+        assertNull(result.totalCost)
+    }
+
+    @Test
     fun `Order converts correctly`() {
         val timeSouce = TimeSource()
         val now = timeSouce.now()
@@ -108,6 +126,49 @@ class OrderConversionTests {
         assertOrderLineEqual(line, result.lines[0])
 
     }
+
+    @Test
+    fun `Order converts correctly with null completed`() {
+        val timeSouce = TimeSource()
+        val now = timeSouce.now()
+        val line = DBOrderLine(
+            null, "en-US",
+            "pantalones", "es-US",
+            "default",
+            BigDecimal.TWO,
+            BigDecimal.TEN,
+            BigDecimal.TEN.times(BigDecimal.TWO),
+            ItemType.DRY_CLEANING
+        )
+        val order = DBOrder(
+            User(),
+            OrderState.SUBMITTED,
+            mutableListOf(line),
+            now,
+            now.plusDays(1),
+            null,
+            now.plusDays(3),
+            now.plusDays(4),
+            Address(),
+            Address(),
+        )
+        val result = order.toCustomer()
+
+        assertEquals(order.id.toString(), result.id)
+        assertEquals(order.state.toString(), result.state)
+        assertEquals(order.completed?.toInstant()?.toEpochMilli(), result.completed)
+        assertEquals(order.lastChange?.toInstant()?.toEpochMilli(), result.lastChange)
+        assertEquals(order.submitted?.toInstant()?.toEpochMilli(), result.submitted)
+        assertEquals(order.scheduledPickup?.toInstant()?.toEpochMilli(), result.scheduledPickup)
+        assertEquals(order.scheduledDropoff?.toInstant()?.toEpochMilli(), result.scheduledDropoff)
+        assertEquals(order.pickupAddress!!.id.toString(), result.pickupAddressId)
+        assertEquals(order.dropoffAddress!!.id.toString(), result.dropoffAddressId)
+
+        assertSize(1, result.lines)
+        assertOrderLineEqual(line, result.lines[0])
+
+    }
+
 
     fun assertOrderLineEqual(dbline: DBOrderLine, customerLine: OrderLine) {
         assertEquals(dbline.itemType.toString(), customerLine.itemType)
