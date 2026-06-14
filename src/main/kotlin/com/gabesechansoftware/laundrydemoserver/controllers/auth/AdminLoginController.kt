@@ -2,7 +2,7 @@ package com.gabesechansoftware.laundrydemoserver.controllers.auth
 
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
-import com.gabesechansoftware.laundrydemoserver.auth.AdminLoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.authentication.AdminLoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.Admin
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping

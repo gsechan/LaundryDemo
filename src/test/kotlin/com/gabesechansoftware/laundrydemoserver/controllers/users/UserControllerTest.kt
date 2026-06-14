@@ -2,7 +2,7 @@ package com.gabesechansoftware.laundrydemoserver.controllers.users
 
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.TimeSource
-import com.gabesechansoftware.laundrydemoserver.auth.UserLoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.authentication.UserLoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadUser
 import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization

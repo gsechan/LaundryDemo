@@ -3,8 +3,8 @@ package com.gabesechansoftware.laundrydemoserver.controllers.auth
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.assertEmpty
 import com.gabesechansoftware.laundrydemoserver.assertNotEmpty
-import com.gabesechansoftware.laundrydemoserver.auth.AdminLoginAuthenticator
-import com.gabesechansoftware.laundrydemoserver.auth.BadLoginException
+import com.gabesechansoftware.laundrydemoserver.authentication.AdminLoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.authentication.BadLoginException
 import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.Admin
 import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.AdminSession
 import io.mockk.every

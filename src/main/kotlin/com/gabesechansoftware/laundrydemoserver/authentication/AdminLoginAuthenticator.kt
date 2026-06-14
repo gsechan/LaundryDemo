@@ -1,4 +1,4 @@
-package com.gabesechansoftware.laundrydemoserver.auth
+package com.gabesechansoftware.laundrydemoserver.authentication
 
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.DatabaseDataInvalidException

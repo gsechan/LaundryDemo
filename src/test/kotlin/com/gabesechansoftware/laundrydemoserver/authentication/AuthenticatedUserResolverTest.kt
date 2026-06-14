@@ -1,4 +1,4 @@
-package com.gabesechansoftware.laundrydemoserver.auth
+package com.gabesechansoftware.laundrydemoserver.authentication
 
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import io.mockk.Runs

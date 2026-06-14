@@ -1,4 +1,4 @@
-package com.gabesechansoftware.laundrydemoserver.auth
+package com.gabesechansoftware.laundrydemoserver.authentication
 
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.DatabaseDataInvalidException
@@ -13,7 +13,6 @@ import jakarta.transaction.Transactional
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
-import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 

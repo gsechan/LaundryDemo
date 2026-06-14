@@ -2,7 +2,7 @@ package com.gabesechansoftware.laundrydemoserver.users
 
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.EntityDoesNotExistException
-import com.gabesechansoftware.laundrydemoserver.auth.UserLoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.authentication.UserLoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchAddress
 import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadAddress

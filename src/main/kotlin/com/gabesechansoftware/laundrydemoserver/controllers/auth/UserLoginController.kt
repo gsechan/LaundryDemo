@@ -2,7 +2,7 @@ package com.gabesechansoftware.laundrydemoserver.controllers.auth
 
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
-import com.gabesechansoftware.laundrydemoserver.auth.UserLoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.authentication.UserLoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
 import com.gabesechansoftware.laundrydemoserver.model.customerview.User as CustomerUser
 import org.springframework.web.bind.annotation.GetMapping

@@ -1,8 +1,7 @@
 package com.gabesechansoftware.laundrydemoserver.controllers.users
 
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
-import com.gabesechansoftware.laundrydemoserver.auth.AuthenticatedUser
-import com.gabesechansoftware.laundrydemoserver.model.customerview.Address
+import com.gabesechansoftware.laundrydemoserver.authentication.AuthenticatedUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchAddress
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadAddress
 import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer

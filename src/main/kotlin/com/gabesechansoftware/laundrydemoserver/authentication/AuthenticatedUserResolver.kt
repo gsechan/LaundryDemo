@@ -1,8 +1,8 @@
-package com.gabesechansoftware.laundrydemoserver.auth
+package com.gabesechansoftware.laundrydemoserver.authentication
 
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
-import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.Admin
+import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.core.MethodParameter
 import org.springframework.stereotype.Component
@@ -13,13 +13,13 @@ import org.springframework.web.method.support.ModelAndViewContainer
 import tools.jackson.databind.ObjectMapper
 
 @Component
-class AuthenticatedAdminResolver(
-    private val adminLoginAuthenticator: AdminLoginAuthenticator,
+class AuthenticatedUserResolver(
+    private val userLoginAuthenticator: UserLoginAuthenticator,
     private val objectMapper: ObjectMapper
 ) : HandlerMethodArgumentResolver {
 
     override fun supportsParameter(parameter: MethodParameter): Boolean {
-        return parameter.hasParameterAnnotation(AuthenticatedAdmin::class.java)
+        return parameter.hasParameterAnnotation(AuthenticatedUser::class.java)
     }
 
     override fun resolveArgument(
@@ -27,7 +27,7 @@ class AuthenticatedAdminResolver(
         mavContainer: ModelAndViewContainer?,
         webRequest: NativeWebRequest,
         binderFactory: WebDataBinderFactory?
-    ): Admin {
+    ): User {
         val token = webRequest.getHeader("Authorization")
             ?.removePrefix("Bearer ")
 
@@ -45,6 +45,6 @@ class AuthenticatedAdminResolver(
             throw BadAuthTokenException(token)
         }
 
-        return adminLoginAuthenticator.authenticateToken(token)
+        return userLoginAuthenticator.authenticateToken(token)
     }
 }

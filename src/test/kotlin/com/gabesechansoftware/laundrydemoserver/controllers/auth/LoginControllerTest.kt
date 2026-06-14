@@ -4,8 +4,8 @@ import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.assertEmpty
 import com.gabesechansoftware.laundrydemoserver.assertNotEmpty
 import com.gabesechansoftware.laundrydemoserver.assertSize
-import com.gabesechansoftware.laundrydemoserver.auth.BadLoginException
-import com.gabesechansoftware.laundrydemoserver.auth.UserLoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.authentication.BadLoginException
+import com.gabesechansoftware.laundrydemoserver.authentication.UserLoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization
 import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Session
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
