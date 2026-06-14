@@ -2,7 +2,7 @@ package com.gabesechansoftware.laundrydemoserver.users
 
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.EntityDoesNotExistException
-import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.authentication.UserLoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchAddress
 import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadAddress
@@ -10,11 +10,10 @@ import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.applyPatch
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.OrganizationRepository
-import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.UserRepository
+import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.customer.UserRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.validation.AddressValidator
-import com.gabesechansoftware.laundrydemoserver.model.validation.PasswordValidator
 import com.gabesechansoftware.laundrydemoserver.model.validation.UserValidator
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
@@ -23,7 +22,7 @@ import java.util.UUID
 @Service
 class UserService(
     private val userRepository: UserRepository,
-    private val loginAuthenticator: LoginAuthenticator,
+    private val userLoginAuthenticator: UserLoginAuthenticator,
     private val organizationRepository: OrganizationRepository,
     private val addressRepository: AddressRepository,
     private val addressValidator: AddressValidator = AddressValidator(),
@@ -37,7 +36,7 @@ class UserService(
         userValidator.validateUser(dbUser, errors)
         if(errors.isEmpty()) {
             userRepository.save(dbUser)
-            loginAuthenticator.createPasswordForUser(dbUser, password)
+            userLoginAuthenticator.createPasswordForUser(dbUser, password)
             return dbUser
         }
         else {
@@ -105,7 +104,7 @@ class UserService(
         }
         userRepository.save(user)
         if(patch.password != null) {
-            loginAuthenticator.updatePasswordForUser(user, patch.password)
+            userLoginAuthenticator.updatePasswordForUser(user, patch.password)
         }
         return user
     }

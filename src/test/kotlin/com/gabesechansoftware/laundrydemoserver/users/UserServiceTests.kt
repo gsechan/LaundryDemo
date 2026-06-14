@@ -3,7 +3,7 @@ package com.gabesechansoftware.laundrydemoserver.users
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.EntityDoesNotExistException
 import com.gabesechansoftware.laundrydemoserver.assertSize
-import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.authentication.UserLoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchAddress
 import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadAddress
@@ -11,7 +11,7 @@ import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadUser
 import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.OrganizationRepository
-import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.UserRepository
+import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.customer.UserRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.validation.AddressValidator
@@ -38,7 +38,7 @@ class UserServiceTests {
     @MockK
     private lateinit var userRepository: UserRepository
     @MockK
-    private lateinit var loginAuthenticator: LoginAuthenticator
+    private lateinit var userLoginAuthenticator: UserLoginAuthenticator
     @MockK
     private lateinit var organizationRepository: OrganizationRepository
     @MockK
@@ -107,7 +107,7 @@ class UserServiceTests {
         val mockValidator = mockk<AddressValidator>()
         val service = UserService(
             userRepository = userRepository,
-            loginAuthenticator = loginAuthenticator,
+            userLoginAuthenticator = userLoginAuthenticator,
             organizationRepository = organizationRepository,
             addressRepository = addressRepository,
             addressValidator = mockValidator,
@@ -143,10 +143,10 @@ class UserServiceTests {
     fun `createUser-  valid user passes`() {
         every { userRepository.save(any()) } returnsArgument 0
         every { organizationRepository.getReferenceById(any()) } returns organization
-        every { loginAuthenticator.createPasswordForUser(any(), any()) } just Runs
+        every { userLoginAuthenticator.createPasswordForUser(any(), any()) } just Runs
         val result =  userService.createUser(uploadUser, "12345678", organization.id)
         verify { userRepository.save(result) }
-        verify { loginAuthenticator.createPasswordForUser(user, "12345678") }
+        verify { userLoginAuthenticator.createPasswordForUser(user, "12345678") }
     }
 
     @Test
@@ -226,7 +226,7 @@ class UserServiceTests {
         val mockValidator = mockk<AddressValidator>()
         val service = UserService(
             userRepository = userRepository,
-            loginAuthenticator = loginAuthenticator,
+            userLoginAuthenticator = userLoginAuthenticator,
             organizationRepository = organizationRepository,
             addressRepository = addressRepository,
             addressValidator = mockValidator,
@@ -247,7 +247,7 @@ class UserServiceTests {
 
         val service = UserService(
             userRepository = userRepository,
-            loginAuthenticator = loginAuthenticator,
+            userLoginAuthenticator = userLoginAuthenticator,
             organizationRepository = organizationRepository,
             addressRepository = addressRepository,
             userValidator = validator,
@@ -267,7 +267,7 @@ class UserServiceTests {
         assertEquals("3128675309", result.phone)
 
         verify { userRepository.save(result) }
-        verify(exactly = 0){ loginAuthenticator.updatePasswordForUser(any(), any()) }
+        verify(exactly = 0){ userLoginAuthenticator.updatePasswordForUser(any(), any()) }
     }
 
     @Test
@@ -279,7 +279,7 @@ class UserServiceTests {
         assertEquals("3128675309", result.phone)
 
         verify { userRepository.save(result) }
-        verify(exactly = 0){ loginAuthenticator.updatePasswordForUser(any(), any()) }
+        verify(exactly = 0){ userLoginAuthenticator.updatePasswordForUser(any(), any()) }
     }
 
     @Test
@@ -291,20 +291,20 @@ class UserServiceTests {
         assertEquals("3125882300", result.phone)
 
         verify { userRepository.save(result) }
-        verify(exactly = 0){ loginAuthenticator.updatePasswordForUser(any(), any()) }
+        verify(exactly = 0){ userLoginAuthenticator.updatePasswordForUser(any(), any()) }
     }
 
     @Test
     fun `updateUser-  password changes are saved`() {
         every { userRepository.save(any()) } returnsArgument 0
-        every { loginAuthenticator.updatePasswordForUser(any(), any()) } just Runs
+        every { userLoginAuthenticator.updatePasswordForUser(any(), any()) } just Runs
         val result = userService.updateUser(user = user, patch = PatchUser(name = null, email = null, phone = null, password = "newpassword"))
         assertEquals("Gabe", result.name)
         assertEquals("test@example.com", result.email)
         assertEquals("3128675309", result.phone)
 
         verify { userRepository.save(result) }
-        verify(exactly = 1){ loginAuthenticator.updatePasswordForUser(user, "newpassword") }
+        verify(exactly = 1){ userLoginAuthenticator.updatePasswordForUser(user, "newpassword") }
     }
 
 }

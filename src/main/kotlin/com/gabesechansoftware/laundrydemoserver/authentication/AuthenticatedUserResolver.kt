@@ -1,4 +1,4 @@
-package com.gabesechansoftware.laundrydemoserver.auth
+package com.gabesechansoftware.laundrydemoserver.authentication
 
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
@@ -14,7 +14,7 @@ import tools.jackson.databind.ObjectMapper
 
 @Component
 class AuthenticatedUserResolver(
-    private val loginAuthenticator: LoginAuthenticator,
+    private val userLoginAuthenticator: UserLoginAuthenticator,
     private val objectMapper: ObjectMapper
 ) : HandlerMethodArgumentResolver {
 
@@ -45,6 +45,6 @@ class AuthenticatedUserResolver(
             throw BadAuthTokenException(token)
         }
 
-        return loginAuthenticator.authenticateToken(token)
+        return userLoginAuthenticator.authenticateToken(token)
     }
 }

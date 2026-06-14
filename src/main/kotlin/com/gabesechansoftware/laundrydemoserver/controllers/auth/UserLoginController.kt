@@ -2,7 +2,7 @@ package com.gabesechansoftware.laundrydemoserver.controllers.auth
 
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
-import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.authentication.UserLoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
 import com.gabesechansoftware.laundrydemoserver.model.customerview.User as CustomerUser
 import org.springframework.web.bind.annotation.GetMapping
@@ -27,19 +27,19 @@ data class CheckAuthRequest(val token: String)
 
 @RestController
 class LoginController(
-    private val loginAuthenticator: LoginAuthenticator
+    private val userLoginAuthenticator: UserLoginAuthenticator
 ) {
 
     @PostMapping("/login")
     fun login(
         @RequestBody request: LoginRequest): NetworkResponse<LoginResponse> {
         try {
-            val user = loginAuthenticator.authenticatePassword(
+            val user = userLoginAuthenticator.authenticatePassword(
                 UUID.fromString(request.organization),
                 request.phone,
                 request.password
             )
-            val session = loginAuthenticator.createSession(user)
+            val session = userLoginAuthenticator.createSession(user)
             return NetworkResponse(LoginResponse(session.token!!, session.user!!.toCustomer()))
         }
         catch (ex: Exception) {
@@ -54,7 +54,7 @@ class LoginController(
         //Can't use authenticated user because we need the actual token
         try {
             val token = authHeader.removePrefix("Bearer ")
-            loginAuthenticator.logout(token)
+            userLoginAuthenticator.logout(token)
         }
         catch (e: Exception) {
             e.printStackTrace()
@@ -67,7 +67,7 @@ class LoginController(
     fun checkAuth(
         @RequestBody request: CheckAuthRequest): NetworkResponse<CustomerUser> {
             try {
-                val user = loginAuthenticator.authenticateToken(request.token)
+                val user = userLoginAuthenticator.authenticateToken(request.token)
                 return NetworkResponse(  user.toCustomer())
             }
             catch (ex: Exception) {

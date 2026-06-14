@@ -1,4 +1,4 @@
-package com.gabesechansoftware.laundrydemoserver.auth
+package com.gabesechansoftware.laundrydemoserver.authentication
 
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.DatabaseDataInvalidException
@@ -13,12 +13,11 @@ import jakarta.transaction.Transactional
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
-import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 
 @Component
-class LoginAuthenticator(
+class UserLoginAuthenticator(
     private val passwordRepo: PasswordRepository,
     private val sessionRepository: SessionRepository,
     private val encoder: PasswordEncoder = BCryptPasswordEncoder(16),
@@ -48,7 +47,7 @@ class LoginAuthenticator(
 
     fun authenticateToken(token: String): User {
         val session = getSessionForToken(token)
-        if(session.expiration!!.toInstant().toEpochMilli() < Instant.now().toEpochMilli()) {
+        if(session.expiration!!.isBefore(timeSource.now())) {
             sessionRepository.deleteByToken(token)
             throw BadLoginException()
         }

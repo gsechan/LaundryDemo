@@ -1,4 +1,4 @@
-package com.gabesechansoftware.laundrydemoserver.auth
+package com.gabesechansoftware.laundrydemoserver.authentication
 
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import io.mockk.Runs
@@ -23,7 +23,7 @@ import kotlin.test.assertEquals
 class AuthenticatedUserResolverTest {
 
     @MockK
-    private lateinit var loginAuthenticator: LoginAuthenticator
+    private lateinit var userLoginAuthenticator: UserLoginAuthenticator
 
     @MockK
     private lateinit var objectMapper: ObjectMapper
@@ -69,13 +69,13 @@ class AuthenticatedUserResolverTest {
         }
 
         verify { mavContainer.isRequestHandled = true }
-        verify(exactly = 0) { loginAuthenticator.authenticateToken(any()) }
+        verify(exactly = 0) { userLoginAuthenticator.authenticateToken(any()) }
     }
 
     @Test
     fun `resolveArgument - header without Bearer prefix throws BadAuthTokenException`() {
         every { webRequest.getHeader("Authorization") } returns "sometoken123"
-        every { loginAuthenticator.authenticateToken("sometoken123") } throws BadAuthTokenException("sometoken123")
+        every { userLoginAuthenticator.authenticateToken("sometoken123") } throws BadAuthTokenException("sometoken123")
         setupFailureResponse()
 
         assertThrows<BadAuthTokenException> {
@@ -86,13 +86,13 @@ class AuthenticatedUserResolverTest {
     @Test
     fun `resolveArgument - valid Bearer token returns user from authenticateToken`() {
         every { webRequest.getHeader("Authorization") } returns "Bearer validtoken123"
-        every { loginAuthenticator.authenticateToken("validtoken123") } returns user
+        every { userLoginAuthenticator.authenticateToken("validtoken123") } returns user
 
         val result = resolver.resolveArgument(parameter, mavContainer, webRequest, null)
 
         assertEquals(user, result)
 
-        verify { loginAuthenticator.authenticateToken("validtoken123") }
+        verify { userLoginAuthenticator.authenticateToken("validtoken123") }
     }
 
     @Test

@@ -1,8 +1,8 @@
 package com.gabesechansoftware.laundrydemoserver.controllers.users
 
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
-import com.gabesechansoftware.laundrydemoserver.auth.AuthenticatedUser
-import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.authentication.AuthenticatedUser
+import com.gabesechansoftware.laundrydemoserver.authentication.UserLoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
@@ -34,7 +34,7 @@ data class UpdateUserRequest(
 @RestController
 class UserController(
     private val userService: UserService,
-    private val loginAuthenticator: LoginAuthenticator
+    private val userLoginAuthenticator: UserLoginAuthenticator
 ) {
 
     @PostMapping("/users")
@@ -43,7 +43,7 @@ class UserController(
         val user = request.user
         val password = request.password
         val resultUser = userService.createUser(user, password, orgId)
-        val session = loginAuthenticator.createSession(resultUser)
+        val session = userLoginAuthenticator.createSession(resultUser)
         return NetworkResponse(CreateUserResponse(session.token!!, resultUser.toCustomer()))
     }
 

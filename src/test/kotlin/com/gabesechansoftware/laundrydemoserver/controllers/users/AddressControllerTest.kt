@@ -1,8 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.controllers.users
 
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
-import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
-import com.gabesechansoftware.laundrydemoserver.controllers.auth.LoginController
 import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchAddress
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadAddress
 import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer

@@ -1,14 +1,14 @@
-package com.gabesechansoftware.laundrydemoserver.auth
+package com.gabesechansoftware.laundrydemoserver.authentication
 
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.method.support.HandlerMethodArgumentResolver
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
-class AuthenticatedUserConfig(
-    private val authenticatedUserResolver: AuthenticatedUserResolver
+class AuthenticatedAdminConfig(
+    private val authenticatedAdminResolver: AuthenticatedAdminResolver
 ) : WebMvcConfigurer {
     override fun addArgumentResolvers(resolvers: MutableList<HandlerMethodArgumentResolver>) {
-        resolvers.add(authenticatedUserResolver)
+        resolvers.add(authenticatedAdminResolver)
     }
 }
