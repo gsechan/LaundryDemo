@@ -3,6 +3,7 @@ package com.gabesechansoftware.laundrydemoserver.controllers.admin
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.admins.AdminService
 import com.gabesechansoftware.laundrydemoserver.admins.UploadAdmin
+import com.gabesechansoftware.laundrydemoserver.assertSize
 import com.gabesechansoftware.laundrydemoserver.authorization.AdminAuthorizationService
 import com.gabesechansoftware.laundrydemoserver.authorization.AdminPermissions
 import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.Admin
@@ -10,8 +11,11 @@ import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.just
+import io.mockk.Runs
 import io.mockk.verify
 import org.junit.jupiter.api.extension.ExtendWith
+import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -62,5 +66,71 @@ class AdminControllerTest {
         assertEquals("new@provider.com", response.data.email)
         assertEquals("2065551212", response.data.phone)
         verify { adminService.createAdmin(upload, "password123") }
+    }
+
+    @Test
+    fun `listAdmins - without admin-management permission returns NOT_AUTHORIZED and does not list`() {
+        every {
+            adminAuthorizationService.permissionsCheckAny(
+                listOf(AdminPermissions.CREATE_ADMIN, AdminPermissions.DELETE_ADMIN),
+                authedAdmin
+            )
+        } returns false
+
+        val response = controller.listAdmins(authedAdmin)
+
+        assertEquals(NetworkErrorType.NOT_AUTHORIZED.toString(), response.errorType)
+        assertNull(response.data)
+        verify(exactly = 0) { adminService.listAll() }
+    }
+
+    @Test
+    fun `listAdmins - with permission returns the admin views`() {
+        val admins = listOf(
+            Admin(name = "Gabe", email = "gabe@provider.com", phone = "3128675309"),
+            Admin(name = "Sue", email = "sue@provider.com", phone = "2065551212"),
+        )
+        every {
+            adminAuthorizationService.permissionsCheckAny(
+                listOf(AdminPermissions.CREATE_ADMIN, AdminPermissions.DELETE_ADMIN),
+                authedAdmin
+            )
+        } returns true
+        every { adminService.listAll() } returns admins
+
+        val response = controller.listAdmins(authedAdmin)
+
+        assertEquals(NetworkErrorType.NONE.toString(), response.errorType)
+        assertNotNull(response.data)
+        assertSize(2, response.data)
+        assertEquals("gabe@provider.com", response.data[0].email)
+        assertEquals("sue@provider.com", response.data[1].email)
+    }
+
+    @Test
+    fun `deleteAdmin - without DELETE_ADMIN returns NOT_AUTHORIZED and does not delete`() {
+        val id = UUID.randomUUID()
+        every {
+            adminAuthorizationService.permissionsCheckAll(listOf(AdminPermissions.DELETE_ADMIN), authedAdmin)
+        } returns false
+
+        val response = controller.deleteAdmin(id, authedAdmin)
+
+        assertEquals(NetworkErrorType.NOT_AUTHORIZED.toString(), response.errorType)
+        verify(exactly = 0) { adminService.deleteAdmin(any(), any()) }
+    }
+
+    @Test
+    fun `deleteAdmin - with DELETE_ADMIN deletes and returns success`() {
+        val id = UUID.randomUUID()
+        every {
+            adminAuthorizationService.permissionsCheckAll(listOf(AdminPermissions.DELETE_ADMIN), authedAdmin)
+        } returns true
+        every { adminService.deleteAdmin(authedAdmin, id) } just Runs
+
+        val response = controller.deleteAdmin(id, authedAdmin)
+
+        assertEquals(NetworkErrorType.NONE.toString(), response.errorType)
+        verify { adminService.deleteAdmin(authedAdmin, id) }
     }
 }
