@@ -112,8 +112,8 @@ class OrderServiceTest {
         completed = completed,
         scheduledPickup = scheduledPickup,
         scheduledDropoff = scheduledDropff,
-        dropoffAddress = dropoffAddress,
-        pickupAddress = pickupAddress,
+        pickupStreet1 = pickupAddress.street1,
+        dropoffStreet1 = dropoffAddress.street1,
     )
 
     val order2 = Order(
@@ -125,8 +125,8 @@ class OrderServiceTest {
         completed = completed,
         scheduledPickup = scheduledPickup,
         scheduledDropoff = scheduledDropff,
-        dropoffAddress = dropoffAddress,
-        pickupAddress = pickupAddress,
+        pickupStreet1 = pickupAddress.street1,
+        dropoffStreet1 = dropoffAddress.street1,
     )
 
     private val washFoldPrice = Item(organization.id, BigDecimal(1.0), mutableListOf(), ItemType.WASH_AND_FOLD)
@@ -172,9 +172,11 @@ class OrderServiceTest {
                 mockValidator.validateOrder(
                     any(),
                     any(),
+                    any(),
+                    any(),
                     any()
                 )
-            } answers { (args[1] as MutableList<String>).add("Error") }
+            } answers { (args[3] as MutableList<String>).add("Error") }
             every { orderRepository.save(any<Order>()) } returnsArgument 0
             val service =
                 OrderService(
@@ -267,8 +269,8 @@ class OrderServiceTest {
                 scheduledDropff.toInstant().toEpochMilli(),
                 result.scheduledDropoff!!.toInstant().toEpochMilli()
             )
-            assertEquals(dropoffAddress, result.dropoffAddress)
-            assertEquals(pickupAddress, result.pickupAddress)
+            assertEquals(dropoffAddress.street1, result.dropoffStreet1)
+            assertEquals(pickupAddress.street1, result.pickupStreet1)
 
             assertSize(2, result.lines)
             var line = result.lines[0]

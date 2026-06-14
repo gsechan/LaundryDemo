@@ -4,7 +4,6 @@ import com.gabesechansoftware.laundrydemoserver.TimeSource
 import com.gabesechansoftware.laundrydemoserver.assertSize
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
-import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order as DBOrder
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderLine as DBOrderLine
@@ -107,8 +106,18 @@ class OrderConversionTests {
             completed = now.plusDays(2),
             scheduledPickup = now.plusDays(3),
             scheduledDropoff = now.plusDays(4),
-            dropoffAddress = Address(),
-            pickupAddress = Address(),
+            pickupStreet1 = "pickup1",
+            pickupStreet2 = "pickup2",
+            pickupCity = "pickupCity",
+            pickupState = "pickupState",
+            pickupCountry = "pickupCountry",
+            pickupPostcode = "pickupPost",
+            dropoffStreet1 = "dropoff1",
+            dropoffStreet2 = "dropoff2",
+            dropoffCity = "dropoffCity",
+            dropoffState = "dropoffState",
+            dropoffCountry = "dropoffCountry",
+            dropoffPostcode = "dropoffPost",
         )
         val result = order.toCustomer()
 
@@ -119,8 +128,18 @@ class OrderConversionTests {
         assertEquals(order.submitted?.toInstant()?.toEpochMilli(), result.submitted)
         assertEquals(order.scheduledPickup?.toInstant()?.toEpochMilli(), result.scheduledPickup)
         assertEquals(order.scheduledDropoff?.toInstant()?.toEpochMilli(), result.scheduledDropoff)
-        assertEquals(order.pickupAddress!!.id.toString(), result.pickupAddressId)
-        assertEquals(order.dropoffAddress!!.id.toString(), result.dropoffAddressId)
+        assertEquals(order.pickupStreet1, result.pickupAddress.street1)
+        assertEquals(order.pickupStreet2, result.pickupAddress.street2)
+        assertEquals(order.pickupCity, result.pickupAddress.city)
+        assertEquals(order.pickupState, result.pickupAddress.state)
+        assertEquals(order.pickupCountry, result.pickupAddress.country)
+        assertEquals(order.pickupPostcode, result.pickupAddress.postcode)
+        assertEquals(order.dropoffStreet1, result.dropoffAddress.street1)
+        assertEquals(order.dropoffStreet2, result.dropoffAddress.street2)
+        assertEquals(order.dropoffCity, result.dropoffAddress.city)
+        assertEquals(order.dropoffState, result.dropoffAddress.state)
+        assertEquals(order.dropoffCountry, result.dropoffAddress.country)
+        assertEquals(order.dropoffPostcode, result.dropoffAddress.postcode)
 
         assertSize(1, result.lines)
         assertOrderLineEqual(line, result.lines[0])
@@ -149,8 +168,18 @@ class OrderConversionTests {
             completed = null,
             scheduledPickup = now.plusDays(3),
             scheduledDropoff = now.plusDays(4),
-            dropoffAddress = Address(),
-            pickupAddress = Address(),
+            pickupStreet1 = "pickup1",
+            pickupStreet2 = "pickup2",
+            pickupCity = "pickupCity",
+            pickupState = "pickupState",
+            pickupCountry = "pickupCountry",
+            pickupPostcode = "pickupPost",
+            dropoffStreet1 = "dropoff1",
+            dropoffStreet2 = "dropoff2",
+            dropoffCity = "dropoffCity",
+            dropoffState = "dropoffState",
+            dropoffCountry = "dropoffCountry",
+            dropoffPostcode = "dropoffPost",
         )
         val result = order.toCustomer()
 
@@ -161,8 +190,18 @@ class OrderConversionTests {
         assertEquals(order.submitted?.toInstant()?.toEpochMilli(), result.submitted)
         assertEquals(order.scheduledPickup?.toInstant()?.toEpochMilli(), result.scheduledPickup)
         assertEquals(order.scheduledDropoff?.toInstant()?.toEpochMilli(), result.scheduledDropoff)
-        assertEquals(order.pickupAddress!!.id.toString(), result.pickupAddressId)
-        assertEquals(order.dropoffAddress!!.id.toString(), result.dropoffAddressId)
+        assertEquals(order.pickupStreet1, result.pickupAddress.street1)
+        assertEquals(order.pickupStreet2, result.pickupAddress.street2)
+        assertEquals(order.pickupCity, result.pickupAddress.city)
+        assertEquals(order.pickupState, result.pickupAddress.state)
+        assertEquals(order.pickupCountry, result.pickupAddress.country)
+        assertEquals(order.pickupPostcode, result.pickupAddress.postcode)
+        assertEquals(order.dropoffStreet1, result.dropoffAddress.street1)
+        assertEquals(order.dropoffStreet2, result.dropoffAddress.street2)
+        assertEquals(order.dropoffCity, result.dropoffAddress.city)
+        assertEquals(order.dropoffState, result.dropoffAddress.state)
+        assertEquals(order.dropoffCountry, result.dropoffAddress.country)
+        assertEquals(order.dropoffPostcode, result.dropoffAddress.postcode)
 
         assertSize(1, result.lines)
         assertOrderLineEqual(line, result.lines[0])

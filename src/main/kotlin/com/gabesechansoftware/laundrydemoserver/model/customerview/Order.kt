@@ -30,8 +30,18 @@ data class UploadOrder(
             completed = null,
             scheduledPickup = Instant.ofEpochMilli(scheduledPickup).atOffset(ZoneOffset.UTC),
             scheduledDropoff = Instant.ofEpochMilli(scheduledDropoff).atOffset(ZoneOffset.UTC),
-            pickupAddress = pickupAddress,
-            dropoffAddress = dropoffAddress,
+            pickupStreet1 = pickupAddress.street1,
+            pickupStreet2 = pickupAddress.street2,
+            pickupCity = pickupAddress.city,
+            pickupState = pickupAddress.state,
+            pickupCountry = pickupAddress.country,
+            pickupPostcode = pickupAddress.postcode,
+            dropoffStreet1 = dropoffAddress.street1,
+            dropoffStreet2 = dropoffAddress.street2,
+            dropoffCity = dropoffAddress.city,
+            dropoffState = dropoffAddress.state,
+            dropoffCountry = dropoffAddress.country,
+            dropoffPostcode = dropoffAddress.postcode,
         )
 
     }
@@ -74,9 +84,18 @@ data class Order(
     val submitted: Long,
     val scheduledPickup: Long,
     val scheduledDropoff: Long,
-    val pickupAddressId: String,
-    val dropoffAddressId: String,
+    val pickupAddress: OrderAddress,
+    val dropoffAddress: OrderAddress,
     val lines: List<OrderLine>
+)
+
+data class OrderAddress(
+    val street1: String?,
+    val street2: String?,
+    val city: String?,
+    val state: String?,
+    val country: String?,
+    val postcode: String?,
 )
 
 data class OrderLine(
@@ -96,8 +115,22 @@ fun DBOrder.toCustomer(): Order {
         submitted = submitted!!.toInstant().toEpochMilli(),
         scheduledPickup = scheduledPickup!!.toInstant().toEpochMilli(),
         scheduledDropoff = scheduledDropoff!!.toInstant().toEpochMilli(),
-        pickupAddressId = pickupAddress!!.id.toString(),
-        dropoffAddressId = dropoffAddress!!.id.toString(),
+        pickupAddress = OrderAddress(
+            street1 = pickupStreet1,
+            street2 = pickupStreet2,
+            city = pickupCity,
+            state = pickupState,
+            country = pickupCountry,
+            postcode = pickupPostcode,
+        ),
+        dropoffAddress = OrderAddress(
+            street1 = dropoffStreet1,
+            street2 = dropoffStreet2,
+            city = dropoffCity,
+            state = dropoffState,
+            country = dropoffCountry,
+            postcode = dropoffPostcode,
+        ),
         lines = lines.map { it.toCustomer() },
     )
 }

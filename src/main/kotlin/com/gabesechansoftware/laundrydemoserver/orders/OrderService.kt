@@ -29,17 +29,19 @@ class OrderService(
         val org = authedUser.organization!!
         val now = timeSource.now()
         val errors = mutableListOf<String>()
+        val pickupAddress = addressRepository.getReferenceById(UUID.fromString(uploadOrder.pickupAddress))
+        val dropoffAddress = addressRepository.getReferenceById(UUID.fromString(uploadOrder.dropoffAddress))
         val order = uploadOrder.toDbOrder(
             authedUser,
             now,
-            addressRepository.getReferenceById(UUID.fromString(uploadOrder.pickupAddress)),
-            addressRepository.getReferenceById(UUID.fromString(uploadOrder.dropoffAddress))
+            pickupAddress,
+            dropoffAddress,
         )
         order.lines.addAll(uploadOrder.lines.map {
             val item = itemService.getItem(org.id, UUID.fromString(it.itemId))
             it.toDBOrderLine(item, locale, org.defaultLocale!!)
         }.toMutableList())
-        orderValidator.validateOrder(order, errors, true)
+        orderValidator.validateOrder(order, pickupAddress, dropoffAddress, errors, true)
 
         if(errors.isEmpty()) {
             orderRepository.save(order)

@@ -1,7 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.model.dbview.orders
 
 import com.gabesechansoftware.laundrydemoserver.model.dbview.BaseEntity
-import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
@@ -12,7 +11,6 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.OneToMany
-import jakarta.persistence.OneToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.TimeZoneStorage
 import org.hibernate.annotations.TimeZoneStorageType
@@ -63,11 +61,17 @@ class Order(
     @Column(columnDefinition = "TIMESTAMP(9)")
     var scheduledDropoff: OffsetDateTime? = null,
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "dropoff_address_id", nullable = false)
-    var dropoffAddress: Address? = null,
+    var pickupStreet1: String? = null,
+    var pickupStreet2: String? = null,
+    var pickupCity: String? = null,
+    var pickupState: String? = null,
+    var pickupCountry: String? = null,
+    var pickupPostcode: String? = null,
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pickup_address_id", nullable = false)
-    var pickupAddress: Address? = null,
+    var dropoffStreet1: String? = null,
+    var dropoffStreet2: String? = null,
+    var dropoffCity: String? = null,
+    var dropoffState: String? = null,
+    var dropoffCountry: String? = null,
+    var dropoffPostcode: String? = null,
 ): BaseEntity()

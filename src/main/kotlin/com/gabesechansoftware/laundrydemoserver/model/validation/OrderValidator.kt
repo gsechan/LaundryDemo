@@ -3,9 +3,19 @@ package com.gabesechansoftware.laundrydemoserver.model.validation
 import com.gabesechansoftware.laundrydemoserver.TimeSource
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order
+import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
 
-class OrderValidator(private val timeSource: TimeSource = TimeSource()) {
-    fun validateOrder(order: Order, errors: MutableList<String>, isNewOrder: Boolean = false) {
+class OrderValidator(
+    private val timeSource: TimeSource = TimeSource(),
+    private val addressValidator: AddressValidator = AddressValidator(),
+) {
+    fun validateOrder(
+        order: Order,
+        pickupAddress: Address?,
+        dropoffAddress: Address?,
+        errors: MutableList<String>,
+        isNewOrder: Boolean = false,
+    ) {
         if (order.lines.isEmpty()) {
             errors.add("There must be at least one line in an order")
         }
@@ -68,12 +78,18 @@ class OrderValidator(private val timeSource: TimeSource = TimeSource()) {
             errors.add("Pickup must be in the future")
         }
 
-        if(order.dropoffAddress == null) {
+        if(dropoffAddress == null) {
             errors.add("There must be a dropoff address")
         }
+        else {
+            addressValidator.validateAddress(dropoffAddress, errors)
+        }
 
-        if(order.pickupAddress == null) {
+        if(pickupAddress == null) {
             errors.add("There must be a pickup address")
+        }
+        else {
+            addressValidator.validateAddress(pickupAddress, errors)
         }
 
         order.lines.forEach { line ->
