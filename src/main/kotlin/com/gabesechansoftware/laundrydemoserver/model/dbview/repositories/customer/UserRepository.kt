@@ -1,4 +1,4 @@
-package com.gabesechansoftware.laundrydemoserver.model.dbview.repositories
+package com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.customer
 
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import org.springframework.data.jpa.repository.JpaRepository

@@ -1,6 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.auth
 
-import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
+import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.Admin
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -20,16 +20,16 @@ import java.io.PrintWriter
 import kotlin.test.assertEquals
 
 @ExtendWith(MockKExtension::class)
-class AuthenticatedUserResolverTest {
+class AuthenticatedAdminResolverTest {
 
     @MockK
-    private lateinit var userLoginAuthenticator: UserLoginAuthenticator
+    private lateinit var adminLoginAuthenticator: AdminLoginAuthenticator
 
     @MockK
     private lateinit var objectMapper: ObjectMapper
 
     @InjectMockKs
-    private lateinit var resolver: AuthenticatedUserResolver
+    private lateinit var resolver: AuthenticatedAdminResolver
 
     @MockK
     private lateinit var parameter: MethodParameter
@@ -46,7 +46,7 @@ class AuthenticatedUserResolverTest {
     @MockK
     private lateinit var writer: PrintWriter
 
-    private val user = User(name = "Gabe", phone = "2067140469")
+    private val admin = Admin(name = "Gabe", email = "admin@provider.com", phone = "2067140469")
 
     private fun setupFailureResponse() {
         every { webRequest.getNativeResponse(HttpServletResponse::class.java) } returns httpResponse
@@ -69,13 +69,13 @@ class AuthenticatedUserResolverTest {
         }
 
         verify { mavContainer.isRequestHandled = true }
-        verify(exactly = 0) { userLoginAuthenticator.authenticateToken(any()) }
+        verify(exactly = 0) { adminLoginAuthenticator.authenticateToken(any()) }
     }
 
     @Test
     fun `resolveArgument - header without Bearer prefix throws BadAuthTokenException`() {
         every { webRequest.getHeader("Authorization") } returns "sometoken123"
-        every { userLoginAuthenticator.authenticateToken("sometoken123") } throws BadAuthTokenException("sometoken123")
+        every { adminLoginAuthenticator.authenticateToken("sometoken123") } throws BadAuthTokenException("sometoken123")
         setupFailureResponse()
 
         assertThrows<BadAuthTokenException> {
@@ -84,15 +84,15 @@ class AuthenticatedUserResolverTest {
     }
 
     @Test
-    fun `resolveArgument - valid Bearer token returns user from authenticateToken`() {
+    fun `resolveArgument - valid Bearer token returns admin from authenticateToken`() {
         every { webRequest.getHeader("Authorization") } returns "Bearer validtoken123"
-        every { userLoginAuthenticator.authenticateToken("validtoken123") } returns user
+        every { adminLoginAuthenticator.authenticateToken("validtoken123") } returns admin
 
         val result = resolver.resolveArgument(parameter, mavContainer, webRequest, null)
 
-        assertEquals(user, result)
+        assertEquals(admin, result)
 
-        verify { userLoginAuthenticator.authenticateToken("validtoken123") }
+        verify { adminLoginAuthenticator.authenticateToken("validtoken123") }
     }
 
     @Test

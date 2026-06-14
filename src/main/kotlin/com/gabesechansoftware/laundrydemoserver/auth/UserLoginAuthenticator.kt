@@ -18,7 +18,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 @Component
-class LoginAuthenticator(
+class UserLoginAuthenticator(
     private val passwordRepo: PasswordRepository,
     private val sessionRepository: SessionRepository,
     private val encoder: PasswordEncoder = BCryptPasswordEncoder(16),
@@ -48,7 +48,7 @@ class LoginAuthenticator(
 
     fun authenticateToken(token: String): User {
         val session = getSessionForToken(token)
-        if(session.expiration!!.toInstant().toEpochMilli() < Instant.now().toEpochMilli()) {
+        if(session.expiration!!.isBefore(timeSource.now())) {
             sessionRepository.deleteByToken(token)
             throw BadLoginException()
         }

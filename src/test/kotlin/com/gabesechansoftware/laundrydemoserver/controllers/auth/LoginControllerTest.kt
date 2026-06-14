@@ -5,7 +5,7 @@ import com.gabesechansoftware.laundrydemoserver.assertEmpty
 import com.gabesechansoftware.laundrydemoserver.assertNotEmpty
 import com.gabesechansoftware.laundrydemoserver.assertSize
 import com.gabesechansoftware.laundrydemoserver.auth.BadLoginException
-import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.auth.UserLoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization
 import com.gabesechansoftware.laundrydemoserver.model.dbview.auth.Session
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
@@ -24,7 +24,7 @@ import kotlin.test.assertNull
 @ExtendWith(MockKExtension::class)
 class LoginControllerTest {
     @MockK
-    private lateinit var authenticator: LoginAuthenticator
+    private lateinit var userLoginAuthenticator: UserLoginAuthenticator
 
     @InjectMockKs
     private lateinit var controller: LoginController
@@ -49,7 +49,7 @@ class LoginControllerTest {
 
     @Test
     fun `login-  if authenticator throws, return an error`() {
-        every { authenticator.authenticatePassword(any(), any(), any()) } throws BadLoginException()
+        every { userLoginAuthenticator.authenticatePassword(any(), any(), any()) } throws BadLoginException()
         val request = LoginRequest("phone", "password", "org")
 
         val response = controller.login(request)
@@ -60,8 +60,8 @@ class LoginControllerTest {
 
     @Test
     fun `login-  if authenticator returns a value, respond with it`() {
-        every { authenticator.authenticatePassword(any(), any(), any()) } returns user
-        every { authenticator.createSession(any()) } returns session
+        every { userLoginAuthenticator.authenticatePassword(any(), any(), any()) } returns user
+        every { userLoginAuthenticator.createSession(any()) } returns session
         val request = LoginRequest("3128675309", "password", organization.id.toString())
 
         val response = controller.login(request)
@@ -85,7 +85,7 @@ class LoginControllerTest {
 
     @Test
     fun `logout-  if authenticator throws, return an error`() {
-        every { authenticator.logout(token) } throws BadLoginException()
+        every { userLoginAuthenticator.logout(token) } throws BadLoginException()
 
         val response = controller.logout(token)
         assertEquals(NetworkErrorType.BAD_AUTH.toString(), response.errorType)
@@ -95,7 +95,7 @@ class LoginControllerTest {
 
     @Test
     fun `logout-  if authenticator succeeds, return Success`() {
-        every { authenticator.logout(token) } returns Unit
+        every { userLoginAuthenticator.logout(token) } returns Unit
 
         val response = controller.logout(token)
         assertEquals(NetworkErrorType.NONE.toString(), response.errorType)
@@ -107,7 +107,7 @@ class LoginControllerTest {
 
     @Test
     fun `checkAuth-  if authenticator throws, return an error`() {
-        every { authenticator.authenticateToken(any()) } throws BadLoginException()
+        every { userLoginAuthenticator.authenticateToken(any()) } throws BadLoginException()
         val request = CheckAuthRequest(token)
 
         val response = controller.checkAuth(request)
@@ -118,7 +118,7 @@ class LoginControllerTest {
 
     @Test
     fun `checkAuth-  if authenticator returns a value, respond with it`() {
-        every { authenticator.authenticateToken(token) } returns user
+        every { userLoginAuthenticator.authenticateToken(token) } returns user
         val request = CheckAuthRequest(token)
 
         val response = controller.checkAuth(request)

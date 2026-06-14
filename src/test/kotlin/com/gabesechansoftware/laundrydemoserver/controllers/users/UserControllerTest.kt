@@ -2,7 +2,7 @@ package com.gabesechansoftware.laundrydemoserver.controllers.users
 
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.TimeSource
-import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.auth.UserLoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadUser
 import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization
@@ -24,7 +24,7 @@ class UserControllerTest {
     lateinit var userService: UserService
 
     @MockK
-    lateinit var loginAuthenticator: LoginAuthenticator
+    lateinit var userLoginAuthenticator: UserLoginAuthenticator
 
     @InjectMockKs
     lateinit var userController: UserController
@@ -37,7 +37,7 @@ class UserControllerTest {
         val user = User(name = "Gabe", email = "test@example.com", phone = "3128675309")
         val session = Session(user, "ddd", TimeSource().now())
         every { userService.createUser(any(), any(), any()) } returns user
-        every { loginAuthenticator.createSession(any()) } returns session
+        every { userLoginAuthenticator.createSession(any()) } returns session
         val result = userController.createUser(request)
         assertEquals(NetworkErrorType.NONE.toString(), result.errorType)
         assertEquals(user.name, result.data!!.user.name)
