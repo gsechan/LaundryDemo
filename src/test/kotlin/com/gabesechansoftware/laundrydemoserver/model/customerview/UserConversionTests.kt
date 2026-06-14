@@ -48,6 +48,118 @@ class UserConversionTests {
     }
 
 
+    @Test
+    fun `applyPatch on User with all fields set updates name, email and phone`() {
+        val organization = Organization("Laundry", "en-us")
+        val user = DBUser(name = "Gabe", email = "test@example.com", phone = "3128675309", organization = organization, addresses = mutableListOf())
+        val patch = PatchUser(name = "NewName", email = "new@example.com", phone = "3125550000", password = "newpassword")
+
+        user.applyPatch(patch)
+
+        assertEquals("NewName", user.name)
+        assertEquals("new@example.com", user.email)
+        assertEquals("3125550000", user.phone)
+    }
+
+    @Test
+    fun `applyPatch on User leaves fields with null patch values unchanged`() {
+        val organization = Organization("Laundry", "en-us")
+        val user = DBUser(name = "Gabe", email = "test@example.com", phone = "3128675309", organization = organization, addresses = mutableListOf())
+        val patch = PatchUser(name = "NewName", email = null, phone = null, password = null)
+
+        user.applyPatch(patch)
+
+        assertEquals("NewName", user.name)
+        assertEquals("test@example.com", user.email)
+        assertEquals("3128675309", user.phone)
+    }
+
+    @Test
+    fun `applyPatch on User with all null values leaves the user unchanged`() {
+        val organization = Organization("Laundry", "en-us")
+        val user = DBUser(name = "Gabe", email = "test@example.com", phone = "3128675309", organization = organization, addresses = mutableListOf())
+        val patch = PatchUser(name = null, email = null, phone = null, password = null)
+
+        user.applyPatch(patch)
+
+        assertEquals("Gabe", user.name)
+        assertEquals("test@example.com", user.email)
+        assertEquals("3128675309", user.phone)
+    }
+
+    @Test
+    fun `applyPatch on User does not change the organization or addresses`() {
+        val address = DBAddress(street1 = "s1", street2 = "s2", city = "city", state = "state", country = "country", postcode = "postalCode", isDefault = true)
+        val organization = Organization("Laundry", "en-us")
+        val user = DBUser(name = "Gabe", email = "test@example.com", phone = "3128675309", organization = organization, addresses = mutableListOf(address))
+        val patch = PatchUser(name = "NewName", email = "new@example.com", phone = "3125550000", password = "newpassword")
+
+        user.applyPatch(patch)
+
+        assertEquals(organization, user.organization)
+        assertSize(1, user.addresses)
+        assertEquals(address, user.addresses[0])
+    }
+
+    @Test
+    fun `applyPatch with all fields set updates every field`() {
+        val address = DBAddress(street1 = "s1", street2 = "s2", city = "city", state = "state", country = "country", postcode = "postalCode", isDefault = true)
+        val patch = PatchAddress(
+            street1 = "newStreet1",
+            street2 = "newStreet2",
+            city = "newCity",
+            state = "newState",
+            country = "newCountry",
+            postcode = "newPostcode",
+        )
+
+        address.applyPatch(patch)
+
+        assertEquals("newStreet1", address.street1)
+        assertEquals("newStreet2", address.street2)
+        assertEquals("newCity", address.city)
+        assertEquals("newState", address.state)
+        assertEquals("newCountry", address.country)
+        assertEquals("newPostcode", address.postcode)
+    }
+
+    @Test
+    fun `applyPatch leaves fields with null patch values unchanged`() {
+        val address = DBAddress(street1 = "s1", street2 = "s2", city = "city", state = "state", country = "country", postcode = "postalCode", isDefault = true)
+        val patch = PatchAddress(
+            street1 = "newStreet1",
+            street2 = null,
+            city = "newCity",
+            state = null,
+            country = null,
+            postcode = null,
+        )
+
+        address.applyPatch(patch)
+
+        assertEquals("newStreet1", address.street1)
+        assertEquals("s2", address.street2)
+        assertEquals("newCity", address.city)
+        assertEquals("state", address.state)
+        assertEquals("country", address.country)
+        assertEquals("postalCode", address.postcode)
+    }
+
+    @Test
+    fun `applyPatch with all null values leaves the address unchanged`() {
+        val address = DBAddress(street1 = "s1", street2 = "s2", city = "city", state = "state", country = "country", postcode = "postalCode", isDefault = true)
+        val patch = PatchAddress(street1 = null, street2 = null, city = null, state = null, country = null, postcode = null)
+
+        address.applyPatch(patch)
+
+        assertEquals("s1", address.street1)
+        assertEquals("s2", address.street2)
+        assertEquals("city", address.city)
+        assertEquals("state", address.state)
+        assertEquals("country", address.country)
+        assertEquals("postalCode", address.postcode)
+    }
+
     private fun assertAddressEqual(dbAddress: DBAddress, customerAddress: Address) {
         assertEquals(dbAddress.id.toString(), customerAddress.id)
         assertEquals(dbAddress.street1, customerAddress.street1)

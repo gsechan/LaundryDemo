@@ -78,6 +78,12 @@ fun DBUser.toCustomer(): User {
     return User(name!!, email, phone!!, sorted.map{it.toCustomer()})
 }
 
+fun DBUser.applyPatch(patch: PatchUser) {
+    patch.name?.let { name = it }
+    patch.email?.let { email = it }
+    patch.phone?.let { phone = it }
+}
+
 fun DBAddress.toCustomer(): Address {
     return Address(
         id = id.toString(),
@@ -88,4 +94,13 @@ fun DBAddress.toCustomer(): Address {
         country = country!!,
         postcode = postcode!!,
     )
+}
+
+fun DBAddress.applyPatch(patch: PatchAddress) {
+    patch.street1?.let { street1 = it }
+    patch.street2?.let { street2 = it }
+    patch.city?.let { city = it }
+    patch.state?.let { state = it }
+    patch.country?.let { country = it }
+    patch.postcode?.let { postcode = it }
 }

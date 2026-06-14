@@ -55,7 +55,7 @@ class UserControllerTest {
     @Test
     fun `updateLoggedInUser returns converted user`() {
         val user = User(name = "Gabe", email = "test@example.com", phone = "3128675309")
-        every { userService.updateUser(user = any(), newName = any(), newEmail = any(), newPhone = any(), newPassword = any()) } returns user
+        every { userService.updateUser(user = any(), patch = any()) } returns user
         val patchUser = PatchUser(null, null, null, null)
         val request = UpdateUserRequest(patchUser)
         val result = userController.updateLoggedInUser(request, user)

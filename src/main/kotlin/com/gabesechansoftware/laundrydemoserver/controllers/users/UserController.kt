@@ -56,10 +56,7 @@ class UserController(
     fun updateLoggedInUser(@RequestBody request: UpdateUserRequest, @AuthenticatedUser user: User): NetworkResponse<CustomerUser> {
         userService.updateUser(
             user = user,
-            newName = request.user.name,
-            newEmail = request.user.email,
-            newPhone = request.user.phone,
-            newPassword = request.user.password,
+            request.user
         )
         return NetworkResponse(user.toCustomer())
     }

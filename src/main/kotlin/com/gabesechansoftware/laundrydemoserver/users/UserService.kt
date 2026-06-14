@@ -4,8 +4,10 @@ import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.EntityDoesNotExistException
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchAddress
+import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadAddress
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadUser
+import com.gabesechansoftware.laundrydemoserver.model.customerview.applyPatch
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.OrganizationRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.UserRepository
@@ -82,14 +84,8 @@ class UserService(
         val address = user.addresses.find { it.id == addressId }
             ?: throw EntityDoesNotExistException("Address $addressId does not exist")
 
-        patch.street1?.let { address.street1 = it }
-        patch.street2?.let { address.street2 = it }
-        patch.city?.let { address.city = it }
-        patch.state?.let { address.state = it }
-        patch.country?.let { address.country = it }
-        patch.postcode?.let { address.postcode = it }
-
         val errors = mutableListOf<String>()
+        address.applyPatch(patch)
         addressValidator.validateAddress(address, errors)
         if(errors.isNotEmpty()) {
             throw APIErrorException(errors)
@@ -100,18 +96,16 @@ class UserService(
     }
 
     @Transactional
-    fun updateUser(user:User, newName: String?, newEmail: String?, newPhone: String?, newPassword: String?): User {
+    fun updateUser(user:User, patch: PatchUser): User {
         val errors = mutableListOf<String>()
-        newName?.let { user.name = it }
-        newEmail?.let { user.email = it }
-        newPhone?.let { user.phone = it }
+        user.applyPatch(patch)
         userValidator.validateUser(user, errors)
         if(errors.isNotEmpty()) {
             throw APIErrorException(errors)
         }
         userRepository.save(user)
-        if(newPassword != null) {
-            loginAuthenticator.updatePasswordForUser(user, newPassword)
+        if(patch.password != null) {
+            loginAuthenticator.updatePasswordForUser(user, patch.password)
         }
         return user
     }

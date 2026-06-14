@@ -5,6 +5,7 @@ import com.gabesechansoftware.laundrydemoserver.EntityDoesNotExistException
 import com.gabesechansoftware.laundrydemoserver.assertSize
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchAddress
+import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchUser
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadAddress
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadUser
 import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization
@@ -253,14 +254,14 @@ class UserServiceTests {
         )
 
         assertThrows<APIErrorException> {
-            service.updateUser(user = user, newName = "Me", newEmail = "me@me.com", newPhone = "3128675309", newPassword = "newpassword")
+            service.updateUser(user = user, patch = PatchUser(name = "Me", email = "me@me.com", phone = "3128675309", password = "newpassword"))
         }
     }
 
     @Test
     fun `updateUser-  name changes are saved`() {
         every { userRepository.save(any()) } returnsArgument 0
-        val result = userService.updateUser(user = user, newName = "Me", newEmail = null, newPhone = null, newPassword = null)
+        val result = userService.updateUser(user = user, patch = PatchUser(name = "Me", email = null, phone = null, password = null))
         assertEquals("Me", result.name)
         assertEquals("test@example.com", result.email)
         assertEquals("3128675309", result.phone)
@@ -272,7 +273,7 @@ class UserServiceTests {
     @Test
     fun `updateUser-  email changes are saved`() {
         every { userRepository.save(any()) } returnsArgument 0
-        val result = userService.updateUser(user = user, newName = null, newEmail = "me@example.com", newPhone = null, newPassword = null)
+        val result = userService.updateUser(user = user, patch = PatchUser(name = null, email = "me@example.com", phone = null, password = null))
         assertEquals("Gabe", result.name)
         assertEquals("me@example.com", result.email)
         assertEquals("3128675309", result.phone)
@@ -284,7 +285,7 @@ class UserServiceTests {
     @Test
     fun `updateUser-  phone changes are saved`() {
         every { userRepository.save(any()) } returnsArgument 0
-        val result = userService.updateUser(user = user, newName = null, newEmail = null, newPhone = "3125882300", newPassword = null)
+        val result = userService.updateUser(user = user, patch = PatchUser(name = null, email = null, phone = "3125882300", password = null))
         assertEquals("Gabe", result.name)
         assertEquals("test@example.com", result.email)
         assertEquals("3125882300", result.phone)
@@ -297,7 +298,7 @@ class UserServiceTests {
     fun `updateUser-  password changes are saved`() {
         every { userRepository.save(any()) } returnsArgument 0
         every { loginAuthenticator.updatePasswordForUser(any(), any()) } just Runs
-        val result = userService.updateUser(user = user, newName = null, newEmail = null, newPhone = null, newPassword = "newpassword")
+        val result = userService.updateUser(user = user, patch = PatchUser(name = null, email = null, phone = null, password = "newpassword"))
         assertEquals("Gabe", result.name)
         assertEquals("test@example.com", result.email)
         assertEquals("3128675309", result.phone)
