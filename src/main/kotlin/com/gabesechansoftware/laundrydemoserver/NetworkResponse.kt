@@ -3,6 +3,7 @@ package com.gabesechansoftware.laundrydemoserver
 enum class NetworkErrorType{
     NONE,
     BAD_AUTH,
+    NOT_AUTHORIZED,
     API_SPECIFIC_ERROR,
     ENTITY_DOES_NOT_EXIST,
 }
