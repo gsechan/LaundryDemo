@@ -1,8 +1,10 @@
 package com.gabesechansoftware.laundrydemoserver.users
 
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
+import com.gabesechansoftware.laundrydemoserver.EntityDoesNotExistException
 import com.gabesechansoftware.laundrydemoserver.assertSize
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchAddress
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadAddress
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadUser
 import com.gabesechansoftware.laundrydemoserver.model.dbview.Organization
@@ -144,6 +146,97 @@ class UserServiceTests {
         val result =  userService.createUser(uploadUser, "12345678", organization.id)
         verify { userRepository.save(result) }
         verify { loginAuthenticator.createPasswordForUser(user, "12345678") }
+    }
+
+    @Test
+    fun `deleteAddress-  address belongs to user, is removed and deleted`() {
+        every { addressRepository.delete(any()) } just Runs
+        user.addresses.add(address.toDBAddress(null, true))
+        val dbAddress = user.addresses[0]
+
+        userService.deleteAddress(user, dbAddress.id)
+
+        assertSize(0, user.addresses)
+        verify { addressRepository.delete(dbAddress) }
+    }
+
+    @Test
+    fun `deleteAddress-  address does not belong to user, throws and nothing is deleted`() {
+        user.addresses.add(address.toDBAddress(null, true))
+        val otherAddressId = Address().id
+
+        assertThrows<EntityDoesNotExistException> { userService.deleteAddress(user, otherAddressId) }
+
+        assertSize(1, user.addresses)
+        verify(exactly = 0) { addressRepository.delete(any()) }
+    }
+
+    @Test
+    fun `updateAddress-  address belongs to user, fields are patched and saved`() {
+        every { addressRepository.save(any()) } returnsArgument 0
+        user.addresses.add(address.toDBAddress(null, true))
+        val dbAddress = user.addresses[0]
+        val patch = PatchAddress(
+            street1 = "newStreet1",
+            street2 = "newStreet2",
+            city = "newCity",
+            state = "newState",
+            country = "newCountry",
+            postcode = "newPostcode",
+        )
+
+        val result = userService.updateAddress(user, dbAddress.id, patch)
+
+        assertEquals("newStreet1", result.street1)
+        assertEquals("newStreet2", result.street2)
+        assertEquals("newCity", result.city)
+        assertEquals("newState", result.state)
+        assertEquals("newCountry", result.country)
+        assertEquals("newPostcode", result.postcode)
+        verify { addressRepository.save(dbAddress) }
+    }
+
+    @Test
+    fun `updateAddress-  null fields in patch leave existing values unchanged`() {
+        every { addressRepository.save(any()) } returnsArgument 0
+        user.addresses.add(address.toDBAddress(null, true))
+        val dbAddress = user.addresses[0]
+        val originalStreet1 = dbAddress.street1
+        val patch = PatchAddress(street1 = null, street2 = null, city = "newCity", state = null, country = null, postcode = null)
+
+        val result = userService.updateAddress(user, dbAddress.id, patch)
+
+        assertEquals(originalStreet1, result.street1)
+        assertEquals("newCity", result.city)
+    }
+
+    @Test
+    fun `updateAddress-  address does not belong to user, throws and nothing is saved`() {
+        user.addresses.add(address.toDBAddress(null, true))
+        val otherAddressId = Address().id
+        val patch = PatchAddress(street1 = "x", street2 = null, city = null, state = null, country = null, postcode = null)
+
+        assertThrows<EntityDoesNotExistException> { userService.updateAddress(user, otherAddressId, patch) }
+        verify(exactly = 0) { addressRepository.save(any()) }
+    }
+
+    @Test
+    fun `updateAddress-  validator failure throws exception and nothing is saved`() {
+        val mockValidator = mockk<AddressValidator>()
+        val service = UserService(
+            userRepository = userRepository,
+            loginAuthenticator = loginAuthenticator,
+            organizationRepository = organizationRepository,
+            addressRepository = addressRepository,
+            addressValidator = mockValidator,
+        )
+        every { mockValidator.validateAddress(any(), any()) } answers { (args[1] as MutableList<String>).add("Error") }
+        user.addresses.add(address.toDBAddress(null, true))
+        val dbAddress = user.addresses[0]
+        val patch = PatchAddress(street1 = "x", street2 = null, city = null, state = null, country = null, postcode = null)
+
+        assertThrows<APIErrorException> { service.updateAddress(user, dbAddress.id, patch) }
+        verify(exactly = 0) { addressRepository.save(any()) }
     }
 
     @Test

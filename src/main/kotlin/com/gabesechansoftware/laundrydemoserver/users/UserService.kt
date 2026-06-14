@@ -3,6 +3,7 @@ package com.gabesechansoftware.laundrydemoserver.users
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.EntityDoesNotExistException
 import com.gabesechansoftware.laundrydemoserver.auth.LoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.model.customerview.PatchAddress
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadAddress
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadUser
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
@@ -66,6 +67,36 @@ class UserService(
         else {
             throw APIErrorException(errors)
         }
+    }
+
+    @Transactional
+    fun deleteAddress(user: User, addressId: UUID) {
+        val address = user.addresses.find { it.id == addressId }
+            ?: throw EntityDoesNotExistException("Address $addressId does not exist")
+        user.addresses.remove(address)
+        addressRepository.delete(address)
+    }
+
+    @Transactional
+    fun updateAddress(user: User, addressId: UUID, patch: PatchAddress): Address {
+        val address = user.addresses.find { it.id == addressId }
+            ?: throw EntityDoesNotExistException("Address $addressId does not exist")
+
+        patch.street1?.let { address.street1 = it }
+        patch.street2?.let { address.street2 = it }
+        patch.city?.let { address.city = it }
+        patch.state?.let { address.state = it }
+        patch.country?.let { address.country = it }
+        patch.postcode?.let { address.postcode = it }
+
+        val errors = mutableListOf<String>()
+        addressValidator.validateAddress(address, errors)
+        if(errors.isNotEmpty()) {
+            throw APIErrorException(errors)
+        }
+
+        addressRepository.save(address)
+        return address
     }
 
     @Transactional

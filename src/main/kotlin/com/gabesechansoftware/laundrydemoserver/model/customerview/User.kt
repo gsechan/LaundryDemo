@@ -63,6 +63,15 @@ data class PatchUser(
     val password: String?
 )
 
+data class PatchAddress(
+    val street1: String?,
+    val street2: String?,
+    val city: String?,
+    val state: String?,
+    val country: String?,
+    val postcode: String?,
+)
+
 fun DBUser.toCustomer(): User {
     val sorted = this.addresses.sortedBy { if (it.isDefault!!) 0 else 1 }
 
