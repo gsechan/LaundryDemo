@@ -31,6 +31,9 @@
         .admin-row:hover { background: #f1f5f9; }
         .admin-row .name { font-weight: bold; }
         .admin-row .meta { color: #475569; font-size: 13px; }
+        .admin-row.deleted, .admin-row.deleted .name, .admin-row.deleted .meta { color: #94a3b8; }
+        .admin-row .deleted-tag { color: #b00020; font-size: 12px; margin-left: 8px; }
+        .admin-row.deleted .deleted-tag { color: #94a3b8; }
 
         .back-link { background: none; border: none; color: #2563eb; cursor: pointer;
                      padding: 0; font-size: 14px; margin-bottom: 16px; }
@@ -431,9 +434,10 @@
                     {error && <div className="error">{error}</div>}
                     {!orgs && !error && <div>Loading…</div>}
                     {orgs && orgs.map((o) => (
-                        <div className="admin-row" key={o.id} onClick={() => setSelected(o)}>
+                        <div className={"admin-row" + (o.isDeleted ? " deleted" : "")} key={o.id} onClick={() => setSelected(o)}>
                             <span className="name">{o.name}</span>
                             <span className="meta"> — {o.defaultLocale}</span>
+                            <span className="deleted-tag">{o.isDeleted ? "Deleted" : ""}</span>
                         </div>
                     ))}
                 </div>
