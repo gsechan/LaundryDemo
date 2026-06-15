@@ -67,7 +67,6 @@ class ItemAdminController(
     @GetMapping("/admin/organizations/{orgId}/items")
     fun listItems(
         @PathVariable orgId: UUID,
-        @AuthenticatedAdmin authedAdmin: Admin,
     ): NetworkResponse<List<AdminItemView>> {
         return NetworkResponse(itemService.getItems(orgId).map { it.toAdminView() })
     }
