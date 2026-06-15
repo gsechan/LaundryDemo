@@ -26,6 +26,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import java.util.UUID
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -118,6 +119,21 @@ class UserServiceTests {
         assertThrows<APIErrorException> { service.addAddress(user, address) }
         verify (exactly = 0){ addressRepository.save(any()) }
 
+    }
+
+    @Test
+    fun `listByOrganization- returns users for the organization`() {
+        val orgId = UUID.randomUUID()
+        val users = listOf(
+            User(name = "Gabe", email = "gabe@example.com", phone = "3128675309"),
+            User(name = "Sue", email = "sue@example.com", phone = "2065551212"),
+        )
+        every { userRepository.findByOrganizationId(orgId) } returns users
+
+        val result = userService.listByOrganization(orgId)
+
+        assertSize(2, result)
+        assertEquals(users, result)
     }
 
     @Test

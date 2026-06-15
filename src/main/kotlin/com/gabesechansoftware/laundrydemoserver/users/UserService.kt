@@ -29,6 +29,10 @@ class UserService(
     private val userValidator: UserValidator = UserValidator(),
 ) {
 
+    fun listByOrganization(orgId: UUID): List<User> {
+        return userRepository.findByOrganizationId(orgId)
+    }
+
     @Transactional
     fun createUser(user: UploadUser, password: String, org: UUID): User {
         val errors = mutableListOf<String>()
