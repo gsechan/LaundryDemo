@@ -98,29 +98,6 @@ class AdminRoleControllerTest {
     }
 
     @Test
-    fun `createRole - with a db-only permission is rejected and does not create`() {
-        canAssign(true)
-        val upload = UploadAdminRole("Bad", listOf(AdminPermissions.CREATE_ORG, AdminPermissions.CREATE_ADMIN))
-
-        val response = controller.createRole(CreateRoleRequest(upload), authedAdmin)
-
-        assertEquals(NetworkErrorType.NOT_AUTHORIZED.toString(), response.errorType)
-        verify(exactly = 0) { adminRoleService.createRole(any()) }
-    }
-
-    @Test
-    fun `updateRole - with a db-only permission is rejected and does not update`() {
-        canAssign(true)
-        val id = UUID.randomUUID()
-        val patch = PatchAdminRole("Role", listOf(AdminPermissions.ASSIGN_ADMIN_ROLES))
-
-        val response = controller.updateRole(id, PatchRoleRequest(patch), authedAdmin)
-
-        assertEquals(NetworkErrorType.NOT_AUTHORIZED.toString(), response.errorType)
-        verify(exactly = 0) { adminRoleService.updateRole(any(), any()) }
-    }
-
-    @Test
     fun `updateRole - without ASSIGN_ADMIN_ROLES returns NOT_AUTHORIZED and does not update`() {
         canAssign(false)
         val id = UUID.randomUUID()

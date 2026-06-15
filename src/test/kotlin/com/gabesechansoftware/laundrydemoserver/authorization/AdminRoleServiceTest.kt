@@ -1,5 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.authorization
 
+import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.EntityDoesNotExistException
 import com.gabesechansoftware.laundrydemoserver.assertSize
 import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.AdminRole
@@ -59,6 +60,26 @@ class AdminRoleServiceTest {
         assertEquals(listOf(AdminPermissions.CREATE_ORG, AdminPermissions.EDIT_ORG), result.permissions)
         verify { adminRoleRepository.save(result.role) }
         verify(exactly = 2) { permissionRepository.save(any()) }
+    }
+
+    @Test
+    fun `createRole - with a db-only permission throws and nothing is saved`() {
+        assertThrows<APIErrorException> {
+            service.createRole(UploadAdminRole("Bad", listOf(AdminPermissions.CREATE_ORG, AdminPermissions.CREATE_ADMIN)))
+        }
+        verify(exactly = 0) { adminRoleRepository.save(any()) }
+        verify(exactly = 0) { permissionRepository.save(any()) }
+    }
+
+    @Test
+    fun `updateRole - with a db-only permission throws and nothing is changed`() {
+        val id = UUID.randomUUID()
+
+        assertThrows<APIErrorException> {
+            service.updateRole(id, PatchAdminRole(name = "Role", permissions = listOf(AdminPermissions.ASSIGN_ADMIN_ROLES)))
+        }
+        verify(exactly = 0) { adminRoleRepository.findById(any()) }
+        verify(exactly = 0) { permissionRepository.save(any()) }
     }
 
     @Test

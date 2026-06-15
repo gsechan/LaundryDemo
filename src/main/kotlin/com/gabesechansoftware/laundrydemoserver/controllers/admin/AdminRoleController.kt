@@ -32,14 +32,6 @@ fun AdminRoleWithPermissions.toView() =
 data class CreateRoleRequest(val role: UploadAdminRole)
 data class PatchRoleRequest(val role: PatchAdminRole)
 
-// These permissions are powerful enough that they can only be granted directly
-// in the database (e.g. via migration), never through the API.
-private val DB_ONLY_PERMISSIONS = setOf(
-    AdminPermissions.CREATE_ADMIN,
-    AdminPermissions.DELETE_ADMIN,
-    AdminPermissions.ASSIGN_ADMIN_ROLES,
-)
-
 
 @RestController
 class AdminRoleController(
@@ -49,9 +41,6 @@ class AdminRoleController(
 
     private fun canAssign(admin: Admin) =
         adminAuthorizationService.permissionsCheckAll(listOf(AdminPermissions.ASSIGN_ADMIN_ROLES), admin)
-
-    private fun hasDbOnlyPermission(permissions: List<AdminPermissions>?) =
-        permissions != null && permissions.any { it in DB_ONLY_PERMISSIONS }
 
     @GetMapping("/admin/roles")
     fun listRoles(
@@ -71,9 +60,6 @@ class AdminRoleController(
         if (!canAssign(authedAdmin)) {
             return NetworkResponse(NetworkErrorType.NOT_AUTHORIZED, "Not authorized to manage roles")
         }
-        if (hasDbOnlyPermission(request.role.permissions)) {
-            return NetworkResponse(NetworkErrorType.NOT_AUTHORIZED, "These permissions can only be set in the database")
-        }
         return NetworkResponse(adminRoleService.createRole(request.role).toView())
     }
 
@@ -85,9 +71,6 @@ class AdminRoleController(
     ): NetworkResponse<AdminRoleView> {
         if (!canAssign(authedAdmin)) {
             return NetworkResponse(NetworkErrorType.NOT_AUTHORIZED, "Not authorized to manage roles")
-        }
-        if (hasDbOnlyPermission(request.role.permissions)) {
-            return NetworkResponse(NetworkErrorType.NOT_AUTHORIZED, "These permissions can only be set in the database")
         }
         return NetworkResponse(adminRoleService.updateRole(id, request.role).toView())
     }

@@ -1,5 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.authorization
 
+import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.EntityDoesNotExistException
 import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.AdminRole
 import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.AdminRolePermission
@@ -24,6 +25,14 @@ data class AdminRoleWithPermissions(
     val permissions: List<AdminPermissions>,
 )
 
+// These permissions are powerful enough that they can only be granted directly
+// in the database (e.g. via migration), never through the API.
+private val DB_ONLY_PERMISSIONS = setOf(
+    AdminPermissions.CREATE_ADMIN,
+    AdminPermissions.DELETE_ADMIN,
+    AdminPermissions.ASSIGN_ADMIN_ROLES,
+)
+
 @Service
 class AdminRoleService(
     private val adminRoleRepository: AdminRoleRepository,
@@ -38,6 +47,7 @@ class AdminRoleService(
 
     @Transactional
     fun createRole(upload: UploadAdminRole): AdminRoleWithPermissions {
+        rejectDbOnlyPermissions(upload.permissions)
         val role = AdminRole(name = upload.name)
         adminRoleRepository.save(role)
         val permissions = upload.permissions.distinct()
@@ -47,6 +57,8 @@ class AdminRoleService(
 
     @Transactional
     fun updateRole(roleId: UUID, patch: PatchAdminRole): AdminRoleWithPermissions {
+        patch.permissions?.let { rejectDbOnlyPermissions(it) }
+
         val role = adminRoleRepository.findById(roleId)
             .orElseThrow { EntityDoesNotExistException("Role $roleId does not exist") }
 
@@ -76,5 +88,11 @@ class AdminRoleService(
 
     private fun permissionsForRole(roleId: UUID): List<AdminPermissions> {
         return permissionRepository.findByRoleId(roleId).mapNotNull { it.permission }
+    }
+
+    private fun rejectDbOnlyPermissions(permissions: List<AdminPermissions>) {
+        if (permissions.any { it in DB_ONLY_PERMISSIONS }) {
+            throw APIErrorException(listOf("These permissions can only be set in the database"))
+        }
     }
 }
