@@ -6,4 +6,5 @@ enum class AdminPermissions {
     EDIT_ORG,
     CREATE_ADMIN,
     DELETE_ADMIN,
+    ASSIGN_ADMIN_ROLES,
 }
