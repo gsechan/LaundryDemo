@@ -286,6 +286,28 @@
                 }
             }
 
+            async function handleUndelete() {
+                setError(null);
+                try {
+                    const res = await fetch("/admin/organizations/" + org.id, {
+                        method: "PATCH",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": "Bearer " + token,
+                        },
+                        body: JSON.stringify({ organization: { isDeleted: false } }),
+                    });
+                    const body = await res.json();
+                    if (body.errorType === "NONE") {
+                        onSaved();
+                    } else {
+                        setError((body.errors && body.errors.join(", ")) || "Could not undelete organization");
+                    }
+                } catch (err) {
+                    setError("Could not reach the server");
+                }
+            }
+
             return (
                 <div>
                     <button className="back-link" onClick={onBack}>← Back to organizations</button>
@@ -301,7 +323,11 @@
                             <input type="text" value={locale} onChange={(e) => setLocale(e.target.value)} />
                         </label>
                     </div>
-                    <div><button className="danger" onClick={handleDelete}>Delete</button></div>
+                    <div>
+                        {org.isDeleted
+                            ? <button onClick={handleUndelete}>Undelete</button>
+                            : <button className="danger" onClick={handleDelete}>Delete</button>}
+                    </div>
                     {error && <div className="error">{error}</div>}
                 </div>
             );

@@ -8,4 +8,5 @@ import jakarta.persistence.*
 class Organization(
     var name: String? = null,
     var defaultLocale: String? = null,
+    var isDeleted: Boolean = false,
 ): BaseEntity()

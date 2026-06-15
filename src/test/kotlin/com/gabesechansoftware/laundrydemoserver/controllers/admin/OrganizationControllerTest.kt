@@ -90,7 +90,7 @@ class OrganizationControllerTest {
             )
         } returns false
 
-        val response = controller.updateOrganization(id, PatchOrganizationRequest(PatchOrganization("New Name", null)), authedAdmin)
+        val response = controller.updateOrganization(id, PatchOrganizationRequest(PatchOrganization("New Name", null, null)), authedAdmin)
 
         assertEquals(NetworkErrorType.NOT_AUTHORIZED.toString(), response.errorType)
         assertNull(response.data)
@@ -100,7 +100,7 @@ class OrganizationControllerTest {
     @Test
     fun `updateOrganization - with permission updates and returns the view`() {
         val id = UUID.randomUUID()
-        val patch = PatchOrganization("New Name", null)
+        val patch = PatchOrganization("New Name", null, null)
         val updated = Organization(name = "New Name", defaultLocale = "en-US")
         every {
             adminAuthorizationService.permissionsCheckAny(
@@ -115,6 +115,47 @@ class OrganizationControllerTest {
         assertEquals(NetworkErrorType.NONE.toString(), response.errorType)
         assertNotNull(response.data)
         assertEquals("New Name", response.data.name)
+        verify { organizationService.updateOrganization(id, patch) }
+    }
+
+    @Test
+    fun `updateOrganization - changing isDeleted without DELETE_ORG returns NOT_AUTHORIZED`() {
+        val id = UUID.randomUUID()
+        val patch = PatchOrganization(null, null, true)
+        every {
+            adminAuthorizationService.permissionsCheckAny(
+                listOf(AdminPermissions.EDIT_ORG, AdminPermissions.CREATE_ORG),
+                authedAdmin
+            )
+        } returns true
+        every { adminAuthorizationService.permissionsCheckAll(listOf(AdminPermissions.DELETE_ORG), authedAdmin) } returns false
+
+        val response = controller.updateOrganization(id, PatchOrganizationRequest(patch), authedAdmin)
+
+        assertEquals(NetworkErrorType.NOT_AUTHORIZED.toString(), response.errorType)
+        assertNull(response.data)
+        verify(exactly = 0) { organizationService.updateOrganization(any(), any()) }
+    }
+
+    @Test
+    fun `updateOrganization - changing isDeleted with DELETE_ORG succeeds`() {
+        val id = UUID.randomUUID()
+        val patch = PatchOrganization(null, null, true)
+        val updated = Organization(name = "Laundry", defaultLocale = "en-US", isDeleted = true)
+        every {
+            adminAuthorizationService.permissionsCheckAny(
+                listOf(AdminPermissions.EDIT_ORG, AdminPermissions.CREATE_ORG),
+                authedAdmin
+            )
+        } returns true
+        every { adminAuthorizationService.permissionsCheckAll(listOf(AdminPermissions.DELETE_ORG), authedAdmin) } returns true
+        every { organizationService.updateOrganization(id, patch) } returns updated
+
+        val response = controller.updateOrganization(id, PatchOrganizationRequest(patch), authedAdmin)
+
+        assertEquals(NetworkErrorType.NONE.toString(), response.errorType)
+        assertNotNull(response.data)
+        assertEquals(true, response.data.isDeleted)
         verify { organizationService.updateOrganization(id, patch) }
     }
 

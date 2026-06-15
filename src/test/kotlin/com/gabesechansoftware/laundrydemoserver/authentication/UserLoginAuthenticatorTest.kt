@@ -83,6 +83,19 @@ class UserLoginAuthenticatorTest {
     }
 
     @Test
+    fun `authenticatePassword - org is soft-deleted throws BadLoginException`() {
+        val deletedOrg = Organization(isDeleted = true)
+        val deletedUser = User(phone = phone, organization = deletedOrg)
+        val deletedPassword = Password(hash = hashedPassword, user = deletedUser)
+        every { passwordRepo.findByOrganizationIdAndPhone(orgId, phone) } returns deletedPassword
+
+        assertThrows<BadLoginException> {
+            authService.authenticatePassword(orgId, phone, unhashedPassword)
+        }
+        verify(exactly = 0) { sessionRepository.save(any()) }
+    }
+
+    @Test
     fun `createSession - saves and returns a user session`() {
         every { sessionRepository.save(any()) } returnsArgument 0
         val timeSource = mockk<TimeSource>()
@@ -163,6 +176,22 @@ class UserLoginAuthenticatorTest {
         every { sessionRepository.findByToken(token) } returns listOf(session)
         every { sessionRepository.save(any()) } returnsArgument 0
         every { sessionRepository.deleteByToken(any()) } returns  Unit
+
+        assertThrows<BadLoginException> {
+            authService.authenticateToken(token)
+        }
+        verify(exactly = 1) { sessionRepository.deleteByToken(token) }
+    }
+
+    @Test
+    fun `authenticateToken - org is soft-deleted throws BadLoginException and deletes session`() {
+        val token = "21b669ee-867f-4748-b859-5058e928bf5b"
+        val deletedOrg = Organization(isDeleted = true)
+        val deletedUser = User(phone = phone, organization = deletedOrg)
+        val session = Session(user = deletedUser, token = token, expiration = OffsetDateTime.now(ZoneOffset.UTC).plusDays(1))
+        every { sessionRepository.findByToken(token) } returns listOf(session)
+        every { sessionRepository.save(any()) } returnsArgument 0
+        every { sessionRepository.deleteByToken(any()) } returns Unit
 
         assertThrows<BadLoginException> {
             authService.authenticateToken(token)

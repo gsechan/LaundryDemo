@@ -24,9 +24,10 @@ data class OrganizationView(
     val id: String,
     val name: String?,
     val defaultLocale: String?,
+    val isDeleted: Boolean,
 )
 
-fun Organization.toView() = OrganizationView(id.toString(), name, defaultLocale)
+fun Organization.toView() = OrganizationView(id.toString(), name, defaultLocale, isDeleted)
 
 data class CreateOrganizationRequest(val organization: UploadOrganization)
 data class PatchOrganizationRequest(val organization: PatchOrganization)
@@ -69,6 +70,11 @@ class OrganizationController(
         )
         if (!canEdit) {
             return NetworkResponse(NetworkErrorType.NOT_AUTHORIZED, "Not authorized to edit organizations")
+        }
+        // Changing the soft-delete flag requires delete permission, not just edit.
+        if (request.organization.isDeleted != null &&
+            !adminAuthorizationService.permissionsCheckAll(listOf(AdminPermissions.DELETE_ORG), authedAdmin)) {
+            return NetworkResponse(NetworkErrorType.NOT_AUTHORIZED, "Not authorized to change the deleted state of organizations")
         }
         val organization = organizationService.updateOrganization(id, request.organization)
         return NetworkResponse(organization.toView())

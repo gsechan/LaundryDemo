@@ -30,7 +30,11 @@ class UserLoginAuthenticator(
         if(!encoder.matches(unhashed, password.hash)) {
             throw BadLoginException()
         }
-        return password.user!!
+        val user = password.user!!
+        if(user.organization?.isDeleted == true) {
+            throw BadLoginException()
+        }
+        return user
     }
 
     fun createSession(user: User): Session {
@@ -51,9 +55,14 @@ class UserLoginAuthenticator(
             sessionRepository.deleteByToken(token)
             throw BadLoginException()
         }
+        val user = session.user!!
+        if(user.organization?.isDeleted == true) {
+            sessionRepository.deleteByToken(token)
+            throw BadLoginException()
+        }
         //Using a token refreshes expiration
         updateExpiration(session, timeSource.now().plusYears(1))
-        return session.user!!
+        return user
     }
 
     @Transactional
