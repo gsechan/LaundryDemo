@@ -132,4 +132,74 @@ class OrderValidator(
             }
         }
     }
+
+    /**
+     * Validates only the fields that an admin patch can change: state, scheduled
+     * pickup/dropoff, the pickup/dropoff snapshot addresses, and line quantities
+     * (with their derived total). Fields that cannot be edited are not checked.
+     */
+    fun validateEditableFields(order: Order, errors: MutableList<String>) {
+        if(order.state == null) {
+            errors.add("There must be a state")
+        }
+
+        // No "must be in the future" checks here: on PATCH the order already
+        // exists, so its schedule may legitimately be in the past.
+        val scheduledPickup = order.scheduledPickup
+        if(scheduledPickup == null) {
+            errors.add("There must be a pickup time")
+        }
+        else if(order.submitted != null && scheduledPickup.isBefore(order.submitted)) {
+            errors.add("The pickup can't be before the submitted date")
+        }
+        val scheduledDropoff = order.scheduledDropoff
+        if(scheduledDropoff == null) {
+            errors.add("There must be a dropoff time")
+        }
+        else if(scheduledPickup != null && scheduledDropoff.isBefore(scheduledPickup)) {
+            errors.add("The dropoff can't be before the pickup")
+        }
+
+        addressValidator.validateAddress(snapshotToAddress(
+            order.pickupStreet1, order.pickupStreet2, order.pickupCity,
+            order.pickupState, order.pickupCountry, order.pickupPostcode), errors)
+        addressValidator.validateAddress(snapshotToAddress(
+            order.dropoffStreet1, order.dropoffStreet2, order.dropoffCity,
+            order.dropoffState, order.dropoffCountry, order.dropoffPostcode), errors)
+
+        order.lines.forEach { line ->
+            when(line.itemType) {
+                ItemType.WASH_AND_FOLD -> {}
+                ItemType.DRY_CLEANING -> {
+                    if(line.quantity == null) {
+                        errors.add("Dry Cleaning lines must have a quantity")
+                    }
+                    if(line.totalCost == null) {
+                        errors.add("Dry Cleaning lines must have a total cost")
+                    }
+                }
+                else -> {
+                    errors.add("Unknown item type ${line.itemType}")
+                }
+            }
+            if(line.totalCost != null && line.quantity != null && line.pricePerUnit != null &&
+                line.totalCost != line.quantity!!.times(line.pricePerUnit!!)) {
+                errors.add("Total cost is not the product of ppu and quantity")
+            }
+        }
+    }
+
+    private fun snapshotToAddress(
+        street1: String?, street2: String?, city: String?,
+        state: String?, country: String?, postcode: String?,
+    ): Address {
+        return Address(
+            street1 = street1,
+            street2 = street2,
+            city = city,
+            state = state,
+            country = country,
+            postcode = postcode,
+        )
+    }
 }

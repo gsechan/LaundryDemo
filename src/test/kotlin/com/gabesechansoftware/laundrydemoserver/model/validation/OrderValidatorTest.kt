@@ -380,4 +380,68 @@ class OrderValidatorTest {
         validator.validateOrder(order, pickupAddress, dropoffAddress, errors, true)
         assertContains(errors, "Unknown item type ${ItemType.OTHER}")
     }
+
+    @Test
+    fun `validateEditableFields - valid order passes`() {
+        val errors = mutableListOf<String>()
+        validator.validateEditableFields(order, errors)
+        assertEmpty(errors)
+    }
+
+    @Test
+    fun `validateEditableFields - past pickup and dropoff still pass`() {
+        val errors = mutableListOf<String>()
+        order.scheduledPickup = TimeSource().now().minusDays(3)
+        order.scheduledDropoff = TimeSource().now().minusDays(2)
+        validator.validateEditableFields(order, errors)
+        assertEmpty(errors)
+    }
+
+    @Test
+    fun `validateEditableFields - null state adds an error`() {
+        val errors = mutableListOf<String>()
+        order.state = null
+        validator.validateEditableFields(order, errors)
+        assertNotEmpty(errors)
+    }
+
+    @Test
+    fun `validateEditableFields - null pickup adds an error`() {
+        val errors = mutableListOf<String>()
+        order.scheduledPickup = null
+        validator.validateEditableFields(order, errors)
+        assertNotEmpty(errors)
+    }
+
+    @Test
+    fun `validateEditableFields - dropoff before pickup adds an error`() {
+        val errors = mutableListOf<String>()
+        order.scheduledDropoff = order.scheduledPickup!!.minusDays(1)
+        validator.validateEditableFields(order, errors)
+        assertNotEmpty(errors)
+    }
+
+    @Test
+    fun `validateEditableFields - dry cleaning line missing quantity adds an error`() {
+        val errors = mutableListOf<String>()
+        lineDc.quantity = null
+        validator.validateEditableFields(order, errors)
+        assertNotEmpty(errors)
+    }
+
+    @Test
+    fun `validateEditableFields - line total not product of ppu and quantity adds an error`() {
+        val errors = mutableListOf<String>()
+        lineDc.totalCost = BigDecimal("100")
+        validator.validateEditableFields(order, errors)
+        assertNotEmpty(errors)
+    }
+
+    @Test
+    fun `validateEditableFields - unknown item type adds an error`() {
+        val errors = mutableListOf<String>()
+        lineDc.itemType = ItemType.OTHER
+        validator.validateEditableFields(order, errors)
+        assertNotEmpty(errors)
+    }
 }
