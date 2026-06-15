@@ -197,7 +197,8 @@
                             )}
                         </div>
                     )}
-                    <div><button className="danger" onClick={handleDelete}>Delete</button></div>
+                    {currentAdmin.permissions.includes("DELETE_ADMIN") &&
+                        <div><button className="danger" onClick={handleDelete}>Delete</button></div>}
                     {error && <div className="error">{error}</div>}
                 </div>
             );
@@ -311,7 +312,8 @@
             return (
                 <div>
                     <h1>Admins</h1>
-                    <div style={{ marginBottom: "12px" }}><button onClick={() => setCreating(true)}>Add New</button></div>
+                    {currentAdmin.permissions.includes("CREATE_ADMIN") &&
+                        <div style={{ marginBottom: "12px" }}><button onClick={() => setCreating(true)}>Add New</button></div>}
                     {error && <div className="error">{error}</div>}
                     {!admins && !error && <div>Loading…</div>}
                     {admins && admins.map((a) => (
@@ -324,7 +326,9 @@
             );
         }
 
-        function OrganizationDetail({ org, token, onBack, onSaved, onDeleted }) {
+        function OrganizationDetail({ org, currentAdmin, token, onBack, onSaved, onDeleted }) {
+            const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
+            const canDelete = currentAdmin.permissions.includes("DELETE_ORG");
             const [name, setName] = useState(org.name || "");
             const [locale, setLocale] = useState(org.defaultLocale || "");
             const [error, setError] = useState(null);
@@ -396,7 +400,7 @@
                     <button className="back-link" onClick={onBack}>← Back to organizations</button>
                     <div className="detail-header">
                         <h1>Edit Organization</h1>
-                        <button onClick={handleSave}>Save</button>
+                        {canEdit && <button onClick={handleSave}>Save</button>}
                     </div>
                     <div className="edit-form">
                         <label>Name
@@ -406,11 +410,13 @@
                             <input type="text" value={locale} onChange={(e) => setLocale(e.target.value)} />
                         </label>
                     </div>
-                    <div>
-                        {org.isDeleted
-                            ? <button onClick={handleUndelete}>Undelete</button>
-                            : <button className="danger" onClick={handleDelete}>Delete</button>}
-                    </div>
+                    {canDelete && (
+                        <div>
+                            {org.isDeleted
+                                ? <button onClick={handleUndelete}>Undelete</button>
+                                : <button className="danger" onClick={handleDelete}>Delete</button>}
+                        </div>
+                    )}
                     {error && <div className="error">{error}</div>}
                 </div>
             );
@@ -460,7 +466,7 @@
             );
         }
 
-        function OrganizationsPage({ token }) {
+        function OrganizationsPage({ token, currentAdmin }) {
             const [orgs, setOrgs] = useState(null);
             const [error, setError] = useState(null);
             const [selected, setSelected] = useState(null);
@@ -499,6 +505,7 @@
                 return (
                     <OrganizationDetail
                         org={selected}
+                        currentAdmin={currentAdmin}
                         token={token}
                         onBack={() => setSelected(null)}
                         onSaved={() => { setSelected(null); load(); }}
@@ -510,7 +517,8 @@
             return (
                 <div>
                     <h1>Organizations</h1>
-                    <div style={{ marginBottom: "12px" }}><button onClick={() => setCreating(true)}>Add New</button></div>
+                    {currentAdmin.permissions.includes("CREATE_ORG") &&
+                        <div style={{ marginBottom: "12px" }}><button onClick={() => setCreating(true)}>Add New</button></div>}
                     {error && <div className="error">{error}</div>}
                     {!orgs && !error && <div>Loading…</div>}
                     {orgs && orgs.map((o) => (
@@ -542,7 +550,8 @@
             );
         }
 
-        function RoleDetail({ role, token, onBack, onSaved, onDeleted }) {
+        function RoleDetail({ role, currentAdmin, token, onBack, onSaved, onDeleted }) {
+            const canAssign = currentAdmin.permissions.includes("ASSIGN_ADMIN_ROLES");
             const [name, setName] = useState(role.name || "");
             const [perms, setPerms] = useState(role.permissions || []);
             const [error, setError] = useState(null);
@@ -583,7 +592,7 @@
                     <button className="back-link" onClick={onBack}>← Back to roles</button>
                     <div className="detail-header">
                         <h1>Edit Role</h1>
-                        <button onClick={handleSave}>Save</button>
+                        {canAssign && <button onClick={handleSave}>Save</button>}
                     </div>
                     <div className="edit-form">
                         <label>Name
@@ -592,7 +601,8 @@
                     </div>
                     <h3>Permissions</h3>
                     <PermissionChecklist selected={perms} onToggle={toggle} />
-                    <div><button className="danger" onClick={handleDelete}>Delete</button></div>
+                    {canAssign &&
+                        <div><button className="danger" onClick={handleDelete}>Delete</button></div>}
                     {error && <div className="error">{error}</div>}
                 </div>
             );
@@ -638,7 +648,7 @@
             );
         }
 
-        function RolesPage({ token }) {
+        function RolesPage({ token, currentAdmin }) {
             const [roles, setRoles] = useState(null);
             const [error, setError] = useState(null);
             const [selected, setSelected] = useState(null);
@@ -672,6 +682,7 @@
                 return (
                     <RoleDetail
                         role={selected}
+                        currentAdmin={currentAdmin}
                         token={token}
                         onBack={() => setSelected(null)}
                         onSaved={() => { setSelected(null); load(); }}
@@ -683,7 +694,8 @@
             return (
                 <div>
                     <h1>Roles</h1>
-                    <div style={{ marginBottom: "12px" }}><button onClick={() => setCreating(true)}>Add New</button></div>
+                    {currentAdmin.permissions.includes("ASSIGN_ADMIN_ROLES") &&
+                        <div style={{ marginBottom: "12px" }}><button onClick={() => setCreating(true)}>Add New</button></div>}
                     {error && <div className="error">{error}</div>}
                     {!roles && !error && <div>Loading…</div>}
                     {roles && roles.map((r) => (
@@ -702,13 +714,23 @@
             { key: "organizations", label: "Organizations" },
         ];
 
+        function pageVisible(key, perms) {
+            const has = (p) => perms.includes(p);
+            if (key === "admins") return has("CREATE_ADMIN") || has("DELETE_ADMIN") || has("ASSIGN_ADMIN_ROLES");
+            if (key === "organizations") return has("CREATE_ORG") || has("DELETE_ORG") || has("EDIT_ORG");
+            if (key === "roles") return has("ASSIGN_ADMIN_ROLES");
+            return true;
+        }
+
         function Shell({ token, currentAdmin }) {
-            const [page, setPage] = useState("admins");
+            const perms = currentAdmin.permissions || [];
+            const visiblePages = PAGES.filter((p) => pageVisible(p.key, perms));
+            const [page, setPage] = useState(visiblePages.length ? visiblePages[0].key : null);
 
             return (
                 <div className="shell">
                     <nav className="navbar">
-                        {PAGES.map((p) => (
+                        {visiblePages.map((p) => (
                             <button
                                 key={p.key}
                                 className={"nav-item" + (page === p.key ? " active" : "")}
@@ -720,8 +742,8 @@
                     </nav>
                     <main className="content">
                         {page === "admins" && <AdminsPage token={token} currentAdmin={currentAdmin} />}
-                        {page === "roles" && <RolesPage token={token} />}
-                        {page === "organizations" && <OrganizationsPage token={token} />}
+                        {page === "roles" && <RolesPage token={token} currentAdmin={currentAdmin} />}
+                        {page === "organizations" && <OrganizationsPage token={token} currentAdmin={currentAdmin} />}
                     </main>
                 </div>
             );
