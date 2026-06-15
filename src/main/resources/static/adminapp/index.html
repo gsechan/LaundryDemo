@@ -25,7 +25,12 @@
                     text-align: left; font-size: 15px; }
         .nav-item:hover { background: #334155; color: #fff; }
         .nav-item.active { background: #334155; color: #fff; font-weight: bold; }
+        .nav-subheader { padding: 16px 18px 4px; color: #64748b; font-size: 11px;
+                         text-transform: uppercase; letter-spacing: 0.05em; }
+        .nav-item.sub { padding-left: 32px; font-size: 14px; }
         .content { flex: 1; padding: 24px; }
+        select { padding: 8px; font-size: 14px; }
+        .name-row { display: flex; gap: 8px; align-items: center; }
 
         .admin-row { padding: 8px 0; border-bottom: 1px solid #e2e8f0; cursor: pointer; }
         .admin-row:hover { background: #f1f5f9; }
@@ -708,16 +713,225 @@
             );
         }
 
+        const ITEM_TYPES = ["WASH_AND_FOLD", "DRY_CLEANING", "OTHER"];
+
+        function ItemDetail({ orgId, item, currentAdmin, token, onBack, onSaved, onDeleted }) {
+            const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
+            const [price, setPrice] = useState(item.price || "");
+            const [itemType, setItemType] = useState(item.itemType || "DRY_CLEANING");
+            const [error, setError] = useState(null);
+
+            async function handleSave() {
+                setError(null);
+                try {
+                    const res = await fetch("/admin/organizations/" + orgId + "/items/" + item.id, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                        body: JSON.stringify({ item: { price, itemType } }),
+                    });
+                    const body = await res.json();
+                    if (body.errorType === "NONE") { onSaved(); }
+                    else { setError((body.errors && body.errors.join(", ")) || "Could not save item"); }
+                } catch (err) { setError("Could not reach the server"); }
+            }
+
+            async function handleDelete() {
+                setError(null);
+                try {
+                    const res = await fetch("/admin/organizations/" + orgId + "/items/" + item.id, {
+                        method: "DELETE",
+                        headers: { "Authorization": "Bearer " + token },
+                    });
+                    const body = await res.json();
+                    if (body.errorType === "NONE") { onDeleted(); }
+                    else { setError((body.errors && body.errors.join(", ")) || "Could not delete item"); }
+                } catch (err) { setError("Could not reach the server"); }
+            }
+
+            return (
+                <div>
+                    <button className="back-link" onClick={onBack}>← Back to items</button>
+                    <div className="detail-header">
+                        <h1>Edit Item</h1>
+                        {canEdit && <button onClick={handleSave}>Save</button>}
+                    </div>
+                    <div className="edit-form">
+                        <label>Price
+                            <input type="text" value={price} onChange={(e) => setPrice(e.target.value)} />
+                        </label>
+                        <label>Type
+                            <select value={itemType} onChange={(e) => setItemType(e.target.value)}>
+                                {ITEM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                            </select>
+                        </label>
+                    </div>
+                    <h3>Names</h3>
+                    {item.names.map((n, i) => (
+                        <div className="detail-field" key={i}>{n.name} <span className="label">({n.locale})</span></div>
+                    ))}
+                    {canEdit && <div><button className="danger" onClick={handleDelete}>Delete</button></div>}
+                    {error && <div className="error">{error}</div>}
+                </div>
+            );
+        }
+
+        function ItemCreate({ orgId, token, onBack, onCreated }) {
+            const [price, setPrice] = useState("");
+            const [itemType, setItemType] = useState("DRY_CLEANING");
+            const [names, setNames] = useState([{ name: "", locale: "" }]);
+            const [error, setError] = useState(null);
+
+            function updateName(i, field, value) {
+                setNames((prev) => prev.map((n, idx) => idx === i ? { ...n, [field]: value } : n));
+            }
+            function addName() { setNames((prev) => [...prev, { name: "", locale: "" }]); }
+            function removeName(i) { setNames((prev) => prev.filter((_, idx) => idx !== i)); }
+
+            async function handleSubmit(e) {
+                e.preventDefault();
+                setError(null);
+                const cleanNames = names.filter((n) => n.name && n.locale);
+                try {
+                    const res = await fetch("/admin/organizations/" + orgId + "/items", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                        body: JSON.stringify({ item: { price, itemType, names: cleanNames } }),
+                    });
+                    const body = await res.json();
+                    if (body.errorType === "NONE") { onCreated(); }
+                    else { setError((body.errors && body.errors.join(", ")) || "Could not create item"); }
+                } catch (err) { setError("Could not reach the server"); }
+            }
+
+            return (
+                <div>
+                    <button className="back-link" onClick={onBack}>← Back to items</button>
+                    <h1>Add Item</h1>
+                    <form onSubmit={handleSubmit}>
+                        <input type="text" placeholder="Price" value={price}
+                               onChange={(e) => setPrice(e.target.value)} />
+                        <select value={itemType} onChange={(e) => setItemType(e.target.value)}>
+                            {ITEM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                        </select>
+                        <h3>Names</h3>
+                        {names.map((n, i) => (
+                            <div className="name-row" key={i}>
+                                <input type="text" placeholder="Name" value={n.name}
+                                       onChange={(e) => updateName(i, "name", e.target.value)} />
+                                <input type="text" placeholder="Locale" value={n.locale}
+                                       onChange={(e) => updateName(i, "locale", e.target.value)} />
+                                <button type="button" onClick={() => removeName(i)}>✕</button>
+                            </div>
+                        ))}
+                        <button type="button" onClick={addName}>Add name</button>
+                        <button type="submit">Create</button>
+                        {error && <div className="error">{error}</div>}
+                    </form>
+                </div>
+            );
+        }
+
+        function ItemsPage({ token, currentAdmin }) {
+            const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
+            const [orgs, setOrgs] = useState(null);
+            const [orgId, setOrgId] = useState("");
+            const [items, setItems] = useState(null);
+            const [selected, setSelected] = useState(null);
+            const [creating, setCreating] = useState(false);
+            const [error, setError] = useState(null);
+
+            useEffect(() => {
+                async function loadOrgs() {
+                    try {
+                        const res = await fetch("/admin/organizations", { headers: { "Authorization": "Bearer " + token } });
+                        const body = await res.json();
+                        if (body.errorType === "NONE") { setOrgs(body.data); }
+                        else { setError((body.errors && body.errors[0]) || "Could not load organizations"); }
+                    } catch (err) { setError("Could not reach the server"); }
+                }
+                loadOrgs();
+            }, [token]);
+
+            async function loadItems() {
+                if (!orgId) { setItems(null); return; }
+                setError(null);
+                try {
+                    const res = await fetch("/admin/organizations/" + orgId + "/items", {
+                        headers: { "Authorization": "Bearer " + token },
+                    });
+                    const body = await res.json();
+                    if (body.errorType === "NONE") { setItems(body.data); }
+                    else { setError((body.errors && body.errors[0]) || "Could not load items"); }
+                } catch (err) { setError("Could not reach the server"); }
+            }
+
+            useEffect(() => { setSelected(null); setCreating(false); loadItems(); }, [orgId]);
+
+            if (orgId && creating) {
+                return (
+                    <ItemCreate
+                        orgId={orgId}
+                        token={token}
+                        onBack={() => setCreating(false)}
+                        onCreated={() => { setCreating(false); loadItems(); }}
+                    />
+                );
+            }
+
+            if (orgId && selected) {
+                return (
+                    <ItemDetail
+                        orgId={orgId}
+                        item={selected}
+                        currentAdmin={currentAdmin}
+                        token={token}
+                        onBack={() => setSelected(null)}
+                        onSaved={() => { setSelected(null); loadItems(); }}
+                        onDeleted={() => { setSelected(null); loadItems(); }}
+                    />
+                );
+            }
+
+            return (
+                <div>
+                    <h1>Items</h1>
+                    <label>Organization{" "}
+                        <select value={orgId} onChange={(e) => setOrgId(e.target.value)}>
+                            <option value="">Select…</option>
+                            {orgs && orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+                        </select>
+                    </label>
+                    {orgId && canEdit &&
+                        <div style={{ marginTop: "12px", marginBottom: "12px" }}>
+                            <button onClick={() => setCreating(true)}>Add New</button>
+                        </div>}
+                    {error && <div className="error">{error}</div>}
+                    {orgId && !items && !error && <div>Loading…</div>}
+                    {items && items.map((it) => (
+                        <div className="admin-row" key={it.id} onClick={() => setSelected(it)}>
+                            <span className="name">{it.names.map((n) => n.name).join(" / ") || "(no name)"}</span>
+                            <span className="meta"> — {it.itemType} — {it.price}</span>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
         const PAGES = [
             { key: "admins", label: "Admins" },
             { key: "roles", label: "Roles" },
             { key: "organizations", label: "Organizations" },
         ];
 
+        const SUBNAV_PAGES = [
+            { key: "items", label: "Items" },
+        ];
+
         function pageVisible(key, perms) {
             const has = (p) => perms.includes(p);
             if (key === "admins") return has("CREATE_ADMIN") || has("DELETE_ADMIN") || has("ASSIGN_ADMIN_ROLES");
             if (key === "organizations") return has("CREATE_ORG") || has("DELETE_ORG") || has("EDIT_ORG");
+            if (key === "items") return has("CREATE_ORG") || has("DELETE_ORG") || has("EDIT_ORG");
             if (key === "roles") return has("ASSIGN_ADMIN_ROLES");
             return true;
         }
@@ -725,7 +939,9 @@
         function Shell({ token, currentAdmin }) {
             const perms = currentAdmin.permissions || [];
             const visiblePages = PAGES.filter((p) => pageVisible(p.key, perms));
-            const [page, setPage] = useState(visiblePages.length ? visiblePages[0].key : null);
+            const visibleSubnav = SUBNAV_PAGES.filter((p) => pageVisible(p.key, perms));
+            const allVisible = [...visiblePages, ...visibleSubnav];
+            const [page, setPage] = useState(allVisible.length ? allVisible[0].key : null);
 
             return (
                 <div className="shell">
@@ -739,11 +955,22 @@
                                 {p.label}
                             </button>
                         ))}
+                        {visibleSubnav.length > 0 && <div className="nav-subheader">Catalog</div>}
+                        {visibleSubnav.map((p) => (
+                            <button
+                                key={p.key}
+                                className={"nav-item sub" + (page === p.key ? " active" : "")}
+                                onClick={() => setPage(p.key)}
+                            >
+                                {p.label}
+                            </button>
+                        ))}
                     </nav>
                     <main className="content">
                         {page === "admins" && <AdminsPage token={token} currentAdmin={currentAdmin} />}
                         {page === "roles" && <RolesPage token={token} currentAdmin={currentAdmin} />}
                         {page === "organizations" && <OrganizationsPage token={token} currentAdmin={currentAdmin} />}
+                        {page === "items" && <ItemsPage token={token} currentAdmin={currentAdmin} />}
                     </main>
                 </div>
             );

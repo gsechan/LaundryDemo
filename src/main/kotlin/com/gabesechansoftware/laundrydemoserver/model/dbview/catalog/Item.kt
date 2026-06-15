@@ -3,6 +3,7 @@ package com.gabesechansoftware.laundrydemoserver.model.dbview.catalog
 import com.gabesechansoftware.laundrydemoserver.Transaltion
 import com.gabesechansoftware.laundrydemoserver.TranslationPicker
 import com.gabesechansoftware.laundrydemoserver.model.dbview.BaseEntity
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
@@ -26,7 +27,7 @@ class Item(
     @Column(nullable = false, precision = 10, scale = 2)
     var price: BigDecimal? = null,
 
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.EAGER, cascade = [CascadeType.ALL], orphanRemoval = true)
     @JoinColumn(name = "item_id")
     var names: MutableList<ItemName> = mutableListOf(),
 
