@@ -27,7 +27,12 @@ class AdminAuthorizationService(
         return permissions.any { it in held }
     }
 
+    /** Every permission the admin holds across all their roles. */
+    fun permissionsFor(admin: Admin): List<AdminPermissions> {
+        return permissionRepository.findPermissionsByAdminId(admin.id)
+    }
+
     private fun permissionsForAdmin(admin: Admin): Set<AdminPermissions> {
-        return permissionRepository.findPermissionsByAdminId(admin.id).toSet()
+        return permissionsFor(admin).toSet()
     }
 }

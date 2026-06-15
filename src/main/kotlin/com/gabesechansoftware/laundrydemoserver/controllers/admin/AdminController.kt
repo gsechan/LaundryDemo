@@ -3,12 +3,12 @@ package com.gabesechansoftware.laundrydemoserver.controllers.admin
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import com.gabesechansoftware.laundrydemoserver.admins.AdminService
+import com.gabesechansoftware.laundrydemoserver.admins.AdminView
+import com.gabesechansoftware.laundrydemoserver.admins.AdminViewMapper
 import com.gabesechansoftware.laundrydemoserver.admins.UploadAdmin
 import com.gabesechansoftware.laundrydemoserver.authentication.AuthenticatedAdmin
 import com.gabesechansoftware.laundrydemoserver.authorization.AdminAuthorizationService
 import com.gabesechansoftware.laundrydemoserver.authorization.AdminPermissions
-import com.gabesechansoftware.laundrydemoserver.controllers.auth.AdminView
-import com.gabesechansoftware.laundrydemoserver.controllers.auth.toView
 import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.Admin
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -29,6 +29,7 @@ data class CreateAdminRequest(
 class AdminController(
     private val adminService: AdminService,
     private val adminAuthorizationService: AdminAuthorizationService,
+    private val adminViewMapper: AdminViewMapper,
 ) {
 
     @PostMapping("/admin/admins")
@@ -40,7 +41,7 @@ class AdminController(
             return NetworkResponse(NetworkErrorType.NOT_AUTHORIZED, "Not authorized to create admins")
         }
         val admin = adminService.createAdmin(request.admin, request.password)
-        return NetworkResponse(admin.toView())
+        return NetworkResponse(adminViewMapper.toView(admin))
     }
 
     @GetMapping("/admin/admins")
@@ -54,7 +55,7 @@ class AdminController(
         if (!canList) {
             return NetworkResponse(NetworkErrorType.NOT_AUTHORIZED, "Not authorized to list admins")
         }
-        return NetworkResponse(adminService.listAll().map { it.toView() })
+        return NetworkResponse(adminService.listAll().map { adminViewMapper.toView(it) })
     }
 
     @DeleteMapping("/admin/admins/{id}")

@@ -88,6 +88,30 @@ class AdminRoleMembershipServiceTest {
     }
 
     @Test
+    fun `assignRole - assigning the Root role throws and nothing is saved`() {
+        val rootRole = AdminRole(name = "Root")
+        every { adminRepository.findById(admin.id) } returns Optional.of(admin)
+        every { adminRoleRepository.findById(rootRole.id) } returns Optional.of(rootRole)
+
+        assertThrows<APIErrorException> {
+            service.assignRole(admin.id, rootRole.id)
+        }
+        verify(exactly = 0) { membershipRepository.save(any()) }
+    }
+
+    @Test
+    fun `removeMembership - removing a Root membership throws and nothing is deleted`() {
+        val rootRole = AdminRole(name = "Root")
+        val membership = AdminRoleMembership(admin = admin, role = rootRole)
+        every { membershipRepository.findById(membership.id) } returns Optional.of(membership)
+
+        assertThrows<APIErrorException> {
+            service.removeMembership(membership.id)
+        }
+        verify(exactly = 0) { membershipRepository.delete(any()) }
+    }
+
+    @Test
     fun `removeMembership - existing membership is deleted`() {
         val membership = AdminRoleMembership(admin = admin, role = role)
         every { membershipRepository.findById(membership.id) } returns Optional.of(membership)

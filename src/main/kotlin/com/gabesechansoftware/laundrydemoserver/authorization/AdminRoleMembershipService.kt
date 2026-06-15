@@ -10,6 +10,9 @@ import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import java.util.UUID
 
+// The Root role can only be assigned or removed directly in the database.
+private const val ROOT_ROLE_NAME = "Root"
+
 @Service
 class AdminRoleMembershipService(
     private val adminRepository: AdminRepository,
@@ -24,6 +27,9 @@ class AdminRoleMembershipService(
         val role = adminRoleRepository.findById(roleId)
             .orElseThrow { EntityDoesNotExistException("Role $roleId does not exist") }
 
+        if (role.name == ROOT_ROLE_NAME) {
+            throw APIErrorException(listOf("The Root role can only be assigned in the database"))
+        }
         if (membershipRepository.existsByAdminIdAndRoleId(adminId, roleId)) {
             throw APIErrorException(listOf("Admin already has this role"))
         }
@@ -37,6 +43,9 @@ class AdminRoleMembershipService(
     fun removeMembership(membershipId: UUID) {
         val membership = membershipRepository.findById(membershipId)
             .orElseThrow { EntityDoesNotExistException("Role membership $membershipId does not exist") }
+        if (membership.role?.name == ROOT_ROLE_NAME) {
+            throw APIErrorException(listOf("The Root role can only be removed in the database"))
+        }
         membershipRepository.delete(membership)
     }
 }

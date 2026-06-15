@@ -2,8 +2,9 @@ package com.gabesechansoftware.laundrydemoserver.controllers.auth
 
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.NetworkResponse
+import com.gabesechansoftware.laundrydemoserver.admins.AdminView
+import com.gabesechansoftware.laundrydemoserver.admins.AdminViewMapper
 import com.gabesechansoftware.laundrydemoserver.authentication.AdminLoginAuthenticator
-import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.Admin
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -13,13 +14,6 @@ import org.springframework.web.bind.annotation.RestController
 
 data class AdminLoginRequest(val email: String, val password: String)
 
-data class AdminView(
-    val id: String,
-    val name: String?,
-    val email: String?,
-    val phone: String?,
-)
-
 data class AdminLoginResponse(
     val session: String,
     val admin: AdminView
@@ -27,12 +21,11 @@ data class AdminLoginResponse(
 
 data class AdminCheckAuthRequest(val token: String)
 
-fun Admin.toView() = AdminView(id.toString(), name, email, phone)
-
 
 @RestController
 class AdminLoginController(
-    private val adminLoginAuthenticator: AdminLoginAuthenticator
+    private val adminLoginAuthenticator: AdminLoginAuthenticator,
+    private val adminViewMapper: AdminViewMapper,
 ) {
 
     @PostMapping("/admin/login")
@@ -44,7 +37,7 @@ class AdminLoginController(
                 request.password
             )
             val session = adminLoginAuthenticator.createSession(admin)
-            return NetworkResponse(AdminLoginResponse(session.token!!, session.admin!!.toView()))
+            return NetworkResponse(AdminLoginResponse(session.token!!, adminViewMapper.toView(session.admin!!)))
         }
         catch (ex: Exception) {
             ex.printStackTrace()
@@ -72,7 +65,7 @@ class AdminLoginController(
         @RequestBody request: AdminCheckAuthRequest): NetworkResponse<AdminView> {
             try {
                 val admin = adminLoginAuthenticator.authenticateToken(request.token)
-                return NetworkResponse(admin.toView())
+                return NetworkResponse(adminViewMapper.toView(admin))
             }
             catch (ex: Exception) {
                 ex.printStackTrace()

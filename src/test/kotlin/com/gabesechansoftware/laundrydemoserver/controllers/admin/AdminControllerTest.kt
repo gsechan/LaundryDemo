@@ -2,6 +2,8 @@ package com.gabesechansoftware.laundrydemoserver.controllers.admin
 
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.admins.AdminService
+import com.gabesechansoftware.laundrydemoserver.admins.AdminView
+import com.gabesechansoftware.laundrydemoserver.admins.AdminViewMapper
 import com.gabesechansoftware.laundrydemoserver.admins.UploadAdmin
 import com.gabesechansoftware.laundrydemoserver.assertSize
 import com.gabesechansoftware.laundrydemoserver.authorization.AdminAuthorizationService
@@ -30,10 +32,18 @@ class AdminControllerTest {
     @MockK
     private lateinit var adminAuthorizationService: AdminAuthorizationService
 
+    @MockK
+    private lateinit var adminViewMapper: AdminViewMapper
+
     @InjectMockKs
     private lateinit var controller: AdminController
 
     private val authedAdmin = Admin(name = "Gabe", email = "admin@provider.com", phone = "3128675309")
+
+    private fun stubView(admin: Admin) {
+        every { adminViewMapper.toView(admin) } returns
+            AdminView(admin.id.toString(), admin.name, admin.email, admin.phone, emptyList(), emptyList())
+    }
     private val upload = UploadAdmin(name = "New", email = "new@provider.com", phone = "2065551212")
     private val request = CreateAdminRequest(upload, "password123")
 
@@ -57,6 +67,7 @@ class AdminControllerTest {
             adminAuthorizationService.permissionsCheckAll(listOf(AdminPermissions.CREATE_ADMIN), authedAdmin)
         } returns true
         every { adminService.createAdmin(upload, "password123") } returns created
+        stubView(created)
 
         val response = controller.createAdmin(request, authedAdmin)
 
@@ -97,6 +108,7 @@ class AdminControllerTest {
             )
         } returns true
         every { adminService.listAll() } returns admins
+        admins.forEach { stubView(it) }
 
         val response = controller.listAdmins(authedAdmin)
 

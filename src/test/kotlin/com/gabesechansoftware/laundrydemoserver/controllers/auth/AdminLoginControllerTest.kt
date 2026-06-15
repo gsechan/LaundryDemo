@@ -3,6 +3,8 @@ package com.gabesechansoftware.laundrydemoserver.controllers.auth
 import com.gabesechansoftware.laundrydemoserver.NetworkErrorType
 import com.gabesechansoftware.laundrydemoserver.assertEmpty
 import com.gabesechansoftware.laundrydemoserver.assertNotEmpty
+import com.gabesechansoftware.laundrydemoserver.admins.AdminView
+import com.gabesechansoftware.laundrydemoserver.admins.AdminViewMapper
 import com.gabesechansoftware.laundrydemoserver.authentication.AdminLoginAuthenticator
 import com.gabesechansoftware.laundrydemoserver.authentication.BadLoginException
 import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.Admin
@@ -23,6 +25,9 @@ class AdminLoginControllerTest {
     @MockK
     private lateinit var authenticator: AdminLoginAuthenticator
 
+    @MockK
+    private lateinit var adminViewMapper: AdminViewMapper
+
     @InjectMockKs
     private lateinit var controller: AdminLoginController
 
@@ -34,6 +39,11 @@ class AdminLoginControllerTest {
     val token = "token"
     val expiration = OffsetDateTime.now()!!
     val session = AdminSession(admin, token, expiration)
+
+    private fun stubView() {
+        every { adminViewMapper.toView(admin) } returns
+            AdminView(admin.id.toString(), name, email, phone, emptyList(), emptyList())
+    }
 
     @Test
     fun `login-  if authenticator throws, return an error`() {
@@ -50,6 +60,7 @@ class AdminLoginControllerTest {
     fun `login-  if authenticator returns a value, respond with it`() {
         every { authenticator.authenticatePassword(any(), any()) } returns admin
         every { authenticator.createSession(any()) } returns session
+        stubView()
         val request = AdminLoginRequest(email, "password")
 
         val response = controller.login(request)
@@ -97,6 +108,7 @@ class AdminLoginControllerTest {
     @Test
     fun `checkAuth-  if authenticator returns a value, respond with it`() {
         every { authenticator.authenticateToken(token) } returns admin
+        stubView()
         val request = AdminCheckAuthRequest(token)
 
         val response = controller.checkAuth(request)

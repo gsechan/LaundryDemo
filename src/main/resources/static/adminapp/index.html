@@ -68,7 +68,7 @@
                     });
                     const body = await res.json();
                     if (body.errorType === "NONE") {
-                        onLogin(body.data.session);
+                        onLogin(body.data.session, body.data.admin);
                     } else {
                         setError((body.errors && body.errors[0]) || "Login failed");
                     }
@@ -92,8 +92,67 @@
             );
         }
 
-        function AdminDetail({ admin, token, onBack, onDeleted }) {
+        function AdminDetail({ admin, currentAdmin, token, onBack, onSaved, onDeleted }) {
+            const canAssign = currentAdmin.permissions.includes("ASSIGN_ADMIN_ROLES");
+            const currentRoleIds = admin.roleMemberships.map((m) => m.roleId);
+            const [roles, setRoles] = useState(null);
+            const [checked, setChecked] = useState(currentRoleIds);
             const [error, setError] = useState(null);
+
+            useEffect(() => {
+                if (!canAssign) return;
+                async function loadRoles() {
+                    try {
+                        const res = await fetch("/admin/roles", {
+                            headers: { "Authorization": "Bearer " + token },
+                        });
+                        const body = await res.json();
+                        if (body.errorType === "NONE") {
+                            // Root can only be assigned directly in the db.
+                            setRoles(body.data.filter((r) => r.name !== "Root"));
+                        } else {
+                            setError((body.errors && body.errors[0]) || "Could not load roles");
+                        }
+                    } catch (err) { setError("Could not reach the server"); }
+                }
+                loadRoles();
+            }, [canAssign, token]);
+
+            function toggle(roleId) {
+                setChecked((prev) => prev.includes(roleId) ? prev.filter((x) => x !== roleId) : [...prev, roleId]);
+            }
+
+            async function handleSave() {
+                setError(null);
+                try {
+                    const toAdd = checked.filter((rid) => !currentRoleIds.includes(rid));
+                    const toRemove = admin.roleMemberships.filter((m) => !checked.includes(m.roleId));
+                    for (const roleId of toAdd) {
+                        const res = await fetch("/admin/role-memberships", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                            body: JSON.stringify({ adminId: admin.id, roleId }),
+                        });
+                        const body = await res.json();
+                        if (body.errorType !== "NONE") {
+                            setError((body.errors && body.errors.join(", ")) || "Could not assign role");
+                            return;
+                        }
+                    }
+                    for (const m of toRemove) {
+                        const res = await fetch("/admin/role-memberships/" + m.membershipId, {
+                            method: "DELETE",
+                            headers: { "Authorization": "Bearer " + token },
+                        });
+                        const body = await res.json();
+                        if (body.errorType !== "NONE") {
+                            setError((body.errors && body.errors.join(", ")) || "Could not remove role");
+                            return;
+                        }
+                    }
+                    onSaved();
+                } catch (err) { setError("Could not reach the server"); }
+            }
 
             async function handleDelete() {
                 setError(null);
@@ -116,9 +175,28 @@
             return (
                 <div>
                     <button className="back-link" onClick={onBack}>← Back to admins</button>
-                    <h1>{admin.name}</h1>
+                    <div className="detail-header">
+                        <h1>{admin.name}</h1>
+                        {canAssign && <button onClick={handleSave}>Save</button>}
+                    </div>
                     <div className="detail-field"><span className="label">Email:</span> {admin.email}</div>
                     <div className="detail-field"><span className="label">Phone:</span> {admin.phone}</div>
+                    {canAssign && (
+                        <div>
+                            <h3>Roles</h3>
+                            {!roles && !error && <div>Loading…</div>}
+                            {roles && (
+                                <div className="edit-form">
+                                    {roles.map((r) => (
+                                        <label key={r.id} style={{ flexDirection: "row", alignItems: "center", gap: "8px" }}>
+                                            <input type="checkbox" checked={checked.includes(r.id)} onChange={() => toggle(r.id)} />
+                                            {r.name}
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                     <div><button className="danger" onClick={handleDelete}>Delete</button></div>
                     {error && <div className="error">{error}</div>}
                 </div>
@@ -182,7 +260,7 @@
             );
         }
 
-        function AdminsPage({ token }) {
+        function AdminsPage({ token, currentAdmin }) {
             const [admins, setAdmins] = useState(null);
             const [error, setError] = useState(null);
             const [selected, setSelected] = useState(null);
@@ -221,8 +299,10 @@
                 return (
                     <AdminDetail
                         admin={selected}
+                        currentAdmin={currentAdmin}
                         token={token}
                         onBack={() => setSelected(null)}
+                        onSaved={() => { setSelected(null); load(); }}
                         onDeleted={() => { setSelected(null); load(); }}
                     />
                 );
@@ -622,7 +702,7 @@
             { key: "organizations", label: "Organizations" },
         ];
 
-        function Shell({ token }) {
+        function Shell({ token, currentAdmin }) {
             const [page, setPage] = useState("admins");
 
             return (
@@ -639,7 +719,7 @@
                         ))}
                     </nav>
                     <main className="content">
-                        {page === "admins" && <AdminsPage token={token} />}
+                        {page === "admins" && <AdminsPage token={token} currentAdmin={currentAdmin} />}
                         {page === "roles" && <RolesPage token={token} />}
                         {page === "organizations" && <OrganizationsPage token={token} />}
                     </main>
@@ -649,10 +729,11 @@
 
         function App() {
             const [token, setToken] = useState(null);
+            const [currentAdmin, setCurrentAdmin] = useState(null);
             if (!token) {
-                return <LoginApp onLogin={setToken} />;
+                return <LoginApp onLogin={(session, admin) => { setToken(session); setCurrentAdmin(admin); }} />;
             }
-            return <Shell token={token} />;
+            return <Shell token={token} currentAdmin={currentAdmin} />;
         }
 
         ReactDOM.createRoot(document.getElementById("root")).render(<App />);
