@@ -27,6 +27,11 @@ data class PatchItem(
      val itemType: ItemType?,
 )
 
+data class PatchItemName(
+     val name: String?,
+     val locale: String?,
+)
+
 @Service
 class ItemService(
      private val itemRepository: ItemRepository,
@@ -66,6 +71,35 @@ class ItemService(
      fun deleteItem(org: UUID, itemId: UUID) {
           val item = getItem(org, itemId)
           itemRepository.delete(item)
+     }
+
+     @Transactional
+     fun addItemName(org: UUID, itemId: UUID, name: String, locale: String): ItemName {
+          val item = getItem(org, itemId)
+          val itemName = ItemName(itemId = item.id, name = name, locale = locale)
+          item.names.add(itemName)
+          itemRepository.save(item)
+          return itemName
+     }
+
+     @Transactional
+     fun updateItemName(org: UUID, itemId: UUID, nameId: UUID, patch: PatchItemName): ItemName {
+          val item = getItem(org, itemId)
+          val itemName = item.names.find { it.id == nameId }
+               ?: throw EntityDoesNotExistException("Item name does not exist")
+          patch.name?.let { itemName.name = it }
+          patch.locale?.let { itemName.locale = it }
+          itemRepository.save(item)
+          return itemName
+     }
+
+     @Transactional
+     fun deleteItemName(org: UUID, itemId: UUID, nameId: UUID) {
+          val item = getItem(org, itemId)
+          val itemName = item.names.find { it.id == nameId }
+               ?: throw EntityDoesNotExistException("Item name does not exist")
+          item.names.remove(itemName)
+          itemRepository.save(item)
      }
 
      private fun parsePrice(price: String): BigDecimal {

@@ -3,6 +3,7 @@ package com.gabesechansoftware.laundrydemoserver.catalog
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.EntityDoesNotExistException
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.Item
+import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemName
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.ItemRepository
 import io.mockk.Runs
@@ -18,6 +19,8 @@ import java.math.BigDecimal
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @ExtendWith(MockKExtension::class)
 class ItemServiceTest {
@@ -114,5 +117,82 @@ class ItemServiceTest {
             service.deleteItem(orgId, id)
         }
         verify(exactly = 0) { itemRepository.delete(any()) }
+    }
+
+    @Test
+    fun `addItemName - adds the name to the item and saves`() {
+        val item = Item(organization = orgId, price = BigDecimal("1.00"), itemType = ItemType.DRY_CLEANING)
+        every { itemRepository.findByOrganizationAndId(orgId, item.id) } returns item
+        every { itemRepository.save(any()) } returnsArgument 0
+
+        val result = service.addItemName(orgId, item.id, "Shirt", "en-US")
+
+        assertEquals("Shirt", result.name)
+        assertEquals("en-US", result.locale)
+        assertEquals(item.id, result.itemId)
+        assertTrue(item.names.contains(result))
+        verify { itemRepository.save(item) }
+    }
+
+    @Test
+    fun `addItemName - item not in org throws`() {
+        val id = UUID.randomUUID()
+        every { itemRepository.findByOrganizationAndId(orgId, id) } returns null
+
+        assertThrows<EntityDoesNotExistException> {
+            service.addItemName(orgId, id, "Shirt", "en-US")
+        }
+        verify(exactly = 0) { itemRepository.save(any()) }
+    }
+
+    @Test
+    fun `updateItemName - applies non-null fields and saves`() {
+        val item = Item(organization = orgId, price = BigDecimal("1.00"), itemType = ItemType.DRY_CLEANING)
+        val name = ItemName(itemId = item.id, name = "Old", locale = "en-US")
+        item.names.add(name)
+        every { itemRepository.findByOrganizationAndId(orgId, item.id) } returns item
+        every { itemRepository.save(any()) } returnsArgument 0
+
+        val result = service.updateItemName(orgId, item.id, name.id, PatchItemName(name = "New", locale = null))
+
+        assertEquals("New", result.name)
+        assertEquals("en-US", result.locale)
+        verify { itemRepository.save(item) }
+    }
+
+    @Test
+    fun `updateItemName - missing name throws and nothing is saved`() {
+        val item = Item(organization = orgId, price = BigDecimal("1.00"), itemType = ItemType.DRY_CLEANING)
+        every { itemRepository.findByOrganizationAndId(orgId, item.id) } returns item
+
+        assertThrows<EntityDoesNotExistException> {
+            service.updateItemName(orgId, item.id, UUID.randomUUID(), PatchItemName("New", null))
+        }
+        verify(exactly = 0) { itemRepository.save(any()) }
+    }
+
+    @Test
+    fun `deleteItemName - removes the name and saves`() {
+        val item = Item(organization = orgId, price = BigDecimal("1.00"), itemType = ItemType.DRY_CLEANING)
+        val name = ItemName(itemId = item.id, name = "Old", locale = "en-US")
+        item.names.add(name)
+        every { itemRepository.findByOrganizationAndId(orgId, item.id) } returns item
+        every { itemRepository.save(any()) } returnsArgument 0
+
+        service.deleteItemName(orgId, item.id, name.id)
+
+        assertFalse(item.names.contains(name))
+        verify { itemRepository.save(item) }
+    }
+
+    @Test
+    fun `deleteItemName - missing name throws and nothing is saved`() {
+        val item = Item(organization = orgId, price = BigDecimal("1.00"), itemType = ItemType.DRY_CLEANING)
+        every { itemRepository.findByOrganizationAndId(orgId, item.id) } returns item
+
+        assertThrows<EntityDoesNotExistException> {
+            service.deleteItemName(orgId, item.id, UUID.randomUUID())
+        }
+        verify(exactly = 0) { itemRepository.save(any()) }
     }
 }

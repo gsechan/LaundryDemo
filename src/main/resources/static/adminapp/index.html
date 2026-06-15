@@ -719,7 +719,64 @@
             const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
             const [price, setPrice] = useState(item.price || "");
             const [itemType, setItemType] = useState(item.itemType || "DRY_CLEANING");
+            const [names, setNames] = useState(item.names || []);
+            const [newName, setNewName] = useState("");
+            const [newLocale, setNewLocale] = useState("");
             const [error, setError] = useState(null);
+
+            const namesUrl = "/admin/organizations/" + orgId + "/items/" + item.id + "/names";
+
+            function updateNameField(id, field, value) {
+                setNames((prev) => prev.map((n) => n.id === id ? { ...n, [field]: value } : n));
+            }
+
+            async function saveName(n) {
+                setError(null);
+                try {
+                    const res = await fetch(namesUrl + "/" + n.id, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                        body: JSON.stringify({ name: n.name, locale: n.locale }),
+                    });
+                    const body = await res.json();
+                    if (body.errorType !== "NONE") {
+                        setError((body.errors && body.errors.join(", ")) || "Could not save name");
+                    }
+                } catch (err) { setError("Could not reach the server"); }
+            }
+
+            async function deleteName(id) {
+                setError(null);
+                try {
+                    const res = await fetch(namesUrl + "/" + id, {
+                        method: "DELETE",
+                        headers: { "Authorization": "Bearer " + token },
+                    });
+                    const body = await res.json();
+                    if (body.errorType === "NONE") { setNames((prev) => prev.filter((n) => n.id !== id)); }
+                    else { setError((body.errors && body.errors.join(", ")) || "Could not delete name"); }
+                } catch (err) { setError("Could not reach the server"); }
+            }
+
+            async function addName() {
+                setError(null);
+                if (!newName || !newLocale) return;
+                try {
+                    const res = await fetch(namesUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                        body: JSON.stringify({ name: newName, locale: newLocale }),
+                    });
+                    const body = await res.json();
+                    if (body.errorType === "NONE") {
+                        setNames((prev) => [...prev, body.data]);
+                        setNewName("");
+                        setNewLocale("");
+                    } else {
+                        setError((body.errors && body.errors.join(", ")) || "Could not add name");
+                    }
+                } catch (err) { setError("Could not reach the server"); }
+            }
 
             async function handleSave() {
                 setError(null);
@@ -766,9 +823,31 @@
                         </label>
                     </div>
                     <h3>Names</h3>
-                    {item.names.map((n, i) => (
-                        <div className="detail-field" key={i}>{n.name} <span className="label">({n.locale})</span></div>
-                    ))}
+                    {canEdit ? (
+                        <div>
+                            {names.map((n) => (
+                                <div className="name-row" key={n.id}>
+                                    <input type="text" value={n.name || ""}
+                                           onChange={(e) => updateNameField(n.id, "name", e.target.value)} />
+                                    <input type="text" value={n.locale || ""}
+                                           onChange={(e) => updateNameField(n.id, "locale", e.target.value)} />
+                                    <button type="button" onClick={() => saveName(n)}>Save</button>
+                                    <button type="button" onClick={() => deleteName(n.id)}>✕</button>
+                                </div>
+                            ))}
+                            <div className="name-row">
+                                <input type="text" placeholder="Name" value={newName}
+                                       onChange={(e) => setNewName(e.target.value)} />
+                                <input type="text" placeholder="Locale" value={newLocale}
+                                       onChange={(e) => setNewLocale(e.target.value)} />
+                                <button type="button" onClick={addName}>Add</button>
+                            </div>
+                        </div>
+                    ) : (
+                        names.map((n, i) => (
+                            <div className="detail-field" key={i}>{n.name} <span className="label">({n.locale})</span></div>
+                        ))
+                    )}
                     {canEdit && <div><button className="danger" onClick={handleDelete}>Delete</button></div>}
                     {error && <div className="error">{error}</div>}
                 </div>
