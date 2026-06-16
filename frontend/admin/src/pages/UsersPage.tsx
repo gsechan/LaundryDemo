@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../AuthContext";
 import PageList from "../components/PageList";
 
-export default function UsersPage({ token }) {
+export default function UsersPage() {
+    const { token } = useAuth();
     const [orgs, setOrgs] = useState(null);
     const [orgId, setOrgId] = useState("");
     const [users, setUsers] = useState(null);

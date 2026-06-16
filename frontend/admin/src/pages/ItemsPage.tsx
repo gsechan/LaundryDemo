@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../AuthContext";
 import PageList from "../components/PageList";
+import DetailView from "../components/DetailView";
 
 const ITEM_TYPES = ["WASH_AND_FOLD", "DRY_CLEANING", "OTHER"];
 
-function ItemDetail({ orgId, item, currentAdmin, token, onBack, onSaved, onDeleted }) {
+function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
+    const { token, currentAdmin } = useAuth();
     const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
     const [price, setPrice] = useState(item.price || "");
     const [itemType, setItemType] = useState(item.itemType || "DRY_CLEANING");
@@ -94,12 +97,16 @@ function ItemDetail({ orgId, item, currentAdmin, token, onBack, onSaved, onDelet
     }
 
     return (
-        <div>
-            <button className="back-link" onClick={onBack}>← Back to items</button>
-            <div className="detail-header">
-                <h1>Edit Item</h1>
-                {canEdit && <button onClick={handleSave}>Save</button>}
-            </div>
+        <DetailView
+            title="Edit Item"
+            backLabel="Back to items"
+            onBack={onBack}
+            canSave={canEdit}
+            onSave={handleSave}
+            canDelete={canEdit}
+            onDelete={handleDelete}
+            error={error}
+        >
             <div className="edit-form">
                 <label>Price
                     <input type="text" value={price} onChange={(e) => setPrice(e.target.value)} />
@@ -136,13 +143,12 @@ function ItemDetail({ orgId, item, currentAdmin, token, onBack, onSaved, onDelet
                     <div className="detail-field" key={i}>{n.name} <span className="label">({n.locale})</span></div>
                 ))
             )}
-            {canEdit && <div><button className="danger" onClick={handleDelete}>Delete</button></div>}
-            {error && <div className="error">{error}</div>}
-        </div>
+        </DetailView>
     );
 }
 
-function ItemCreate({ orgId, token, onBack, onCreated }) {
+function ItemCreate({ orgId, onBack, onCreated }) {
+    const { token } = useAuth();
     const [price, setPrice] = useState("");
     const [itemType, setItemType] = useState("DRY_CLEANING");
     const [names, setNames] = useState([{ name: "", locale: "" }]);
@@ -198,7 +204,8 @@ function ItemCreate({ orgId, token, onBack, onCreated }) {
     );
 }
 
-export default function ItemsPage({ token, currentAdmin }) {
+export default function ItemsPage() {
+    const { token, currentAdmin } = useAuth();
     const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
     const [orgs, setOrgs] = useState(null);
     const [orgId, setOrgId] = useState("");
@@ -238,7 +245,6 @@ export default function ItemsPage({ token, currentAdmin }) {
         return (
             <ItemCreate
                 orgId={orgId}
-                token={token}
                 onBack={() => setCreating(false)}
                 onCreated={() => { setCreating(false); loadItems(); }}
             />
@@ -250,8 +256,6 @@ export default function ItemsPage({ token, currentAdmin }) {
             <ItemDetail
                 orgId={orgId}
                 item={selected}
-                currentAdmin={currentAdmin}
-                token={token}
                 onBack={() => setSelected(null)}
                 onSaved={() => { setSelected(null); loadItems(); }}
                 onDeleted={() => { setSelected(null); loadItems(); }}

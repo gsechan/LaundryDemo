@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../AuthContext";
 import PageList from "../components/PageList";
+import DetailView from "../components/DetailView";
 
-function OrganizationDetail({ org, currentAdmin, token, onBack, onSaved, onDeleted }) {
+function OrganizationDetail({ org, onBack, onSaved, onDeleted }) {
+    const { token, currentAdmin } = useAuth();
     const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
     const canDelete = currentAdmin.permissions.includes("DELETE_ORG");
     const [name, setName] = useState(org.name || "");
@@ -71,12 +74,18 @@ function OrganizationDetail({ org, currentAdmin, token, onBack, onSaved, onDelet
     }
 
     return (
-        <div>
-            <button className="back-link" onClick={onBack}>← Back to organizations</button>
-            <div className="detail-header">
-                <h1>Edit Organization</h1>
-                {canEdit && <button onClick={handleSave}>Save</button>}
-            </div>
+        <DetailView
+            title="Edit Organization"
+            backLabel="Back to organizations"
+            onBack={onBack}
+            canSave={canEdit}
+            onSave={handleSave}
+            canDelete={canDelete}
+            onDelete={org.isDeleted ? handleUndelete : handleDelete}
+            deleteLabel={org.isDeleted ? "Undelete" : "Delete"}
+            deleteDanger={!org.isDeleted}
+            error={error}
+        >
             <div className="edit-form">
                 <label>Name
                     <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
@@ -85,19 +94,12 @@ function OrganizationDetail({ org, currentAdmin, token, onBack, onSaved, onDelet
                     <input type="text" value={locale} onChange={(e) => setLocale(e.target.value)} />
                 </label>
             </div>
-            {canDelete && (
-                <div>
-                    {org.isDeleted
-                        ? <button onClick={handleUndelete}>Undelete</button>
-                        : <button className="danger" onClick={handleDelete}>Delete</button>}
-                </div>
-            )}
-            {error && <div className="error">{error}</div>}
-        </div>
+        </DetailView>
     );
 }
 
-function OrganizationCreate({ token, onBack, onCreated }) {
+function OrganizationCreate({ onBack, onCreated }) {
+    const { token } = useAuth();
     const [name, setName] = useState("");
     const [locale, setLocale] = useState("");
     const [error, setError] = useState(null);
@@ -141,7 +143,8 @@ function OrganizationCreate({ token, onBack, onCreated }) {
     );
 }
 
-export default function OrganizationsPage({ token, currentAdmin }) {
+export default function OrganizationsPage() {
+    const { token, currentAdmin } = useAuth();
     const [orgs, setOrgs] = useState(null);
     const [error, setError] = useState(null);
     const [selected, setSelected] = useState(null);
@@ -169,7 +172,6 @@ export default function OrganizationsPage({ token, currentAdmin }) {
     if (creating) {
         return (
             <OrganizationCreate
-                token={token}
                 onBack={() => setCreating(false)}
                 onCreated={() => { setCreating(false); load(); }}
             />
@@ -180,8 +182,6 @@ export default function OrganizationsPage({ token, currentAdmin }) {
         return (
             <OrganizationDetail
                 org={selected}
-                currentAdmin={currentAdmin}
-                token={token}
                 onBack={() => setSelected(null)}
                 onSaved={() => { setSelected(null); load(); }}
                 onDeleted={() => { setSelected(null); load(); }}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import AuthContext from "./AuthContext";
 import Navbar, { getInitialPage } from "./Navbar";
 import LoginPage from "./pages/LoginPage";
 import AdminsPage from "./pages/AdminsPage";
@@ -13,17 +14,19 @@ function Shell({ token, currentAdmin }) {
     const [page, setPage] = useState(() => getInitialPage(perms));
 
     return (
-        <div className="shell">
-            <Navbar perms={perms} page={page} onNavigate={setPage} />
-            <main className="content">
-                {page === "admins" && <AdminsPage token={token} currentAdmin={currentAdmin} />}
-                {page === "roles" && <RolesPage token={token} currentAdmin={currentAdmin} />}
-                {page === "organizations" && <OrganizationsPage token={token} currentAdmin={currentAdmin} />}
-                {page === "orders" && <OrdersPage token={token} currentAdmin={currentAdmin} />}
-                {page === "users" && <UsersPage token={token} />}
-                {page === "items" && <ItemsPage token={token} currentAdmin={currentAdmin} />}
-            </main>
-        </div>
+        <AuthContext.Provider value={{ token, currentAdmin }}>
+            <div className="shell">
+                <Navbar perms={perms} page={page} onNavigate={setPage} />
+                <main className="content">
+                    {page === "admins" && <AdminsPage />}
+                    {page === "roles" && <RolesPage />}
+                    {page === "organizations" && <OrganizationsPage />}
+                    {page === "orders" && <OrdersPage />}
+                    {page === "users" && <UsersPage />}
+                    {page === "items" && <ItemsPage />}
+                </main>
+            </div>
+        </AuthContext.Provider>
     );
 }
 

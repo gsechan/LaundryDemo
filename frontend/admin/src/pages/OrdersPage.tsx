@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../AuthContext";
 import PageList from "../components/PageList";
+import DetailView from "../components/DetailView";
 
 const ORDER_STATES = [
     "SUBMITTED", "PICKUP_IN_PROGRESS", "PICKED_UP", "CLEANING",
@@ -15,7 +17,8 @@ function msToInput(ms) {
 function inputToMs(s) { return s ? new Date(s).getTime() : null; }
 function msToLabel(ms) { return ms == null ? "—" : new Date(ms).toLocaleString(); }
 
-function OrderDetail({ order, currentAdmin, token, onBack, onSaved, onDeleted }) {
+function OrderDetail({ order, onBack, onSaved, onDeleted }) {
+    const { token, currentAdmin } = useAuth();
     const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
     const [state, setState] = useState(order.state || "SUBMITTED");
     const [pickupAt, setPickupAt] = useState(msToInput(order.scheduledPickup));
@@ -84,12 +87,16 @@ function OrderDetail({ order, currentAdmin, token, onBack, onSaved, onDeleted })
     }
 
     return (
-        <div>
-            <button className="back-link" onClick={onBack}>← Back to orders</button>
-            <div className="detail-header">
-                <h1>Edit Order</h1>
-                {canEdit && <button onClick={handleSave}>Save</button>}
-            </div>
+        <DetailView
+            title="Edit Order"
+            backLabel="Back to orders"
+            onBack={onBack}
+            canSave={canEdit}
+            onSave={handleSave}
+            canDelete={canEdit}
+            onDelete={handleDelete}
+            error={error}
+        >
             <div className="edit-form">
                 <label>State
                     <select value={state} onChange={(e) => setState(e.target.value)}>
@@ -115,13 +122,12 @@ function OrderDetail({ order, currentAdmin, token, onBack, onSaved, onDeleted })
                     <span>= {l.totalCost || "—"}</span>
                 </div>
             ))}
-            {canEdit && <div><button className="danger" onClick={handleDelete}>Delete</button></div>}
-            {error && <div className="error">{error}</div>}
-        </div>
+        </DetailView>
     );
 }
 
-export default function OrdersPage({ token, currentAdmin }) {
+export default function OrdersPage() {
+    const { token, currentAdmin } = useAuth();
     const [orders, setOrders] = useState(null);
     const [selected, setSelected] = useState(null);
     const [error, setError] = useState(null);
@@ -142,8 +148,6 @@ export default function OrdersPage({ token, currentAdmin }) {
         return (
             <OrderDetail
                 order={selected}
-                currentAdmin={currentAdmin}
-                token={token}
                 onBack={() => setSelected(null)}
                 onSaved={() => { setSelected(null); load(); }}
                 onDeleted={() => { setSelected(null); load(); }}

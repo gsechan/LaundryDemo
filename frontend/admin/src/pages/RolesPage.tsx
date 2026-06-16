@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../AuthContext";
 import PageList from "../components/PageList";
+import DetailView from "../components/DetailView";
 
 const ALL_PERMISSIONS = [
     "CREATE_ORG", "DELETE_ORG", "EDIT_ORG",
@@ -19,7 +21,8 @@ function PermissionChecklist({ selected, onToggle }) {
     );
 }
 
-function RoleDetail({ role, currentAdmin, token, onBack, onSaved, onDeleted }) {
+function RoleDetail({ role, onBack, onSaved, onDeleted }) {
+    const { token, currentAdmin } = useAuth();
     const canAssign = currentAdmin.permissions.includes("ASSIGN_ADMIN_ROLES");
     const [name, setName] = useState(role.name || "");
     const [perms, setPerms] = useState(role.permissions || []);
@@ -57,12 +60,16 @@ function RoleDetail({ role, currentAdmin, token, onBack, onSaved, onDeleted }) {
     }
 
     return (
-        <div>
-            <button className="back-link" onClick={onBack}>← Back to roles</button>
-            <div className="detail-header">
-                <h1>Edit Role</h1>
-                {canAssign && <button onClick={handleSave}>Save</button>}
-            </div>
+        <DetailView
+            title="Edit Role"
+            backLabel="Back to roles"
+            onBack={onBack}
+            canSave={canAssign}
+            onSave={handleSave}
+            canDelete={canAssign}
+            onDelete={handleDelete}
+            error={error}
+        >
             <div className="edit-form">
                 <label>Name
                     <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
@@ -70,14 +77,12 @@ function RoleDetail({ role, currentAdmin, token, onBack, onSaved, onDeleted }) {
             </div>
             <h3>Permissions</h3>
             <PermissionChecklist selected={perms} onToggle={toggle} />
-            {canAssign &&
-                <div><button className="danger" onClick={handleDelete}>Delete</button></div>}
-            {error && <div className="error">{error}</div>}
-        </div>
+        </DetailView>
     );
 }
 
-function RoleCreate({ token, onBack, onCreated }) {
+function RoleCreate({ onBack, onCreated }) {
+    const { token } = useAuth();
     const [name, setName] = useState("");
     const [perms, setPerms] = useState([]);
     const [error, setError] = useState(null);
@@ -117,7 +122,8 @@ function RoleCreate({ token, onBack, onCreated }) {
     );
 }
 
-export default function RolesPage({ token, currentAdmin }) {
+export default function RolesPage() {
+    const { token, currentAdmin } = useAuth();
     const [roles, setRoles] = useState(null);
     const [error, setError] = useState(null);
     const [selected, setSelected] = useState(null);
@@ -140,7 +146,6 @@ export default function RolesPage({ token, currentAdmin }) {
     if (creating) {
         return (
             <RoleCreate
-                token={token}
                 onBack={() => setCreating(false)}
                 onCreated={() => { setCreating(false); load(); }}
             />
@@ -151,8 +156,6 @@ export default function RolesPage({ token, currentAdmin }) {
         return (
             <RoleDetail
                 role={selected}
-                currentAdmin={currentAdmin}
-                token={token}
                 onBack={() => setSelected(null)}
                 onSaved={() => { setSelected(null); load(); }}
                 onDeleted={() => { setSelected(null); load(); }}

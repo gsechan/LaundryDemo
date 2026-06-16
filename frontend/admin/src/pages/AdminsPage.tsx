@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../AuthContext";
 import PageList from "../components/PageList";
+import DetailView from "../components/DetailView";
 
-function AdminDetail({ admin, currentAdmin, token, onBack, onSaved, onDeleted }) {
+function AdminDetail({ admin, onBack, onSaved, onDeleted }) {
+    const { token, currentAdmin } = useAuth();
     const canAssign = currentAdmin.permissions.includes("ASSIGN_ADMIN_ROLES");
     const currentRoleIds = admin.roleMemberships.map((m) => m.roleId);
     const [roles, setRoles] = useState(null);
@@ -81,12 +84,16 @@ function AdminDetail({ admin, currentAdmin, token, onBack, onSaved, onDeleted })
     }
 
     return (
-        <div>
-            <button className="back-link" onClick={onBack}>← Back to admins</button>
-            <div className="detail-header">
-                <h1>{admin.name}</h1>
-                {canAssign && <button onClick={handleSave}>Save</button>}
-            </div>
+        <DetailView
+            title={admin.name}
+            backLabel="Back to admins"
+            onBack={onBack}
+            canSave={canAssign}
+            onSave={handleSave}
+            canDelete={currentAdmin.permissions.includes("DELETE_ADMIN")}
+            onDelete={handleDelete}
+            error={error}
+        >
             <div className="detail-field"><span className="label">Email:</span> {admin.email}</div>
             <div className="detail-field"><span className="label">Phone:</span> {admin.phone}</div>
             {canAssign && (
@@ -105,14 +112,12 @@ function AdminDetail({ admin, currentAdmin, token, onBack, onSaved, onDeleted })
                     )}
                 </div>
             )}
-            {currentAdmin.permissions.includes("DELETE_ADMIN") &&
-                <div><button className="danger" onClick={handleDelete}>Delete</button></div>}
-            {error && <div className="error">{error}</div>}
-        </div>
+        </DetailView>
     );
 }
 
-function AdminCreate({ token, onBack, onCreated }) {
+function AdminCreate({ onBack, onCreated }) {
+    const { token } = useAuth();
     const [name, setName] = useState("");
     const [phone, setPhone] = useState("");
     const [email, setEmail] = useState("");
@@ -169,7 +174,8 @@ function AdminCreate({ token, onBack, onCreated }) {
     );
 }
 
-export default function AdminsPage({ token, currentAdmin }) {
+export default function AdminsPage() {
+    const { token, currentAdmin } = useAuth();
     const [admins, setAdmins] = useState(null);
     const [error, setError] = useState(null);
     const [selected, setSelected] = useState(null);
@@ -197,7 +203,6 @@ export default function AdminsPage({ token, currentAdmin }) {
     if (creating) {
         return (
             <AdminCreate
-                token={token}
                 onBack={() => setCreating(false)}
                 onCreated={() => { setCreating(false); load(); }}
             />
@@ -208,8 +213,6 @@ export default function AdminsPage({ token, currentAdmin }) {
         return (
             <AdminDetail
                 admin={selected}
-                currentAdmin={currentAdmin}
-                token={token}
                 onBack={() => setSelected(null)}
                 onSaved={() => { setSelected(null); load(); }}
                 onDeleted={() => { setSelected(null); load(); }}
