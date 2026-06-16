@@ -3,6 +3,7 @@ package com.gabesechansoftware.laundrydemoserver.admins
 import com.gabesechansoftware.laundrydemoserver.APIErrorException
 import com.gabesechansoftware.laundrydemoserver.EntityDoesNotExistException
 import com.gabesechansoftware.laundrydemoserver.authentication.AdminLoginAuthenticator
+import com.gabesechansoftware.laundrydemoserver.model.adminview.UploadAdmin
 import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.Admin
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.admin.AdminRepository
 import com.gabesechansoftware.laundrydemoserver.model.validation.AdminValidator
@@ -10,11 +11,6 @@ import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import java.util.UUID
 
-data class UploadAdmin(
-    val name: String,
-    val email: String,
-    val phone: String,
-)
 
 @Service
 class AdminService(

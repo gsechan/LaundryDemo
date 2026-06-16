@@ -5,10 +5,10 @@ import com.gabesechansoftware.laundrydemoserver.NetworkResponse
 import com.gabesechansoftware.laundrydemoserver.admins.AdminService
 import com.gabesechansoftware.laundrydemoserver.admins.AdminView
 import com.gabesechansoftware.laundrydemoserver.admins.AdminViewMapper
-import com.gabesechansoftware.laundrydemoserver.admins.UploadAdmin
 import com.gabesechansoftware.laundrydemoserver.authentication.AuthenticatedAdmin
 import com.gabesechansoftware.laundrydemoserver.authorization.AdminAuthorizationService
 import com.gabesechansoftware.laundrydemoserver.authorization.AdminPermissions
+import com.gabesechansoftware.laundrydemoserver.model.adminview.UploadAdmin
 import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.Admin
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
