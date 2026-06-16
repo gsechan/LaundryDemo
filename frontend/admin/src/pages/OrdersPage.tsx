@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import useApi from "../useApi";
-import { loadResource, deleteResource } from "../apiUtils";
+import { saveResource, loadResource, deleteResource } from "../apiUtils";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
@@ -33,32 +33,19 @@ function OrderDetail({ order, onBack, onSaved, onDeleted }) {
     );
     const [error, setError] = useState(null);
 
-    async function handleSave() {
-        setError(null);
-        const body = {
-            order: {
-                state,
-                scheduledPickup: inputToMs(pickupAt),
-                scheduledDropoff: inputToMs(dropoffAt),
-                pickupAddress: pickup,
-                dropoffAddress: dropoff,
-                lines: order.lines.map((l) => ({
-                    id: l.id,
-                    quantity: lineQtys[l.id] === "" ? null : lineQtys[l.id],
-                })),
-            },
-        };
-        try {
-            const res = await api("/admin/orders/" + order.id, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-            });
-            const b = await res.json();
-            if (b.errorType === "NONE") { onSaved(); }
-            else { setError((b.errors && b.errors.join(", ")) || "Could not save order"); }
-        } catch (err) { setError("Could not reach the server"); }
-    }
+    const handleSave = () => saveResource(api, "PATCH", "/admin/orders/" + order.id, {
+        order: {
+            state,
+            scheduledPickup: inputToMs(pickupAt),
+            scheduledDropoff: inputToMs(dropoffAt),
+            pickupAddress: pickup,
+            dropoffAddress: dropoff,
+            lines: order.lines.map((l) => ({
+                id: l.id,
+                quantity: lineQtys[l.id] === "" ? null : lineQtys[l.id],
+            })),
+        },
+    }, setError, onSaved, "Could not save order");
 
     const handleDelete = () => deleteResource(api, "/admin/orders/" + order.id, setError, onDeleted, "Could not delete order");
 

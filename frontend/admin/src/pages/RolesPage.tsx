@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import useApi from "../useApi";
-import { loadResource, deleteResource } from "../apiUtils";
+import { saveResource, loadResource, deleteResource } from "../apiUtils";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
@@ -35,19 +35,8 @@ function RoleDetail({ role, onBack, onSaved, onDeleted }) {
         setPerms((prev) => prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]);
     }
 
-    async function handleSave() {
-        setError(null);
-        try {
-            const res = await api("/admin/roles/" + role.id, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ role: { name, permissions: perms } }),
-            });
-            const body = await res.json();
-            if (body.errorType === "NONE") { onSaved(); }
-            else { setError((body.errors && body.errors.join(", ")) || "Could not save role"); }
-        } catch (err) { setError("Could not reach the server"); }
-    }
+    const handleSave = () => saveResource(api, "PATCH", "/admin/roles/" + role.id,
+        { role: { name, permissions: perms } }, setError, onSaved, "Could not save role");
 
     const handleDelete = () => deleteResource(api, "/admin/roles/" + role.id, setError, onDeleted, "Could not delete role");
 
@@ -85,17 +74,8 @@ function RoleCreate({ onBack, onCreated }) {
 
     async function handleSubmit(e) {
         e.preventDefault();
-        setError(null);
-        try {
-            const res = await api("/admin/roles", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ role: { name, permissions: perms } }),
-            });
-            const body = await res.json();
-            if (body.errorType === "NONE") { onCreated(); }
-            else { setError((body.errors && body.errors.join(", ")) || "Could not create role"); }
-        } catch (err) { setError("Could not reach the server"); }
+        await saveResource(api, "POST", "/admin/roles",
+            { role: { name, permissions: perms } }, setError, onCreated, "Could not create role");
     }
 
     return (

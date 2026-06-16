@@ -1,3 +1,25 @@
+export async function saveResource(
+    api: (url: string, options?: RequestInit) => Promise<Response>,
+    method: string,
+    url: string,
+    payload: unknown,
+    setError: (msg: string | null) => void,
+    onSuccess: (data?: any) => void,
+    errorMsg: string,
+) {
+    setError(null);
+    try {
+        const res = await api(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+        const body = await res.json();
+        if (body.errorType === "NONE") { onSuccess(body.data); }
+        else { setError((body.errors && body.errors.join(", ")) || errorMsg); }
+    } catch (err) { setError("Could not reach the server"); }
+}
+
 export async function loadResource(
     api: (url: string, options?: RequestInit) => Promise<Response>,
     url: string,

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import useApi from "../useApi";
-import { loadResource, deleteResource } from "../apiUtils";
+import { saveResource, loadResource, deleteResource } from "../apiUtils";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
@@ -24,64 +24,21 @@ function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
         setNames((prev) => prev.map((n) => n.id === id ? { ...n, [field]: value } : n));
     }
 
-    async function saveName(n) {
-        setError(null);
-        try {
-            const res = await api(namesUrl + "/" + n.id, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: n.name, locale: n.locale }),
-            });
-            const body = await res.json();
-            if (body.errorType !== "NONE") {
-                setError((body.errors && body.errors.join(", ")) || "Could not save name");
-            }
-        } catch (err) { setError("Could not reach the server"); }
-    }
+    const saveName = (n) => saveResource(api, "PATCH", namesUrl + "/" + n.id,
+        { name: n.name, locale: n.locale }, setError, () => {}, "Could not save name");
 
-    async function deleteName(id) {
-        setError(null);
-        try {
-            const res = await api(namesUrl + "/" + id, { method: "DELETE" });
-            const body = await res.json();
-            if (body.errorType === "NONE") { setNames((prev) => prev.filter((n) => n.id !== id)); }
-            else { setError((body.errors && body.errors.join(", ")) || "Could not delete name"); }
-        } catch (err) { setError("Could not reach the server"); }
-    }
+    const deleteName = (id) => deleteResource(api, namesUrl + "/" + id, setError,
+        () => setNames((prev) => prev.filter((n) => n.id !== id)), "Could not delete name");
 
     async function addName() {
-        setError(null);
         if (!newName || !newLocale) return;
-        try {
-            const res = await api(namesUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: newName, locale: newLocale }),
-            });
-            const body = await res.json();
-            if (body.errorType === "NONE") {
-                setNames((prev) => [...prev, body.data]);
-                setNewName("");
-                setNewLocale("");
-            } else {
-                setError((body.errors && body.errors.join(", ")) || "Could not add name");
-            }
-        } catch (err) { setError("Could not reach the server"); }
+        await saveResource(api, "POST", namesUrl, { name: newName, locale: newLocale }, setError,
+            (data) => { setNames((prev) => [...prev, data]); setNewName(""); setNewLocale(""); },
+            "Could not add name");
     }
 
-    async function handleSave() {
-        setError(null);
-        try {
-            const res = await api("/admin/organizations/" + orgId + "/items/" + item.id, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ item: { price, itemType } }),
-            });
-            const body = await res.json();
-            if (body.errorType === "NONE") { onSaved(); }
-            else { setError((body.errors && body.errors.join(", ")) || "Could not save item"); }
-        } catch (err) { setError("Could not reach the server"); }
-    }
+    const handleSave = () => saveResource(api, "PATCH", "/admin/organizations/" + orgId + "/items/" + item.id,
+        { item: { price, itemType } }, setError, onSaved, "Could not save item");
 
     const handleDelete = () => deleteResource(api, "/admin/organizations/" + orgId + "/items/" + item.id, setError, onDeleted, "Could not delete item");
 
@@ -151,18 +108,9 @@ function ItemCreate({ orgId, onBack, onCreated }) {
 
     async function handleSubmit(e) {
         e.preventDefault();
-        setError(null);
         const cleanNames = names.filter((n) => n.name && n.locale);
-        try {
-            const res = await api("/admin/organizations/" + orgId + "/items", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ item: { price, itemType, names: cleanNames } }),
-            });
-            const body = await res.json();
-            if (body.errorType === "NONE") { onCreated(); }
-            else { setError((body.errors && body.errors.join(", ")) || "Could not create item"); }
-        } catch (err) { setError("Could not reach the server"); }
+        await saveResource(api, "POST", "/admin/organizations/" + orgId + "/items",
+            { item: { price, itemType, names: cleanNames } }, setError, onCreated, "Could not create item");
     }
 
     return (

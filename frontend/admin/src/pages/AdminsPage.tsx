@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import useApi from "../useApi";
-import { loadResource, deleteResource } from "../apiUtils";
+import { saveResource, loadResource, deleteResource } from "../apiUtils";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
@@ -100,26 +100,12 @@ function AdminCreate({ onBack, onCreated }) {
 
     async function handleSubmit(e) {
         e.preventDefault();
-        setError(null);
         if (password !== confirm) {
             setError("Passwords do not match");
             return;
         }
-        try {
-            const res = await api("/admin/admins", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ admin: { name, email, phone }, password }),
-            });
-            const body = await res.json();
-            if (body.errorType === "NONE") {
-                onCreated();
-            } else {
-                setError((body.errors && body.errors.join(", ")) || "Could not create admin");
-            }
-        } catch (err) {
-            setError("Could not reach the server");
-        }
+        await saveResource(api, "POST", "/admin/admins", { admin: { name, email, phone }, password },
+            setError, onCreated, "Could not create admin");
     }
 
     return (

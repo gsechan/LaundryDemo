@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import useApi from "../useApi";
-import { loadResource, deleteResource } from "../apiUtils";
+import { saveResource, loadResource, deleteResource } from "../apiUtils";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
@@ -14,45 +14,13 @@ function OrganizationDetail({ org, onBack, onSaved, onDeleted }) {
     const [locale, setLocale] = useState(org.defaultLocale || "");
     const [error, setError] = useState(null);
 
-    async function handleSave() {
-        setError(null);
-        try {
-            const res = await api("/admin/organizations/" + org.id, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ organization: { name, defaultLocale: locale } }),
-            });
-            const body = await res.json();
-            if (body.errorType === "NONE") {
-                onSaved();
-            } else {
-                setError((body.errors && body.errors.join(", ")) || "Could not save organization");
-            }
-        } catch (err) {
-            setError("Could not reach the server");
-        }
-    }
+    const handleSave = () => saveResource(api, "PATCH", "/admin/organizations/" + org.id,
+        { organization: { name, defaultLocale: locale } }, setError, onSaved, "Could not save organization");
 
     const handleDelete = () => deleteResource(api, "/admin/organizations/" + org.id, setError, onDeleted, "Could not delete organization");
 
-    async function handleUndelete() {
-        setError(null);
-        try {
-            const res = await api("/admin/organizations/" + org.id, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ organization: { isDeleted: false } }),
-            });
-            const body = await res.json();
-            if (body.errorType === "NONE") {
-                onSaved();
-            } else {
-                setError((body.errors && body.errors.join(", ")) || "Could not undelete organization");
-            }
-        } catch (err) {
-            setError("Could not reach the server");
-        }
-    }
+    const handleUndelete = () => saveResource(api, "PATCH", "/admin/organizations/" + org.id,
+        { organization: { isDeleted: false } }, setError, onSaved, "Could not undelete organization");
 
     return (
         <DetailView
@@ -87,22 +55,8 @@ function OrganizationCreate({ onBack, onCreated }) {
 
     async function handleSubmit(e) {
         e.preventDefault();
-        setError(null);
-        try {
-            const res = await api("/admin/organizations", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ organization: { name, defaultLocale: locale } }),
-            });
-            const body = await res.json();
-            if (body.errorType === "NONE") {
-                onCreated();
-            } else {
-                setError((body.errors && body.errors.join(", ")) || "Could not create organization");
-            }
-        } catch (err) {
-            setError("Could not reach the server");
-        }
+        await saveResource(api, "POST", "/admin/organizations",
+            { organization: { name, defaultLocale: locale } }, setError, onCreated, "Could not create organization");
     }
 
     return (
