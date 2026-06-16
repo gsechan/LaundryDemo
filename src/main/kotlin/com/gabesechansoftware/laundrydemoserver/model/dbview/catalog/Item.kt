@@ -9,7 +9,6 @@ import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
-import jakarta.persistence.ForeignKey
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
@@ -20,9 +19,8 @@ import java.util.UUID
 @Table(name = "items")
 class Item(
 
-    @Column( name = "organization_id", nullable = false)
-    @JoinColumn(name = "organization_id", foreignKey = ForeignKey(name = "fk_items_orangization_id"))
-    var organization: UUID? = null,
+    @Column(name = "location_id", nullable = false)
+    var locationId: UUID? = null,
 
     @Column(nullable = false, precision = 10, scale = 2)
     var price: BigDecimal? = null,

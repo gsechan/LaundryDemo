@@ -36,6 +36,7 @@ class AdminOrderControllerTest {
     private lateinit var controller: AdminOrderController
 
     private val authedAdmin = Admin(name = "Gabe", email = "admin@provider.com", phone = "3128675309")
+    private val orgId = UUID.randomUUID()
 
     private fun canEdit(value: Boolean) {
         every {
@@ -49,9 +50,9 @@ class AdminOrderControllerTest {
     @Test
     fun `listOrders - any admin can list, returns the views`() {
         val orders = listOf(Order(state = OrderState.SUBMITTED), Order(state = OrderState.COMPLETED))
-        every { orderService.listAllOrders() } returns orders
+        every { orderService.listOrdersByOrg(orgId) } returns orders
 
-        val response = controller.listOrders(authedAdmin)
+        val response = controller.listOrders(orgId, authedAdmin)
 
         assertEquals(NetworkErrorType.NONE.toString(), response.errorType)
         assertNotNull(response.data)
@@ -65,7 +66,7 @@ class AdminOrderControllerTest {
         val id = UUID.randomUUID()
         val patch = PatchOrder(OrderState.COMPLETED, null, null, null, null, null)
 
-        val response = controller.updateOrder(id, PatchOrderRequest(patch), authedAdmin)
+        val response = controller.updateOrder(orgId, id, PatchOrderRequest(patch), authedAdmin)
 
         assertEquals(NetworkErrorType.NOT_AUTHORIZED.toString(), response.errorType)
         assertNull(response.data)
@@ -80,7 +81,7 @@ class AdminOrderControllerTest {
         val updated = Order(state = OrderState.COMPLETED)
         every { orderService.updateOrder(id, patch) } returns updated
 
-        val response = controller.updateOrder(id, PatchOrderRequest(patch), authedAdmin)
+        val response = controller.updateOrder(orgId, id, PatchOrderRequest(patch), authedAdmin)
 
         assertEquals(NetworkErrorType.NONE.toString(), response.errorType)
         assertNotNull(response.data)
@@ -93,7 +94,7 @@ class AdminOrderControllerTest {
         canEdit(false)
         val id = UUID.randomUUID()
 
-        val response = controller.deleteOrder(id, authedAdmin)
+        val response = controller.deleteOrder(orgId, id, authedAdmin)
 
         assertEquals(NetworkErrorType.NOT_AUTHORIZED.toString(), response.errorType)
         verify(exactly = 0) { orderService.deleteOrder(any()) }
@@ -105,7 +106,7 @@ class AdminOrderControllerTest {
         val id = UUID.randomUUID()
         every { orderService.deleteOrder(id) } just Runs
 
-        val response = controller.deleteOrder(id, authedAdmin)
+        val response = controller.deleteOrder(orgId, id, authedAdmin)
 
         assertEquals(NetworkErrorType.NONE.toString(), response.errorType)
         verify { orderService.deleteOrder(id) }

@@ -6,7 +6,10 @@ import java.util.UUID
 @Entity
 @Table(
     name = "locations",
-    indexes = [Index(name = "idx_locations_organization_id", columnList = "organization_id")]
+    indexes = [
+        Index(name = "idx_locations_organization_id", columnList = "organization_id"),
+        Index(name = "idx_locations_postcode", columnList = "postcode"),
+    ]
 )
 class Location(
     var name: String = "",

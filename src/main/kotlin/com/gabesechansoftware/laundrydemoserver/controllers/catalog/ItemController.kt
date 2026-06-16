@@ -8,13 +8,13 @@ import com.gabesechansoftware.laundrydemoserver.model.customerview.toCustomer
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-
+import java.util.UUID
 
 data class ItemsResponse(
     val items: List<Item>
 )
-
 
 @RestController
 class ItemController(
@@ -24,8 +24,9 @@ class ItemController(
     fun getItems(
         @AuthenticatedUser user: User,
         @RequestHeader("Accept-Language") locale: String,
+        @RequestParam(required = false) addressId: UUID?,
     ): NetworkResponse<ItemsResponse> {
-        val  items = itemService.getItems(user.organization!!.id).map { it.toCustomer(locale) }
+        val items = itemService.getItemsForUser(user, addressId).map { it.toCustomer(locale) }
         return NetworkResponse(ItemsResponse(items))
     }
 }

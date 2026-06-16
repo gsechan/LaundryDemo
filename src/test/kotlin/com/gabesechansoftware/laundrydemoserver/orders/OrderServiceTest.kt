@@ -130,10 +130,11 @@ class OrderServiceTest {
         dropoffAddress = EmbeddedAddress(street1 = dropoffAddress.street1 ?: ""),
     )
 
-    private val washFoldPrice = Item(organization.id, BigDecimal(1.0), mutableListOf(), ItemType.WASH_AND_FOLD)
+    private val locationId = UUID.randomUUID()
+    private val washFoldPrice = Item(locationId = locationId, price = BigDecimal(1.0), itemType = ItemType.WASH_AND_FOLD)
     val dryCleanItemName1 = ItemName(null, "Englsh", "en-US")
     val dryCleanItemName2 = ItemName(null, "Spanish", "es-ES")
-    private val dryCleanItem = Item(organization.id, BigDecimal(1.0), mutableListOf(dryCleanItemName1, dryCleanItemName2))
+    private val dryCleanItem = Item(locationId = locationId, price = BigDecimal(1.0), names = mutableListOf(dryCleanItemName1, dryCleanItemName2))
 
 
     @Test

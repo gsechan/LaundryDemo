@@ -8,4 +8,5 @@ import java.util.UUID
 
 interface AddressRepository: JpaRepository<Address, UUID> {
     fun countAddressesByUser(user: User): Int
+    fun findFirstByUserAndIsDefault(user: User, isDefault: Boolean): Address?
 }
