@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
+import useApi from "../useApi";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
 function AdminDetail({ admin, onBack, onSaved, onDeleted }) {
-    const { token, currentAdmin } = useAuth();
+    const { currentAdmin } = useAuth();
+    const api = useApi();
     const canAssign = currentAdmin.permissions.includes("ASSIGN_ADMIN_ROLES");
     const currentRoleIds = admin.roleMemberships.map((m) => m.roleId);
     const [roles, setRoles] = useState(null);
@@ -15,9 +17,7 @@ function AdminDetail({ admin, onBack, onSaved, onDeleted }) {
         if (!canAssign) return;
         async function loadRoles() {
             try {
-                const res = await fetch("/admin/roles", {
-                    headers: { "Authorization": "Bearer " + token },
-                });
+                const res = await api("/admin/roles");
                 const body = await res.json();
                 if (body.errorType === "NONE") {
                     setRoles(body.data.filter((r) => r.name !== "Root"));
@@ -27,7 +27,7 @@ function AdminDetail({ admin, onBack, onSaved, onDeleted }) {
             } catch (err) { setError("Could not reach the server"); }
         }
         loadRoles();
-    }, [canAssign, token]);
+    }, [canAssign]);
 
     function toggle(roleId) {
         setChecked((prev) => prev.includes(roleId) ? prev.filter((x) => x !== roleId) : [...prev, roleId]);
@@ -39,9 +39,9 @@ function AdminDetail({ admin, onBack, onSaved, onDeleted }) {
             const toAdd = checked.filter((rid) => !currentRoleIds.includes(rid));
             const toRemove = admin.roleMemberships.filter((m) => !checked.includes(m.roleId));
             for (const roleId of toAdd) {
-                const res = await fetch("/admin/role-memberships", {
+                const res = await api("/admin/role-memberships", {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ adminId: admin.id, roleId }),
                 });
                 const body = await res.json();
@@ -51,10 +51,7 @@ function AdminDetail({ admin, onBack, onSaved, onDeleted }) {
                 }
             }
             for (const m of toRemove) {
-                const res = await fetch("/admin/role-memberships/" + m.membershipId, {
-                    method: "DELETE",
-                    headers: { "Authorization": "Bearer " + token },
-                });
+                const res = await api("/admin/role-memberships/" + m.membershipId, { method: "DELETE" });
                 const body = await res.json();
                 if (body.errorType !== "NONE") {
                     setError((body.errors && body.errors.join(", ")) || "Could not remove role");
@@ -68,10 +65,7 @@ function AdminDetail({ admin, onBack, onSaved, onDeleted }) {
     async function handleDelete() {
         setError(null);
         try {
-            const res = await fetch("/admin/admins/" + admin.id, {
-                method: "DELETE",
-                headers: { "Authorization": "Bearer " + token },
-            });
+            const res = await api("/admin/admins/" + admin.id, { method: "DELETE" });
             const body = await res.json();
             if (body.errorType === "NONE") {
                 onDeleted();
@@ -117,7 +111,7 @@ function AdminDetail({ admin, onBack, onSaved, onDeleted }) {
 }
 
 function AdminCreate({ onBack, onCreated }) {
-    const { token } = useAuth();
+    const api = useApi();
     const [name, setName] = useState("");
     const [phone, setPhone] = useState("");
     const [email, setEmail] = useState("");
@@ -133,12 +127,9 @@ function AdminCreate({ onBack, onCreated }) {
             return;
         }
         try {
-            const res = await fetch("/admin/admins", {
+            const res = await api("/admin/admins", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + token,
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ admin: { name, email, phone }, password }),
             });
             const body = await res.json();
@@ -175,7 +166,8 @@ function AdminCreate({ onBack, onCreated }) {
 }
 
 export default function AdminsPage() {
-    const { token, currentAdmin } = useAuth();
+    const { currentAdmin } = useAuth();
+    const api = useApi();
     const [admins, setAdmins] = useState(null);
     const [error, setError] = useState(null);
     const [selected, setSelected] = useState(null);
@@ -184,9 +176,7 @@ export default function AdminsPage() {
     async function load() {
         setError(null);
         try {
-            const res = await fetch("/admin/admins", {
-                headers: { "Authorization": "Bearer " + token },
-            });
+            const res = await api("/admin/admins");
             const body = await res.json();
             if (body.errorType === "NONE") {
                 setAdmins(body.data);
@@ -198,7 +188,7 @@ export default function AdminsPage() {
         }
     }
 
-    useEffect(() => { load(); }, [token]);
+    useEffect(() => { load(); }, []);
 
     if (creating) {
         return (

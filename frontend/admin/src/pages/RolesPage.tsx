@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
+import useApi from "../useApi";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
@@ -22,7 +23,8 @@ function PermissionChecklist({ selected, onToggle }) {
 }
 
 function RoleDetail({ role, onBack, onSaved, onDeleted }) {
-    const { token, currentAdmin } = useAuth();
+    const { currentAdmin } = useAuth();
+    const api = useApi();
     const canAssign = currentAdmin.permissions.includes("ASSIGN_ADMIN_ROLES");
     const [name, setName] = useState(role.name || "");
     const [perms, setPerms] = useState(role.permissions || []);
@@ -35,9 +37,9 @@ function RoleDetail({ role, onBack, onSaved, onDeleted }) {
     async function handleSave() {
         setError(null);
         try {
-            const res = await fetch("/admin/roles/" + role.id, {
+            const res = await api("/admin/roles/" + role.id, {
                 method: "PATCH",
-                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ role: { name, permissions: perms } }),
             });
             const body = await res.json();
@@ -49,10 +51,7 @@ function RoleDetail({ role, onBack, onSaved, onDeleted }) {
     async function handleDelete() {
         setError(null);
         try {
-            const res = await fetch("/admin/roles/" + role.id, {
-                method: "DELETE",
-                headers: { "Authorization": "Bearer " + token },
-            });
+            const res = await api("/admin/roles/" + role.id, { method: "DELETE" });
             const body = await res.json();
             if (body.errorType === "NONE") { onDeleted(); }
             else { setError((body.errors && body.errors.join(", ")) || "Could not delete role"); }
@@ -82,7 +81,7 @@ function RoleDetail({ role, onBack, onSaved, onDeleted }) {
 }
 
 function RoleCreate({ onBack, onCreated }) {
-    const { token } = useAuth();
+    const api = useApi();
     const [name, setName] = useState("");
     const [perms, setPerms] = useState([]);
     const [error, setError] = useState(null);
@@ -95,9 +94,9 @@ function RoleCreate({ onBack, onCreated }) {
         e.preventDefault();
         setError(null);
         try {
-            const res = await fetch("/admin/roles", {
+            const res = await api("/admin/roles", {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ role: { name, permissions: perms } }),
             });
             const body = await res.json();
@@ -123,7 +122,8 @@ function RoleCreate({ onBack, onCreated }) {
 }
 
 export default function RolesPage() {
-    const { token, currentAdmin } = useAuth();
+    const { currentAdmin } = useAuth();
+    const api = useApi();
     const [roles, setRoles] = useState(null);
     const [error, setError] = useState(null);
     const [selected, setSelected] = useState(null);
@@ -132,16 +132,14 @@ export default function RolesPage() {
     async function load() {
         setError(null);
         try {
-            const res = await fetch("/admin/roles", {
-                headers: { "Authorization": "Bearer " + token },
-            });
+            const res = await api("/admin/roles");
             const body = await res.json();
             if (body.errorType === "NONE") { setRoles(body.data); }
             else { setError((body.errors && body.errors[0]) || "Could not load roles"); }
         } catch (err) { setError("Could not reach the server"); }
     }
 
-    useEffect(() => { load(); }, [token]);
+    useEffect(() => { load(); }, []);
 
     if (creating) {
         return (

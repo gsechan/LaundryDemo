@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
+import useApi from "../useApi";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
@@ -18,7 +19,8 @@ function inputToMs(s) { return s ? new Date(s).getTime() : null; }
 function msToLabel(ms) { return ms == null ? "—" : new Date(ms).toLocaleString(); }
 
 function OrderDetail({ order, onBack, onSaved, onDeleted }) {
-    const { token, currentAdmin } = useAuth();
+    const { currentAdmin } = useAuth();
+    const api = useApi();
     const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
     const [state, setState] = useState(order.state || "SUBMITTED");
     const [pickupAt, setPickupAt] = useState(msToInput(order.scheduledPickup));
@@ -46,9 +48,9 @@ function OrderDetail({ order, onBack, onSaved, onDeleted }) {
             },
         };
         try {
-            const res = await fetch("/admin/orders/" + order.id, {
+            const res = await api("/admin/orders/" + order.id, {
                 method: "PATCH",
-                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
             });
             const b = await res.json();
@@ -60,10 +62,7 @@ function OrderDetail({ order, onBack, onSaved, onDeleted }) {
     async function handleDelete() {
         setError(null);
         try {
-            const res = await fetch("/admin/orders/" + order.id, {
-                method: "DELETE",
-                headers: { "Authorization": "Bearer " + token },
-            });
+            const res = await api("/admin/orders/" + order.id, { method: "DELETE" });
             const b = await res.json();
             if (b.errorType === "NONE") { onDeleted(); }
             else { setError((b.errors && b.errors.join(", ")) || "Could not delete order"); }
@@ -127,7 +126,8 @@ function OrderDetail({ order, onBack, onSaved, onDeleted }) {
 }
 
 export default function OrdersPage() {
-    const { token, currentAdmin } = useAuth();
+    const { currentAdmin } = useAuth();
+    const api = useApi();
     const [orders, setOrders] = useState(null);
     const [selected, setSelected] = useState(null);
     const [error, setError] = useState(null);
@@ -135,14 +135,14 @@ export default function OrdersPage() {
     async function load() {
         setError(null);
         try {
-            const res = await fetch("/admin/orders", { headers: { "Authorization": "Bearer " + token } });
+            const res = await api("/admin/orders");
             const body = await res.json();
             if (body.errorType === "NONE") { setOrders(body.data); }
             else { setError((body.errors && body.errors[0]) || "Could not load orders"); }
         } catch (err) { setError("Could not reach the server"); }
     }
 
-    useEffect(() => { load(); }, [token]);
+    useEffect(() => { load(); }, []);
 
     if (selected) {
         return (

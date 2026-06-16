@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
+import useApi from "../useApi";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
 function OrganizationDetail({ org, onBack, onSaved, onDeleted }) {
-    const { token, currentAdmin } = useAuth();
+    const { currentAdmin } = useAuth();
+    const api = useApi();
     const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
     const canDelete = currentAdmin.permissions.includes("DELETE_ORG");
     const [name, setName] = useState(org.name || "");
@@ -14,12 +16,9 @@ function OrganizationDetail({ org, onBack, onSaved, onDeleted }) {
     async function handleSave() {
         setError(null);
         try {
-            const res = await fetch("/admin/organizations/" + org.id, {
+            const res = await api("/admin/organizations/" + org.id, {
                 method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + token,
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ organization: { name, defaultLocale: locale } }),
             });
             const body = await res.json();
@@ -36,10 +35,7 @@ function OrganizationDetail({ org, onBack, onSaved, onDeleted }) {
     async function handleDelete() {
         setError(null);
         try {
-            const res = await fetch("/admin/organizations/" + org.id, {
-                method: "DELETE",
-                headers: { "Authorization": "Bearer " + token },
-            });
+            const res = await api("/admin/organizations/" + org.id, { method: "DELETE" });
             const body = await res.json();
             if (body.errorType === "NONE") {
                 onDeleted();
@@ -54,12 +50,9 @@ function OrganizationDetail({ org, onBack, onSaved, onDeleted }) {
     async function handleUndelete() {
         setError(null);
         try {
-            const res = await fetch("/admin/organizations/" + org.id, {
+            const res = await api("/admin/organizations/" + org.id, {
                 method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + token,
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ organization: { isDeleted: false } }),
             });
             const body = await res.json();
@@ -99,7 +92,7 @@ function OrganizationDetail({ org, onBack, onSaved, onDeleted }) {
 }
 
 function OrganizationCreate({ onBack, onCreated }) {
-    const { token } = useAuth();
+    const api = useApi();
     const [name, setName] = useState("");
     const [locale, setLocale] = useState("");
     const [error, setError] = useState(null);
@@ -108,12 +101,9 @@ function OrganizationCreate({ onBack, onCreated }) {
         e.preventDefault();
         setError(null);
         try {
-            const res = await fetch("/admin/organizations", {
+            const res = await api("/admin/organizations", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + token,
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ organization: { name, defaultLocale: locale } }),
             });
             const body = await res.json();
@@ -144,7 +134,8 @@ function OrganizationCreate({ onBack, onCreated }) {
 }
 
 export default function OrganizationsPage() {
-    const { token, currentAdmin } = useAuth();
+    const { currentAdmin } = useAuth();
+    const api = useApi();
     const [orgs, setOrgs] = useState(null);
     const [error, setError] = useState(null);
     const [selected, setSelected] = useState(null);
@@ -153,9 +144,7 @@ export default function OrganizationsPage() {
     async function load() {
         setError(null);
         try {
-            const res = await fetch("/admin/organizations", {
-                headers: { "Authorization": "Bearer " + token },
-            });
+            const res = await api("/admin/organizations");
             const body = await res.json();
             if (body.errorType === "NONE") {
                 setOrgs(body.data);
@@ -167,7 +156,7 @@ export default function OrganizationsPage() {
         }
     }
 
-    useEffect(() => { load(); }, [token]);
+    useEffect(() => { load(); }, []);
 
     if (creating) {
         return (

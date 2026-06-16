@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
+import useApi from "../useApi";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
 const ITEM_TYPES = ["WASH_AND_FOLD", "DRY_CLEANING", "OTHER"];
 
 function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
-    const { token, currentAdmin } = useAuth();
+    const { currentAdmin } = useAuth();
+    const api = useApi();
     const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
     const [price, setPrice] = useState(item.price || "");
     const [itemType, setItemType] = useState(item.itemType || "DRY_CLEANING");
@@ -24,9 +26,9 @@ function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
     async function saveName(n) {
         setError(null);
         try {
-            const res = await fetch(namesUrl + "/" + n.id, {
+            const res = await api(namesUrl + "/" + n.id, {
                 method: "PATCH",
-                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: n.name, locale: n.locale }),
             });
             const body = await res.json();
@@ -39,10 +41,7 @@ function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
     async function deleteName(id) {
         setError(null);
         try {
-            const res = await fetch(namesUrl + "/" + id, {
-                method: "DELETE",
-                headers: { "Authorization": "Bearer " + token },
-            });
+            const res = await api(namesUrl + "/" + id, { method: "DELETE" });
             const body = await res.json();
             if (body.errorType === "NONE") { setNames((prev) => prev.filter((n) => n.id !== id)); }
             else { setError((body.errors && body.errors.join(", ")) || "Could not delete name"); }
@@ -53,9 +52,9 @@ function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
         setError(null);
         if (!newName || !newLocale) return;
         try {
-            const res = await fetch(namesUrl, {
+            const res = await api(namesUrl, {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: newName, locale: newLocale }),
             });
             const body = await res.json();
@@ -72,9 +71,9 @@ function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
     async function handleSave() {
         setError(null);
         try {
-            const res = await fetch("/admin/organizations/" + orgId + "/items/" + item.id, {
+            const res = await api("/admin/organizations/" + orgId + "/items/" + item.id, {
                 method: "PATCH",
-                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ item: { price, itemType } }),
             });
             const body = await res.json();
@@ -86,10 +85,7 @@ function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
     async function handleDelete() {
         setError(null);
         try {
-            const res = await fetch("/admin/organizations/" + orgId + "/items/" + item.id, {
-                method: "DELETE",
-                headers: { "Authorization": "Bearer " + token },
-            });
+            const res = await api("/admin/organizations/" + orgId + "/items/" + item.id, { method: "DELETE" });
             const body = await res.json();
             if (body.errorType === "NONE") { onDeleted(); }
             else { setError((body.errors && body.errors.join(", ")) || "Could not delete item"); }
@@ -148,7 +144,7 @@ function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
 }
 
 function ItemCreate({ orgId, onBack, onCreated }) {
-    const { token } = useAuth();
+    const api = useApi();
     const [price, setPrice] = useState("");
     const [itemType, setItemType] = useState("DRY_CLEANING");
     const [names, setNames] = useState([{ name: "", locale: "" }]);
@@ -165,9 +161,9 @@ function ItemCreate({ orgId, onBack, onCreated }) {
         setError(null);
         const cleanNames = names.filter((n) => n.name && n.locale);
         try {
-            const res = await fetch("/admin/organizations/" + orgId + "/items", {
+            const res = await api("/admin/organizations/" + orgId + "/items", {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ item: { price, itemType, names: cleanNames } }),
             });
             const body = await res.json();
@@ -205,7 +201,8 @@ function ItemCreate({ orgId, onBack, onCreated }) {
 }
 
 export default function ItemsPage() {
-    const { token, currentAdmin } = useAuth();
+    const { currentAdmin } = useAuth();
+    const api = useApi();
     const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
     const [orgs, setOrgs] = useState(null);
     const [orgId, setOrgId] = useState("");
@@ -217,22 +214,20 @@ export default function ItemsPage() {
     useEffect(() => {
         async function loadOrgs() {
             try {
-                const res = await fetch("/admin/organizations", { headers: { "Authorization": "Bearer " + token } });
+                const res = await api("/admin/organizations");
                 const body = await res.json();
                 if (body.errorType === "NONE") { setOrgs(body.data); }
                 else { setError((body.errors && body.errors[0]) || "Could not load organizations"); }
             } catch (err) { setError("Could not reach the server"); }
         }
         loadOrgs();
-    }, [token]);
+    }, []);
 
     async function loadItems() {
         if (!orgId) { setItems(null); return; }
         setError(null);
         try {
-            const res = await fetch("/admin/organizations/" + orgId + "/items", {
-                headers: { "Authorization": "Bearer " + token },
-            });
+            const res = await api("/admin/organizations/" + orgId + "/items");
             const body = await res.json();
             if (body.errorType === "NONE") { setItems(body.data); }
             else { setError((body.errors && body.errors[0]) || "Could not load items"); }

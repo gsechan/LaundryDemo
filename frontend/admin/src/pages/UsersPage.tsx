@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../AuthContext";
+import useApi from "../useApi";
 import PageList from "../components/PageList";
 
 export default function UsersPage() {
-    const { token } = useAuth();
+    const api = useApi();
     const [orgs, setOrgs] = useState(null);
     const [orgId, setOrgId] = useState("");
     const [users, setUsers] = useState(null);
@@ -12,22 +12,20 @@ export default function UsersPage() {
     useEffect(() => {
         async function loadOrgs() {
             try {
-                const res = await fetch("/admin/organizations", { headers: { "Authorization": "Bearer " + token } });
+                const res = await api("/admin/organizations");
                 const body = await res.json();
                 if (body.errorType === "NONE") { setOrgs(body.data); }
                 else { setError((body.errors && body.errors[0]) || "Could not load organizations"); }
             } catch (err) { setError("Could not reach the server"); }
         }
         loadOrgs();
-    }, [token]);
+    }, []);
 
     async function loadUsers() {
         if (!orgId) { setUsers(null); return; }
         setError(null);
         try {
-            const res = await fetch("/admin/organizations/" + orgId + "/users", {
-                headers: { "Authorization": "Bearer " + token },
-            });
+            const res = await api("/admin/organizations/" + orgId + "/users");
             const body = await res.json();
             if (body.errorType === "NONE") { setUsers(body.data); }
             else { setError((body.errors && body.errors[0]) || "Could not load users"); }
