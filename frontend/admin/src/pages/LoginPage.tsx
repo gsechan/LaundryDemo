@@ -4,10 +4,12 @@ export default function LoginPage({ onLogin }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     async function handleSubmit(e) {
         e.preventDefault();
         setError(null);
+        setLoading(true);
         try {
             const res = await fetch("/admin/login", {
                 method: "POST",
@@ -22,6 +24,8 @@ export default function LoginPage({ onLogin }) {
             }
         } catch (err) {
             setError("Could not reach the server");
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -33,7 +37,7 @@ export default function LoginPage({ onLogin }) {
                        onChange={(e) => setEmail(e.target.value)} />
                 <input type="password" placeholder="Password" value={password}
                        onChange={(e) => setPassword(e.target.value)} />
-                <button type="submit">Log in</button>
+                <button type="submit" disabled={loading}>{loading ? "Logging in…" : "Log in"}</button>
                 {error && <div className="error">{error}</div>}
             </form>
         </div>
