@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import useApi from "../useApi";
+import { loadResource } from "../apiUtils";
 import PageList from "../components/PageList";
 
 export default function UsersPage() {
@@ -10,26 +11,12 @@ export default function UsersPage() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        async function loadOrgs() {
-            try {
-                const res = await api("/admin/organizations");
-                const body = await res.json();
-                if (body.errorType === "NONE") { setOrgs(body.data); }
-                else { setError((body.errors && body.errors[0]) || "Could not load organizations"); }
-            } catch (err) { setError("Could not reach the server"); }
-        }
-        loadOrgs();
+        loadResource(api, "/admin/organizations", setError, setOrgs, "Could not load organizations");
     }, []);
 
     async function loadUsers() {
         if (!orgId) { setUsers(null); return; }
-        setError(null);
-        try {
-            const res = await api("/admin/organizations/" + orgId + "/users");
-            const body = await res.json();
-            if (body.errorType === "NONE") { setUsers(body.data); }
-            else { setError((body.errors && body.errors[0]) || "Could not load users"); }
-        } catch (err) { setError("Could not reach the server"); }
+        await loadResource(api, "/admin/organizations/" + orgId + "/users", setError, setUsers, "Could not load users");
     }
 
     useEffect(() => { loadUsers(); }, [orgId]);

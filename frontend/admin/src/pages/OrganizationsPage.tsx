@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import useApi from "../useApi";
-import { deleteResource } from "../apiUtils";
+import { loadResource, deleteResource } from "../apiUtils";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
@@ -130,18 +130,7 @@ export default function OrganizationsPage() {
     const [creating, setCreating] = useState(false);
 
     async function load() {
-        setError(null);
-        try {
-            const res = await api("/admin/organizations");
-            const body = await res.json();
-            if (body.errorType === "NONE") {
-                setOrgs(body.data);
-            } else {
-                setError((body.errors && body.errors[0]) || "Could not load organizations");
-            }
-        } catch (err) {
-            setError("Could not reach the server");
-        }
+        await loadResource(api, "/admin/organizations", setError, setOrgs, "Could not load organizations");
     }
 
     useEffect(() => { load(); }, []);

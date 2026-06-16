@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import useApi from "../useApi";
-import { deleteResource } from "../apiUtils";
+import { loadResource, deleteResource } from "../apiUtils";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
@@ -205,26 +205,12 @@ export default function ItemsPage() {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        async function loadOrgs() {
-            try {
-                const res = await api("/admin/organizations");
-                const body = await res.json();
-                if (body.errorType === "NONE") { setOrgs(body.data); }
-                else { setError((body.errors && body.errors[0]) || "Could not load organizations"); }
-            } catch (err) { setError("Could not reach the server"); }
-        }
-        loadOrgs();
+        loadResource(api, "/admin/organizations", setError, setOrgs, "Could not load organizations");
     }, []);
 
     async function loadItems() {
         if (!orgId) { setItems(null); return; }
-        setError(null);
-        try {
-            const res = await api("/admin/organizations/" + orgId + "/items");
-            const body = await res.json();
-            if (body.errorType === "NONE") { setItems(body.data); }
-            else { setError((body.errors && body.errors[0]) || "Could not load items"); }
-        } catch (err) { setError("Could not reach the server"); }
+        await loadResource(api, "/admin/organizations/" + orgId + "/items", setError, setItems, "Could not load items");
     }
 
     useEffect(() => { setSelected(null); setCreating(false); loadItems(); }, [orgId]);

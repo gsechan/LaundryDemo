@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import useApi from "../useApi";
-import { deleteResource } from "../apiUtils";
+import { loadResource, deleteResource } from "../apiUtils";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
@@ -16,18 +16,9 @@ function AdminDetail({ admin, onBack, onSaved, onDeleted }) {
 
     useEffect(() => {
         if (!canAssign) return;
-        async function loadRoles() {
-            try {
-                const res = await api("/admin/roles");
-                const body = await res.json();
-                if (body.errorType === "NONE") {
-                    setRoles(body.data.filter((r) => r.name !== "Root"));
-                } else {
-                    setError((body.errors && body.errors[0]) || "Could not load roles");
-                }
-            } catch (err) { setError("Could not reach the server"); }
-        }
-        loadRoles();
+        loadResource(api, "/admin/roles", setError,
+            (data) => setRoles(data.filter((r) => r.name !== "Root")),
+            "Could not load roles");
     }, [canAssign]);
 
     function toggle(roleId) {
@@ -162,18 +153,7 @@ export default function AdminsPage() {
     const [creating, setCreating] = useState(false);
 
     async function load() {
-        setError(null);
-        try {
-            const res = await api("/admin/admins");
-            const body = await res.json();
-            if (body.errorType === "NONE") {
-                setAdmins(body.data);
-            } else {
-                setError((body.errors && body.errors[0]) || "Could not load admins");
-            }
-        } catch (err) {
-            setError("Could not reach the server");
-        }
+        await loadResource(api, "/admin/admins", setError, setAdmins, "Could not load admins");
     }
 
     useEffect(() => { load(); }, []);

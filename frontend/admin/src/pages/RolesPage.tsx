@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import useApi from "../useApi";
-import { deleteResource } from "../apiUtils";
+import { loadResource, deleteResource } from "../apiUtils";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
@@ -123,13 +123,7 @@ export default function RolesPage() {
     const [creating, setCreating] = useState(false);
 
     async function load() {
-        setError(null);
-        try {
-            const res = await api("/admin/roles");
-            const body = await res.json();
-            if (body.errorType === "NONE") { setRoles(body.data); }
-            else { setError((body.errors && body.errors[0]) || "Could not load roles"); }
-        } catch (err) { setError("Could not reach the server"); }
+        await loadResource(api, "/admin/roles", setError, setRoles, "Could not load roles");
     }
 
     useEffect(() => { load(); }, []);

@@ -1,3 +1,19 @@
+export async function loadResource(
+    api: (url: string, options?: RequestInit) => Promise<Response>,
+    url: string,
+    setError: (msg: string | null) => void,
+    onLoaded: (data: any) => void,
+    errorMsg: string,
+) {
+    setError(null);
+    try {
+        const res = await api(url);
+        const body = await res.json();
+        if (body.errorType === "NONE") { onLoaded(body.data); }
+        else { setError((body.errors && body.errors[0]) || errorMsg); }
+    } catch (err) { setError("Could not reach the server"); }
+}
+
 export async function deleteResource(
     api: (url: string, options?: RequestInit) => Promise<Response>,
     url: string,
