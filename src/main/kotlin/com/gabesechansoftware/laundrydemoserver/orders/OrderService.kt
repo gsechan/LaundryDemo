@@ -59,6 +59,15 @@ class OrderService(
         return orderRepository.findAll()
     }
 
+    fun listOrdersByOrg(organizationId: UUID): List<Order> {
+        return orderRepository.findByUserOrganizationId(organizationId)
+    }
+
+    fun getOrder(orderId: UUID): Order {
+        return orderRepository.findById(orderId)
+            .orElseThrow { EntityDoesNotExistException("Order $orderId does not exist") }
+    }
+
     @Transactional
     fun updateOrder(orderId: UUID, patch: PatchOrder): Order {
         val order = orderRepository.findById(orderId)

@@ -35,15 +35,26 @@ class AdminOrderController(
             admin
         )
 
-    @GetMapping("/admin/orders")
+    @GetMapping("/admin/organizations/{orgId}/orders")
     fun listOrders(
+        @PathVariable orgId: UUID,
         @AuthenticatedAdmin authedAdmin: Admin,
     ): NetworkResponse<List<AdminOrderView>> {
-        return NetworkResponse(orderService.listAllOrders().map { it.toAdminView() })
+        return NetworkResponse(orderService.listOrdersByOrg(orgId).map { it.toAdminView() })
     }
 
-    @PatchMapping("/admin/orders/{id}")
+    @GetMapping("/admin/organizations/{orgId}/orders/{id}")
+    fun getOrder(
+        @PathVariable orgId: UUID,
+        @PathVariable id: UUID,
+        @AuthenticatedAdmin authedAdmin: Admin,
+    ): NetworkResponse<AdminOrderView> {
+        return NetworkResponse(orderService.getOrder(id).toAdminView())
+    }
+
+    @PatchMapping("/admin/organizations/{orgId}/orders/{id}")
     fun updateOrder(
+        @PathVariable orgId: UUID,
         @PathVariable id: UUID,
         @RequestBody request: PatchOrderRequest,
         @AuthenticatedAdmin authedAdmin: Admin,
@@ -54,8 +65,9 @@ class AdminOrderController(
         return NetworkResponse(orderService.updateOrder(id, request.order).toAdminView())
     }
 
-    @DeleteMapping("/admin/orders/{id}")
+    @DeleteMapping("/admin/organizations/{orgId}/orders/{id}")
     fun deleteOrder(
+        @PathVariable orgId: UUID,
         @PathVariable id: UUID,
         @AuthenticatedAdmin authedAdmin: Admin,
     ): NetworkResponse<Unit> {

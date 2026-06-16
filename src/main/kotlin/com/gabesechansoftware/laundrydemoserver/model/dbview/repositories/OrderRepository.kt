@@ -8,4 +8,5 @@ import java.util.UUID
 
 interface OrderRepository: JpaRepository<Order, UUID> {
     fun findByUser(user: User): List<Order>
+    fun findByUserOrganizationId(organizationId: UUID): List<Order>
 }

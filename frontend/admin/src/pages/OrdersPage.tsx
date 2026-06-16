@@ -19,7 +19,7 @@ function msToInput(ms) {
 function inputToMs(s) { return s ? new Date(s).getTime() : null; }
 function msToLabel(ms) { return ms == null ? "—" : new Date(ms).toLocaleString(); }
 
-function OrderDetail({ order, onBack, onSaved, onDeleted }) {
+function OrderDetail({ order, orgId, onBack, onSaved, onDeleted }) {
     const { hasAnyPermission } = useAuth();
     const api = useApi();
     const canEdit = hasAnyPermission("EDIT_ORG", "CREATE_ORG");
@@ -33,7 +33,9 @@ function OrderDetail({ order, onBack, onSaved, onDeleted }) {
     );
     const [error, setError] = useState(null);
 
-    const handleSave = () => saveResource(api, "PATCH", "/admin/orders/" + order.id, {
+    const orderUrl = `/admin/organizations/${orgId}/orders/${order.id}`;
+
+    const handleSave = () => saveResource(api, "PATCH", orderUrl, {
         order: {
             state,
             scheduledPickup: inputToMs(pickupAt),
@@ -47,7 +49,7 @@ function OrderDetail({ order, onBack, onSaved, onDeleted }) {
         },
     }, setError, onSaved, "Could not save order");
 
-    const handleDelete = () => deleteResource(api, "/admin/orders/" + order.id, setError, onDeleted, "Could not delete order");
+    const handleDelete = () => deleteResource(api, orderUrl, setError, onDeleted, "Could not delete order");
 
     function addressEditor(label, addr, setAddr) {
         return (
@@ -106,25 +108,41 @@ function OrderDetail({ order, onBack, onSaved, onDeleted }) {
 }
 
 export default function OrdersPage() {
-    const { currentAdmin } = useAuth();
     const api = useApi();
+    const [orgs, setOrgs] = useState(null);
+    const [selectedOrgId, setSelectedOrgId] = useState("");
     const [orders, setOrders] = useState(null);
     const [selected, setSelected] = useState(null);
+    const [orgsError, setOrgsError] = useState(null);
     const [error, setError] = useState(null);
 
-    async function load() {
-        await loadResource(api, "/admin/orders", setError, setOrders, "Could not load orders");
-    }
+    useEffect(() => {
+        loadResource(api, "/admin/organizations", setOrgsError, (data) => {
+            const active = data.filter((o) => !o.isDeleted);
+            setOrgs(active);
+            if (active.length > 0) setSelectedOrgId(active[0].id);
+        }, "Could not load organizations");
+    }, []);
 
-    useEffect(() => { load(); }, []);
+    useEffect(() => {
+        if (!selectedOrgId) { setOrders(null); return; }
+        setOrders(null);
+        loadResource(api, `/admin/organizations/${selectedOrgId}/orders`, setError, setOrders, "Could not load orders");
+    }, [selectedOrgId]);
+
+    function reload() {
+        if (!selectedOrgId) return;
+        loadResource(api, `/admin/organizations/${selectedOrgId}/orders`, setError, setOrders, "Could not load orders");
+    }
 
     if (selected) {
         return (
             <OrderDetail
                 order={selected}
+                orgId={selectedOrgId}
                 onBack={() => setSelected(null)}
-                onSaved={() => { setSelected(null); load(); }}
-                onDeleted={() => { setSelected(null); load(); }}
+                onSaved={() => { setSelected(null); reload(); }}
+                onDeleted={() => { setSelected(null); reload(); }}
             />
         );
     }
@@ -132,15 +150,31 @@ export default function OrdersPage() {
     return (
         <PageList
             title="Orders"
-            loading={!orders && !error}
-            error={error}
+            loading={!orgs && !orgsError}
+            error={orgsError || error}
         >
+            <div style={{ marginBottom: "1rem" }}>
+                <label>
+                    Organization{" "}
+                    <select
+                        value={selectedOrgId}
+                        onChange={(e) => { setSelectedOrgId(e.target.value); setOrders(null); }}
+                        disabled={!orgs}
+                    >
+                        {orgs && orgs.map((o) => (
+                            <option key={o.id} value={o.id}>{o.name}</option>
+                        ))}
+                    </select>
+                </label>
+            </div>
+            {selectedOrgId && !orders && !error && <div>Loading orders…</div>}
             {orders && orders.map((o) => (
                 <div className="admin-row" key={o.id} onClick={() => setSelected(o)}>
                     <span className="name">{o.state}</span>
                     <span className="meta"> — pickup {msToLabel(o.scheduledPickup)} — {o.lines.length} item(s)</span>
                 </div>
             ))}
+            {orders && orders.length === 0 && <div>No orders for this organization.</div>}
         </PageList>
     );
 }
