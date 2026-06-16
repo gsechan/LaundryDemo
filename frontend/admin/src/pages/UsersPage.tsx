@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PageList from "../components/PageList";
 
 export default function UsersPage({ token }) {
     const [orgs, setOrgs] = useState(null);
@@ -34,22 +35,20 @@ export default function UsersPage({ token }) {
     useEffect(() => { loadUsers(); }, [orgId]);
 
     return (
-        <div>
-            <h1>Users</h1>
-            <label>Organization{" "}
-                <select value={orgId} onChange={(e) => setOrgId(e.target.value)}>
-                    <option value="">Select…</option>
-                    {orgs && orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
-                </select>
-            </label>
-            {error && <div className="error">{error}</div>}
-            {orgId && !users && !error && <div>Loading…</div>}
+        <PageList
+            title="Users"
+            orgs={orgs ?? []}
+            orgId={orgId}
+            onOrgChange={setOrgId}
+            loading={!!orgId && !users && !error}
+            error={error}
+        >
             {users && users.map((u) => (
                 <div className="admin-row" key={u.id} style={{ cursor: "default" }}>
                     <span className="name">{u.name}</span>
                     <span className="meta"> — {u.email} — {u.phone}</span>
                 </div>
             ))}
-        </div>
+        </PageList>
     );
 }

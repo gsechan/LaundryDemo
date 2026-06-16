@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PageList from "../components/PageList";
 
 const ORDER_STATES = [
     "SUBMITTED", "PICKUP_IN_PROGRESS", "PICKED_UP", "CLEANING",
@@ -151,16 +152,17 @@ export default function OrdersPage({ token, currentAdmin }) {
     }
 
     return (
-        <div>
-            <h1>Orders</h1>
-            {error && <div className="error">{error}</div>}
-            {!orders && !error && <div>Loading…</div>}
+        <PageList
+            title="Orders"
+            loading={!orders && !error}
+            error={error}
+        >
             {orders && orders.map((o) => (
                 <div className="admin-row" key={o.id} onClick={() => setSelected(o)}>
                     <span className="name">{o.state}</span>
                     <span className="meta"> — pickup {msToLabel(o.scheduledPickup)} — {o.lines.length} item(s)</span>
                 </div>
             ))}
-        </div>
+        </PageList>
     );
 }

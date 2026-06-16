@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PageList from "../components/PageList";
 
 function AdminDetail({ admin, currentAdmin, token, onBack, onSaved, onDeleted }) {
     const canAssign = currentAdmin.permissions.includes("ASSIGN_ADMIN_ROLES");
@@ -217,18 +218,19 @@ export default function AdminsPage({ token, currentAdmin }) {
     }
 
     return (
-        <div>
-            <h1>Admins</h1>
-            {currentAdmin.permissions.includes("CREATE_ADMIN") &&
-                <div style={{ marginBottom: "12px" }}><button onClick={() => setCreating(true)}>Add New</button></div>}
-            {error && <div className="error">{error}</div>}
-            {!admins && !error && <div>Loading…</div>}
+        <PageList
+            title="Admins"
+            canAdd={currentAdmin.permissions.includes("CREATE_ADMIN")}
+            onAdd={() => setCreating(true)}
+            loading={!admins && !error}
+            error={error}
+        >
             {admins && admins.map((a) => (
                 <div className="admin-row" key={a.id} onClick={() => setSelected(a)}>
                     <span className="name">{a.name}</span>
                     <span className="meta"> — {a.email} — {a.phone}</span>
                 </div>
             ))}
-        </div>
+        </PageList>
     );
 }

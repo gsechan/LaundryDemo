@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PageList from "../components/PageList";
 
 const ITEM_TYPES = ["WASH_AND_FOLD", "DRY_CLEANING", "OTHER"];
 
@@ -259,26 +260,22 @@ export default function ItemsPage({ token, currentAdmin }) {
     }
 
     return (
-        <div>
-            <h1>Items</h1>
-            <label>Organization{" "}
-                <select value={orgId} onChange={(e) => setOrgId(e.target.value)}>
-                    <option value="">Select…</option>
-                    {orgs && orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
-                </select>
-            </label>
-            {orgId && canEdit &&
-                <div style={{ marginTop: "12px", marginBottom: "12px" }}>
-                    <button onClick={() => setCreating(true)}>Add New</button>
-                </div>}
-            {error && <div className="error">{error}</div>}
-            {orgId && !items && !error && <div>Loading…</div>}
+        <PageList
+            title="Items"
+            orgs={orgs ?? []}
+            orgId={orgId}
+            onOrgChange={setOrgId}
+            canAdd={!!orgId && canEdit}
+            onAdd={() => setCreating(true)}
+            loading={!!orgId && !items && !error}
+            error={error}
+        >
             {items && items.map((it) => (
                 <div className="admin-row" key={it.id} onClick={() => setSelected(it)}>
                     <span className="name">{it.names.map((n) => n.name).join(" / ") || "(no name)"}</span>
                     <span className="meta"> — {it.itemType} — {it.price}</span>
                 </div>
             ))}
-        </div>
+        </PageList>
     );
 }

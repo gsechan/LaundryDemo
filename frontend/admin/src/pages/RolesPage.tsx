@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PageList from "../components/PageList";
 
 const ALL_PERMISSIONS = [
     "CREATE_ORG", "DELETE_ORG", "EDIT_ORG",
@@ -160,18 +161,19 @@ export default function RolesPage({ token, currentAdmin }) {
     }
 
     return (
-        <div>
-            <h1>Roles</h1>
-            {currentAdmin.permissions.includes("ASSIGN_ADMIN_ROLES") &&
-                <div style={{ marginBottom: "12px" }}><button onClick={() => setCreating(true)}>Add New</button></div>}
-            {error && <div className="error">{error}</div>}
-            {!roles && !error && <div>Loading…</div>}
+        <PageList
+            title="Roles"
+            canAdd={currentAdmin.permissions.includes("ASSIGN_ADMIN_ROLES")}
+            onAdd={() => setCreating(true)}
+            loading={!roles && !error}
+            error={error}
+        >
             {roles && roles.map((r) => (
                 <div className="admin-row" key={r.id} onClick={() => setSelected(r)}>
                     <span className="name">{r.name}</span>
                     <span className="meta"> — {r.permissions.join(", ")}</span>
                 </div>
             ))}
-        </div>
+        </PageList>
     );
 }

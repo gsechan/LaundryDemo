@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PageList from "../components/PageList";
 
 function OrganizationDetail({ org, currentAdmin, token, onBack, onSaved, onDeleted }) {
     const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
@@ -189,12 +190,13 @@ export default function OrganizationsPage({ token, currentAdmin }) {
     }
 
     return (
-        <div>
-            <h1>Organizations</h1>
-            {currentAdmin.permissions.includes("CREATE_ORG") &&
-                <div style={{ marginBottom: "12px" }}><button onClick={() => setCreating(true)}>Add New</button></div>}
-            {error && <div className="error">{error}</div>}
-            {!orgs && !error && <div>Loading…</div>}
+        <PageList
+            title="Organizations"
+            canAdd={currentAdmin.permissions.includes("CREATE_ORG")}
+            onAdd={() => setCreating(true)}
+            loading={!orgs && !error}
+            error={error}
+        >
             {orgs && orgs.map((o) => (
                 <div className={"admin-row" + (o.isDeleted ? " deleted" : "")} key={o.id} onClick={() => setSelected(o)}>
                     <span className="name">{o.name}</span>
@@ -202,6 +204,6 @@ export default function OrganizationsPage({ token, currentAdmin }) {
                     <span className="deleted-tag">{o.isDeleted ? "Deleted" : ""}</span>
                 </div>
             ))}
-        </div>
+        </PageList>
     );
 }
