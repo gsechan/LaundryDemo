@@ -6,6 +6,7 @@ plugins {
     id "org.jetbrains.kotlin.plugin.jpa" version '2.2.21'
     id "org.jetbrains.kotlin.plugin.allopen" version '2.2.21'
     id 'jacoco'
+    id 'com.github.node-gradle.node' version '7.1.0'
 }
 
 group = 'com.gabesechansoftware'
@@ -71,3 +72,40 @@ allOpen {
     annotation("jakarta.persistence.Embeddable")
     annotation("jakarta.persistence.MappedSuperclass")
 }
+
+// --- Admin web app (Vite/React/TypeScript) build ---
+// The node-gradle plugin downloads a per-OS Node distribution (download = true),
+// so no developer needs Node installed -- works on Windows, macOS and Linux.
+def adminAppDir = "${projectDir}/frontend/admin"
+def adminAppGenerated = layout.buildDirectory.dir('generated/adminapp').get().asFile
+
+node {
+    version = '22.12.0'
+    npmVersion = '11.17.0'
+    download = true
+    nodeProjectDir = file(adminAppDir)
+}
+
+tasks.register('buildAdminApp', com.github.gradle.node.npm.task.NpmTask) {
+    dependsOn tasks.named('npmInstall')
+    args = ['run', 'build']
+    inputs.dir("${adminAppDir}/src")
+    inputs.file("${adminAppDir}/index.html")
+    inputs.file("${adminAppDir}/package.json")
+    inputs.file("${adminAppDir}/vite.config.ts")
+    inputs.file("${adminAppDir}/tsconfig.json")
+    outputs.dir("${adminAppDir}/dist")
+}
+
+tasks.register('copyAdminApp', Copy) {
+    dependsOn tasks.named('buildAdminApp')
+    from("${adminAppDir}/dist")
+    into(new File(adminAppGenerated, 'static/adminapp'))
+    outputs.upToDateWhen { false }
+}
+
+// Register the built front-end as a generated resource directory of the main
+// source set. This puts it on the runtime classpath (so bootRun serves it) and
+// into the jar (so bootJar ships it) with a proper task dependency via builtBy,
+// avoiding the implicit-dependency error from writing into build/resources/main.
+sourceSets.main.output.dir(adminAppGenerated, builtBy: 'copyAdminApp')

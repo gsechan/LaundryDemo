@@ -1,0 +1,234 @@
+import { useState, useEffect } from "react";
+
+function AdminDetail({ admin, currentAdmin, token, onBack, onSaved, onDeleted }) {
+    const canAssign = currentAdmin.permissions.includes("ASSIGN_ADMIN_ROLES");
+    const currentRoleIds = admin.roleMemberships.map((m) => m.roleId);
+    const [roles, setRoles] = useState(null);
+    const [checked, setChecked] = useState(currentRoleIds);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        if (!canAssign) return;
+        async function loadRoles() {
+            try {
+                const res = await fetch("/admin/roles", {
+                    headers: { "Authorization": "Bearer " + token },
+                });
+                const body = await res.json();
+                if (body.errorType === "NONE") {
+                    setRoles(body.data.filter((r) => r.name !== "Root"));
+                } else {
+                    setError((body.errors && body.errors[0]) || "Could not load roles");
+                }
+            } catch (err) { setError("Could not reach the server"); }
+        }
+        loadRoles();
+    }, [canAssign, token]);
+
+    function toggle(roleId) {
+        setChecked((prev) => prev.includes(roleId) ? prev.filter((x) => x !== roleId) : [...prev, roleId]);
+    }
+
+    async function handleSave() {
+        setError(null);
+        try {
+            const toAdd = checked.filter((rid) => !currentRoleIds.includes(rid));
+            const toRemove = admin.roleMemberships.filter((m) => !checked.includes(m.roleId));
+            for (const roleId of toAdd) {
+                const res = await fetch("/admin/role-memberships", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                    body: JSON.stringify({ adminId: admin.id, roleId }),
+                });
+                const body = await res.json();
+                if (body.errorType !== "NONE") {
+                    setError((body.errors && body.errors.join(", ")) || "Could not assign role");
+                    return;
+                }
+            }
+            for (const m of toRemove) {
+                const res = await fetch("/admin/role-memberships/" + m.membershipId, {
+                    method: "DELETE",
+                    headers: { "Authorization": "Bearer " + token },
+                });
+                const body = await res.json();
+                if (body.errorType !== "NONE") {
+                    setError((body.errors && body.errors.join(", ")) || "Could not remove role");
+                    return;
+                }
+            }
+            onSaved();
+        } catch (err) { setError("Could not reach the server"); }
+    }
+
+    async function handleDelete() {
+        setError(null);
+        try {
+            const res = await fetch("/admin/admins/" + admin.id, {
+                method: "DELETE",
+                headers: { "Authorization": "Bearer " + token },
+            });
+            const body = await res.json();
+            if (body.errorType === "NONE") {
+                onDeleted();
+            } else {
+                setError((body.errors && body.errors[0]) || "Could not delete admin");
+            }
+        } catch (err) {
+            setError("Could not reach the server");
+        }
+    }
+
+    return (
+        <div>
+            <button className="back-link" onClick={onBack}>← Back to admins</button>
+            <div className="detail-header">
+                <h1>{admin.name}</h1>
+                {canAssign && <button onClick={handleSave}>Save</button>}
+            </div>
+            <div className="detail-field"><span className="label">Email:</span> {admin.email}</div>
+            <div className="detail-field"><span className="label">Phone:</span> {admin.phone}</div>
+            {canAssign && (
+                <div>
+                    <h3>Roles</h3>
+                    {!roles && !error && <div>Loading…</div>}
+                    {roles && (
+                        <div className="edit-form">
+                            {roles.map((r) => (
+                                <label key={r.id} style={{ flexDirection: "row", alignItems: "center", gap: "8px" }}>
+                                    <input type="checkbox" checked={checked.includes(r.id)} onChange={() => toggle(r.id)} />
+                                    {r.name}
+                                </label>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+            {currentAdmin.permissions.includes("DELETE_ADMIN") &&
+                <div><button className="danger" onClick={handleDelete}>Delete</button></div>}
+            {error && <div className="error">{error}</div>}
+        </div>
+    );
+}
+
+function AdminCreate({ token, onBack, onCreated }) {
+    const [name, setName] = useState("");
+    const [phone, setPhone] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirm, setConfirm] = useState("");
+    const [error, setError] = useState(null);
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        setError(null);
+        if (password !== confirm) {
+            setError("Passwords do not match");
+            return;
+        }
+        try {
+            const res = await fetch("/admin/admins", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + token,
+                },
+                body: JSON.stringify({ admin: { name, email, phone }, password }),
+            });
+            const body = await res.json();
+            if (body.errorType === "NONE") {
+                onCreated();
+            } else {
+                setError((body.errors && body.errors.join(", ")) || "Could not create admin");
+            }
+        } catch (err) {
+            setError("Could not reach the server");
+        }
+    }
+
+    return (
+        <div>
+            <button className="back-link" onClick={onBack}>← Back to admins</button>
+            <h1>Add Admin</h1>
+            <form onSubmit={handleSubmit}>
+                <input type="text" placeholder="Name" value={name}
+                       onChange={(e) => setName(e.target.value)} />
+                <input type="tel" placeholder="Phone" value={phone}
+                       onChange={(e) => setPhone(e.target.value)} />
+                <input type="email" placeholder="Email" value={email}
+                       onChange={(e) => setEmail(e.target.value)} />
+                <input type="password" placeholder="Password" value={password}
+                       onChange={(e) => setPassword(e.target.value)} />
+                <input type="password" placeholder="Confirm password" value={confirm}
+                       onChange={(e) => setConfirm(e.target.value)} />
+                <button type="submit">Create</button>
+                {error && <div className="error">{error}</div>}
+            </form>
+        </div>
+    );
+}
+
+export default function AdminsPage({ token, currentAdmin }) {
+    const [admins, setAdmins] = useState(null);
+    const [error, setError] = useState(null);
+    const [selected, setSelected] = useState(null);
+    const [creating, setCreating] = useState(false);
+
+    async function load() {
+        setError(null);
+        try {
+            const res = await fetch("/admin/admins", {
+                headers: { "Authorization": "Bearer " + token },
+            });
+            const body = await res.json();
+            if (body.errorType === "NONE") {
+                setAdmins(body.data);
+            } else {
+                setError((body.errors && body.errors[0]) || "Could not load admins");
+            }
+        } catch (err) {
+            setError("Could not reach the server");
+        }
+    }
+
+    useEffect(() => { load(); }, [token]);
+
+    if (creating) {
+        return (
+            <AdminCreate
+                token={token}
+                onBack={() => setCreating(false)}
+                onCreated={() => { setCreating(false); load(); }}
+            />
+        );
+    }
+
+    if (selected) {
+        return (
+            <AdminDetail
+                admin={selected}
+                currentAdmin={currentAdmin}
+                token={token}
+                onBack={() => setSelected(null)}
+                onSaved={() => { setSelected(null); load(); }}
+                onDeleted={() => { setSelected(null); load(); }}
+            />
+        );
+    }
+
+    return (
+        <div>
+            <h1>Admins</h1>
+            {currentAdmin.permissions.includes("CREATE_ADMIN") &&
+                <div style={{ marginBottom: "12px" }}><button onClick={() => setCreating(true)}>Add New</button></div>}
+            {error && <div className="error">{error}</div>}
+            {!admins && !error && <div>Loading…</div>}
+            {admins && admins.map((a) => (
+                <div className="admin-row" key={a.id} onClick={() => setSelected(a)}>
+                    <span className="name">{a.name}</span>
+                    <span className="meta"> — {a.email} — {a.phone}</span>
+                </div>
+            ))}
+        </div>
+    );
+}
