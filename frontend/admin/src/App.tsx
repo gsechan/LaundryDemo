@@ -24,7 +24,7 @@ function Shell({ token, currentAdmin }) {
                     {page === "roles" && <RolesPage />}
                     {page === "organizations" && <OrganizationsPage />}
                     {page === "locations" && <LocationsPage orgId={orgId} onOrgChange={setOrgId} />}
-                    {page === "orders" && <OrdersPage />}
+                    {page === "orders" && <OrdersPage orgId={orgId} onOrgChange={setOrgId} />}
                     {page === "users" && <UsersPage orgId={orgId} onOrgChange={setOrgId} />}
                     {page === "items" && <ItemsPage orgId={orgId} onOrgChange={setOrgId} />}
                 </main>

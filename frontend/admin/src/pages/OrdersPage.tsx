@@ -107,42 +107,32 @@ function OrderDetail({ order, orgId, onBack, onSaved, onDeleted }) {
     );
 }
 
-export default function OrdersPage() {
+export default function OrdersPage({ orgId, onOrgChange }) {
     const api = useApi();
     const [orgs, setOrgs] = useState(null);
-    const [selectedOrgId, setSelectedOrgId] = useState("");
     const [orders, setOrders] = useState(null);
     const [selected, setSelected] = useState(null);
-    const [orgsError, setOrgsError] = useState(null);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        loadResource(api, "/admin/organizations", setOrgsError, (data) => {
-            const active = data.filter((o) => !o.isDeleted);
-            setOrgs(active);
-            if (active.length > 0) setSelectedOrgId(active[0].id);
-        }, "Could not load organizations");
+        loadResource(api, "/admin/organizations", setError, setOrgs, "Could not load organizations");
     }, []);
 
-    useEffect(() => {
-        if (!selectedOrgId) { setOrders(null); return; }
-        setOrders(null);
-        loadResource(api, `/admin/organizations/${selectedOrgId}/orders`, setError, setOrders, "Could not load orders");
-    }, [selectedOrgId]);
-
-    function reload() {
-        if (!selectedOrgId) return;
-        loadResource(api, `/admin/organizations/${selectedOrgId}/orders`, setError, setOrders, "Could not load orders");
+    async function loadOrders() {
+        if (!orgId) { setOrders(null); return; }
+        await loadResource(api, `/admin/organizations/${orgId}/orders`, setError, setOrders, "Could not load orders");
     }
 
-    if (selected) {
+    useEffect(() => { setSelected(null); loadOrders(); }, [orgId]);
+
+    if (orgId && selected) {
         return (
             <OrderDetail
                 order={selected}
-                orgId={selectedOrgId}
+                orgId={orgId}
                 onBack={() => setSelected(null)}
-                onSaved={() => { setSelected(null); reload(); }}
-                onDeleted={() => { setSelected(null); reload(); }}
+                onSaved={() => { setSelected(null); loadOrders(); }}
+                onDeleted={() => { setSelected(null); loadOrders(); }}
             />
         );
     }
@@ -150,31 +140,18 @@ export default function OrdersPage() {
     return (
         <PageList
             title="Orders"
-            loading={!orgs && !orgsError}
-            error={orgsError || error}
+            orgs={orgs ?? []}
+            orgId={orgId}
+            onOrgChange={onOrgChange}
+            loading={!!orgId && !orders && !error}
+            error={error}
         >
-            <div style={{ marginBottom: "1rem" }}>
-                <label>
-                    Organization{" "}
-                    <select
-                        value={selectedOrgId}
-                        onChange={(e) => { setSelectedOrgId(e.target.value); setOrders(null); }}
-                        disabled={!orgs}
-                    >
-                        {orgs && orgs.map((o) => (
-                            <option key={o.id} value={o.id}>{o.name}</option>
-                        ))}
-                    </select>
-                </label>
-            </div>
-            {selectedOrgId && !orders && !error && <div>Loading orders…</div>}
             {orders && orders.map((o) => (
                 <div className="admin-row" key={o.id} onClick={() => setSelected(o)}>
                     <span className="name">{o.state}</span>
                     <span className="meta"> — pickup {msToLabel(o.scheduledPickup)} — {o.lines.length} item(s)</span>
                 </div>
             ))}
-            {orders && orders.length === 0 && <div>No orders for this organization.</div>}
         </PageList>
     );
 }
