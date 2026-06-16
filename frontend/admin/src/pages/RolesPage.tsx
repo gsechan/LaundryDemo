@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import useApi from "../useApi";
+import { deleteResource } from "../apiUtils";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
@@ -48,15 +49,7 @@ function RoleDetail({ role, onBack, onSaved, onDeleted }) {
         } catch (err) { setError("Could not reach the server"); }
     }
 
-    async function handleDelete() {
-        setError(null);
-        try {
-            const res = await api("/admin/roles/" + role.id, { method: "DELETE" });
-            const body = await res.json();
-            if (body.errorType === "NONE") { onDeleted(); }
-            else { setError((body.errors && body.errors.join(", ")) || "Could not delete role"); }
-        } catch (err) { setError("Could not reach the server"); }
-    }
+    const handleDelete = () => deleteResource(api, "/admin/roles/" + role.id, setError, onDeleted, "Could not delete role");
 
     return (
         <DetailView

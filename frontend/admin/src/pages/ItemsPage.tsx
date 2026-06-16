@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import useApi from "../useApi";
+import { deleteResource } from "../apiUtils";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
@@ -82,15 +83,7 @@ function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
         } catch (err) { setError("Could not reach the server"); }
     }
 
-    async function handleDelete() {
-        setError(null);
-        try {
-            const res = await api("/admin/organizations/" + orgId + "/items/" + item.id, { method: "DELETE" });
-            const body = await res.json();
-            if (body.errorType === "NONE") { onDeleted(); }
-            else { setError((body.errors && body.errors.join(", ")) || "Could not delete item"); }
-        } catch (err) { setError("Could not reach the server"); }
-    }
+    const handleDelete = () => deleteResource(api, "/admin/organizations/" + orgId + "/items/" + item.id, setError, onDeleted, "Could not delete item");
 
     return (
         <DetailView

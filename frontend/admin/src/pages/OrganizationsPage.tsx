@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../AuthContext";
 import useApi from "../useApi";
+import { deleteResource } from "../apiUtils";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
@@ -32,20 +33,7 @@ function OrganizationDetail({ org, onBack, onSaved, onDeleted }) {
         }
     }
 
-    async function handleDelete() {
-        setError(null);
-        try {
-            const res = await api("/admin/organizations/" + org.id, { method: "DELETE" });
-            const body = await res.json();
-            if (body.errorType === "NONE") {
-                onDeleted();
-            } else {
-                setError((body.errors && body.errors.join(", ")) || "Could not delete organization");
-            }
-        } catch (err) {
-            setError("Could not reach the server");
-        }
-    }
+    const handleDelete = () => deleteResource(api, "/admin/organizations/" + org.id, setError, onDeleted, "Could not delete organization");
 
     async function handleUndelete() {
         setError(null);
