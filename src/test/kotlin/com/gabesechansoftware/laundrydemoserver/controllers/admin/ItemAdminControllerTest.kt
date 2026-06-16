@@ -7,11 +7,9 @@ import com.gabesechansoftware.laundrydemoserver.authorization.AdminPermissions
 import com.gabesechansoftware.laundrydemoserver.catalog.ItemService
 import com.gabesechansoftware.laundrydemoserver.catalog.PatchItem
 import com.gabesechansoftware.laundrydemoserver.catalog.UploadItem
-import com.gabesechansoftware.laundrydemoserver.catalog.PatchItemName
 import com.gabesechansoftware.laundrydemoserver.catalog.UploadItemName
 import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.Admin
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.Item
-import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemName
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
@@ -26,7 +24,6 @@ import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 
 @ExtendWith(MockKExtension::class)
 class ItemAdminControllerTest {
@@ -57,7 +54,7 @@ class ItemAdminControllerTest {
         val item = Item(organization = orgId, price = BigDecimal("1.00"), itemType = ItemType.DRY_CLEANING)
         every { itemService.getItems(orgId) } returns listOf(item)
 
-        val response = controller.listItems(orgId, authedAdmin)
+        val response = controller.listItems(orgId)
 
         assertEquals(NetworkErrorType.NONE.toString(), response.errorType)
         assertNotNull(response.data)
@@ -98,7 +95,7 @@ class ItemAdminControllerTest {
         canEdit(false)
         val itemId = UUID.randomUUID()
 
-        val response = controller.updateItem(orgId, itemId, PatchItemRequest(PatchItem("5.00", null)), authedAdmin)
+        val response = controller.updateItem(orgId, itemId, PatchItemRequest(PatchItem("5.00", null, null)), authedAdmin)
 
         assertEquals(NetworkErrorType.NOT_AUTHORIZED.toString(), response.errorType)
         assertNull(response.data)
@@ -109,7 +106,7 @@ class ItemAdminControllerTest {
     fun `updateItem - with edit permission updates and returns the view`() {
         canEdit(true)
         val itemId = UUID.randomUUID()
-        val patch = PatchItem("5.00", ItemType.WASH_AND_FOLD)
+        val patch = PatchItem("5.00", ItemType.WASH_AND_FOLD, null)
         val updated = Item(organization = orgId, price = BigDecimal("5.00"), itemType = ItemType.WASH_AND_FOLD)
         every { itemService.updateItem(orgId, itemId, patch) } returns updated
 
@@ -145,83 +142,4 @@ class ItemAdminControllerTest {
         verify { itemService.deleteItem(orgId, itemId) }
     }
 
-    @Test
-    fun `addItemName - without edit permission returns NOT_AUTHORIZED and does not add`() {
-        canEdit(false)
-        val itemId = UUID.randomUUID()
-
-        val response = controller.addItemName(orgId, itemId, PostItemNameRequest("Shirt", "en-US"), authedAdmin)
-
-        assertEquals(NetworkErrorType.NOT_AUTHORIZED.toString(), response.errorType)
-        verify(exactly = 0) { itemService.addItemName(any(), any(), any(), any()) }
-    }
-
-    @Test
-    fun `addItemName - with edit permission adds and returns the view`() {
-        canEdit(true)
-        val itemId = UUID.randomUUID()
-        val created = ItemName(itemId = itemId, name = "Shirt", locale = "en-US")
-        every { itemService.addItemName(orgId, itemId, "Shirt", "en-US") } returns created
-
-        val response = controller.addItemName(orgId, itemId, PostItemNameRequest("Shirt", "en-US"), authedAdmin)
-
-        assertEquals(NetworkErrorType.NONE.toString(), response.errorType)
-        assertNotNull(response.data)
-        assertEquals("Shirt", response.data.name)
-        assertEquals("en-US", response.data.locale)
-        verify { itemService.addItemName(orgId, itemId, "Shirt", "en-US") }
-    }
-
-    @Test
-    fun `updateItemName - without edit permission returns NOT_AUTHORIZED and does not update`() {
-        canEdit(false)
-        val itemId = UUID.randomUUID()
-        val nameId = UUID.randomUUID()
-
-        val response = controller.updateItemName(orgId, itemId, nameId, PatchItemNameRequest("New", null), authedAdmin)
-
-        assertEquals(NetworkErrorType.NOT_AUTHORIZED.toString(), response.errorType)
-        verify(exactly = 0) { itemService.updateItemName(any(), any(), any(), any()) }
-    }
-
-    @Test
-    fun `updateItemName - with edit permission updates and returns the view`() {
-        canEdit(true)
-        val itemId = UUID.randomUUID()
-        val nameId = UUID.randomUUID()
-        val updated = ItemName(itemId = itemId, name = "New", locale = "en-US")
-        every { itemService.updateItemName(orgId, itemId, nameId, PatchItemName("New", null)) } returns updated
-
-        val response = controller.updateItemName(orgId, itemId, nameId, PatchItemNameRequest("New", null), authedAdmin)
-
-        assertEquals(NetworkErrorType.NONE.toString(), response.errorType)
-        assertNotNull(response.data)
-        assertEquals("New", response.data.name)
-        verify { itemService.updateItemName(orgId, itemId, nameId, PatchItemName("New", null)) }
-    }
-
-    @Test
-    fun `deleteItemName - without edit permission returns NOT_AUTHORIZED and does not delete`() {
-        canEdit(false)
-        val itemId = UUID.randomUUID()
-        val nameId = UUID.randomUUID()
-
-        val response = controller.deleteItemName(orgId, itemId, nameId, authedAdmin)
-
-        assertEquals(NetworkErrorType.NOT_AUTHORIZED.toString(), response.errorType)
-        verify(exactly = 0) { itemService.deleteItemName(any(), any(), any()) }
-    }
-
-    @Test
-    fun `deleteItemName - with edit permission deletes and returns success`() {
-        canEdit(true)
-        val itemId = UUID.randomUUID()
-        val nameId = UUID.randomUUID()
-        every { itemService.deleteItemName(orgId, itemId, nameId) } just Runs
-
-        val response = controller.deleteItemName(orgId, itemId, nameId, authedAdmin)
-
-        assertEquals(NetworkErrorType.NONE.toString(), response.errorType)
-        verify { itemService.deleteItemName(orgId, itemId, nameId) }
-    }
 }

@@ -14,7 +14,7 @@ class AdminAuthorizationService(
         if (permissions.isEmpty()) {
             return true
         }
-        val held = permissionsForAdmin(admin)
+        val held = permissionsFor(admin).toSet()
         return held.containsAll(permissions)
     }
 
@@ -23,16 +23,12 @@ class AdminAuthorizationService(
         if (permissions.isEmpty()) {
             return true
         }
-        val held = permissionsForAdmin(admin)
+        val held = permissionsFor(admin).toSet()
         return permissions.any { it in held }
     }
 
     /** Every permission the admin holds across all their roles. */
     fun permissionsFor(admin: Admin): List<AdminPermissions> {
         return permissionRepository.findPermissionsByAdminId(admin.id)
-    }
-
-    private fun permissionsForAdmin(admin: Admin): Set<AdminPermissions> {
-        return permissionsFor(admin).toSet()
     }
 }

@@ -38,3 +38,7 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+### Front-end (Vite admin app) ###
+frontend/admin/node_modules/
+frontend/admin/dist/

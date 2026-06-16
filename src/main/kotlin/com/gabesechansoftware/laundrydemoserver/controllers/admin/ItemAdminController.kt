@@ -7,11 +7,9 @@ import com.gabesechansoftware.laundrydemoserver.authorization.AdminAuthorization
 import com.gabesechansoftware.laundrydemoserver.authorization.AdminPermissions
 import com.gabesechansoftware.laundrydemoserver.catalog.ItemService
 import com.gabesechansoftware.laundrydemoserver.catalog.PatchItem
-import com.gabesechansoftware.laundrydemoserver.catalog.PatchItemName
 import com.gabesechansoftware.laundrydemoserver.catalog.UploadItem
 import com.gabesechansoftware.laundrydemoserver.model.dbview.admin.Admin
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.Item
-import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemName
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -48,8 +46,6 @@ fun Item.toAdminView() = AdminItemView(
 
 data class PatchItemRequest(val item: PatchItem)
 data class PostItemRequest(val item: UploadItem)
-data class PostItemNameRequest(val name: String, val locale: String)
-data class PatchItemNameRequest(val name: String?, val locale: String?)
 
 
 @RestController
@@ -67,7 +63,6 @@ class ItemAdminController(
     @GetMapping("/admin/organizations/{orgId}/items")
     fun listItems(
         @PathVariable orgId: UUID,
-        @AuthenticatedAdmin authedAdmin: Admin,
     ): NetworkResponse<List<AdminItemView>> {
         return NetworkResponse(itemService.getItems(orgId).map { it.toAdminView() })
     }
@@ -110,45 +105,4 @@ class ItemAdminController(
         return NetworkResponse(Unit)
     }
 
-    @PostMapping("/admin/organizations/{orgId}/items/{itemId}/names")
-    fun addItemName(
-        @PathVariable orgId: UUID,
-        @PathVariable itemId: UUID,
-        @RequestBody request: PostItemNameRequest,
-        @AuthenticatedAdmin authedAdmin: Admin,
-    ): NetworkResponse<AdminItemNameView> {
-        if (!canEditOrg(authedAdmin)) {
-            return NetworkResponse(NetworkErrorType.NOT_AUTHORIZED, "Not authorized to edit items")
-        }
-        return NetworkResponse(itemService.addItemName(orgId, itemId, request.name, request.locale).toView())
-    }
-
-    @PatchMapping("/admin/organizations/{orgId}/items/{itemId}/names/{nameId}")
-    fun updateItemName(
-        @PathVariable orgId: UUID,
-        @PathVariable itemId: UUID,
-        @PathVariable nameId: UUID,
-        @RequestBody request: PatchItemNameRequest,
-        @AuthenticatedAdmin authedAdmin: Admin,
-    ): NetworkResponse<AdminItemNameView> {
-        if (!canEditOrg(authedAdmin)) {
-            return NetworkResponse(NetworkErrorType.NOT_AUTHORIZED, "Not authorized to edit items")
-        }
-        val updated = itemService.updateItemName(orgId, itemId, nameId, PatchItemName(request.name, request.locale))
-        return NetworkResponse(updated.toView())
-    }
-
-    @DeleteMapping("/admin/organizations/{orgId}/items/{itemId}/names/{nameId}")
-    fun deleteItemName(
-        @PathVariable orgId: UUID,
-        @PathVariable itemId: UUID,
-        @PathVariable nameId: UUID,
-        @AuthenticatedAdmin authedAdmin: Admin,
-    ): NetworkResponse<Unit> {
-        if (!canEditOrg(authedAdmin)) {
-            return NetworkResponse(NetworkErrorType.NOT_AUTHORIZED, "Not authorized to edit items")
-        }
-        itemService.deleteItemName(orgId, itemId, nameId)
-        return NetworkResponse(Unit)
-    }
 }
