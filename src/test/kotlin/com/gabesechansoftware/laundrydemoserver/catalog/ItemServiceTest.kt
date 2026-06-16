@@ -62,7 +62,7 @@ class ItemServiceTest {
     fun `getItemsForUser - uses default address when addressId is null`() {
         val item = Item(locationId = location.id, price = BigDecimal("1.00"), itemType = ItemType.DRY_CLEANING)
         every { addressRepository.findFirstByUserAndIsDefault(user, true) } returns defaultAddress
-        every { locationRepository.findFirstByOrganizationIdAndPostcode(org.id, postcode) } returns location
+        every { locationRepository.findFirstByOrganizationIdAndAddressPostcode(org.id, postcode) } returns location
         every { itemRepository.findByLocationId(location.id) } returns listOf(item)
 
         val result = service.getItemsForUser(user, null)
@@ -75,7 +75,7 @@ class ItemServiceTest {
     fun `getItemsForUser - uses provided addressId when given`() {
         val item = Item(locationId = location.id, price = BigDecimal("1.00"), itemType = ItemType.DRY_CLEANING)
         every { addressRepository.findById(defaultAddress.id) } returns Optional.of(defaultAddress)
-        every { locationRepository.findFirstByOrganizationIdAndPostcode(org.id, postcode) } returns location
+        every { locationRepository.findFirstByOrganizationIdAndAddressPostcode(org.id, postcode) } returns location
         every { itemRepository.findByLocationId(location.id) } returns listOf(item)
 
         val result = service.getItemsForUser(user, defaultAddress.id)

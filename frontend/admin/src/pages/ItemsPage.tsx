@@ -7,7 +7,7 @@ import DetailView from "../components/DetailView";
 
 const ITEM_TYPES = ["WASH_AND_FOLD", "DRY_CLEANING", "OTHER"];
 
-function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
+function ItemDetail({ orgId, locationId, item, onBack, onSaved, onDeleted }) {
     const { hasAnyPermission } = useAuth();
     const api = useApi();
     const canEdit = hasAnyPermission("EDIT_ORG", "CREATE_ORG");
@@ -17,6 +17,8 @@ function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
     const [newName, setNewName] = useState("");
     const [newLocale, setNewLocale] = useState("");
     const [error, setError] = useState(null);
+
+    const itemUrl = `/admin/organizations/${orgId}/locations/${locationId}/items/${item.id}`;
 
     function updateNameField(i, field, value) {
         setNames((prev) => prev.map((n, idx) => idx === i ? { ...n, [field]: value } : n));
@@ -29,10 +31,10 @@ function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
         setNewLocale("");
     }
 
-    const handleSave = () => saveResource(api, "PATCH", "/admin/organizations/" + orgId + "/items/" + item.id,
+    const handleSave = () => saveResource(api, "PATCH", itemUrl,
         { item: { price, itemType, names } }, setError, onSaved, "Could not save item");
 
-    const handleDelete = () => deleteResource(api, "/admin/organizations/" + orgId + "/items/" + item.id, setError, onDeleted, "Could not delete item");
+    const handleDelete = () => deleteResource(api, itemUrl, setError, onDeleted, "Could not delete item");
 
     return (
         <DetailView
@@ -84,7 +86,7 @@ function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
     );
 }
 
-function ItemCreate({ orgId, onBack, onCreated }) {
+function ItemCreate({ orgId, locationId, onBack, onCreated }) {
     const api = useApi();
     const [price, setPrice] = useState("");
     const [itemType, setItemType] = useState("DRY_CLEANING");
@@ -100,7 +102,8 @@ function ItemCreate({ orgId, onBack, onCreated }) {
     async function handleSubmit(e) {
         e.preventDefault();
         const cleanNames = names.filter((n) => n.name && n.locale);
-        await saveResource(api, "POST", "/admin/organizations/" + orgId + "/items",
+        await saveResource(api, "POST",
+            `/admin/organizations/${orgId}/locations/${locationId}/items`,
             { item: { price, itemType, names: cleanNames } }, setError, onCreated, "Could not create item");
     }
 
@@ -132,11 +135,12 @@ function ItemCreate({ orgId, onBack, onCreated }) {
     );
 }
 
-export default function ItemsPage({ orgId, onOrgChange }) {
+export default function ItemsPage({ orgId, onOrgChange, locationId, onLocationChange }) {
     const { hasAnyPermission } = useAuth();
     const api = useApi();
     const canEdit = hasAnyPermission("EDIT_ORG", "CREATE_ORG");
     const [orgs, setOrgs] = useState(null);
+    const [locations, setLocations] = useState(null);
     const [items, setItems] = useState(null);
     const [selected, setSelected] = useState(null);
     const [creating, setCreating] = useState(false);
@@ -146,27 +150,43 @@ export default function ItemsPage({ orgId, onOrgChange }) {
         loadResource(api, "/admin/organizations", setError, setOrgs, "Could not load organizations");
     }, []);
 
+    useEffect(() => {
+        setSelected(null);
+        setCreating(false);
+        setLocations(null);
+        setItems(null);
+        if (!orgId) return;
+        loadResource(api, `/admin/organizations/${orgId}/locations`, setError, setLocations, "Could not load locations");
+    }, [orgId]);
+
     async function loadItems() {
-        if (!orgId) { setItems(null); return; }
-        await loadResource(api, "/admin/organizations/" + orgId + "/items", setError, setItems, "Could not load items");
+        if (!orgId || !locationId) { setItems(null); return; }
+        await loadResource(api, `/admin/organizations/${orgId}/locations/${locationId}/items`,
+            setError, setItems, "Could not load items");
     }
 
-    useEffect(() => { setSelected(null); setCreating(false); loadItems(); }, [orgId]);
+    useEffect(() => {
+        setSelected(null);
+        setCreating(false);
+        loadItems();
+    }, [locationId]);
 
-    if (orgId && creating) {
+    if (orgId && locationId && creating) {
         return (
             <ItemCreate
                 orgId={orgId}
+                locationId={locationId}
                 onBack={() => setCreating(false)}
                 onCreated={() => { setCreating(false); loadItems(); }}
             />
         );
     }
 
-    if (orgId && selected) {
+    if (orgId && locationId && selected) {
         return (
             <ItemDetail
                 orgId={orgId}
+                locationId={locationId}
                 item={selected}
                 onBack={() => setSelected(null)}
                 onSaved={() => { setSelected(null); loadItems(); }}
@@ -181,9 +201,12 @@ export default function ItemsPage({ orgId, onOrgChange }) {
             orgs={orgs ?? []}
             orgId={orgId}
             onOrgChange={onOrgChange}
-            canAdd={!!orgId && canEdit}
+            locations={orgId ? (locations ?? []) : []}
+            locationId={locationId}
+            onLocationChange={onLocationChange}
+            canAdd={!!orgId && !!locationId && canEdit}
             onAdd={() => setCreating(true)}
-            loading={!!orgId && !items && !error}
+            loading={!!orgId && !!locationId && !items && !error}
             error={error}
         >
             {items && items.map((it) => (

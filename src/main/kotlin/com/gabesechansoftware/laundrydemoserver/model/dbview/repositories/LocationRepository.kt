@@ -8,5 +8,5 @@ import java.util.UUID
 @Repository
 interface LocationRepository : JpaRepository<Location, UUID> {
     fun findByOrganizationId(organizationId: UUID): List<Location>
-    fun findFirstByOrganizationIdAndPostcode(organizationId: UUID, postcode: String): Location?
+    fun findFirstByOrganizationIdAndAddressPostcode(organizationId: UUID, postcode: String): Location?
 }

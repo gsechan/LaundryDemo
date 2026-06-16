@@ -48,7 +48,7 @@ class ItemService(
           } ?: return emptyList()
 
           val orgId = user.organization?.id ?: return emptyList()
-          val location = locationRepository.findFirstByOrganizationIdAndPostcode(orgId, address.postcode ?: return emptyList())
+          val location = locationRepository.findFirstByOrganizationIdAndAddressPostcode(orgId, address.postcode ?: return emptyList())
                ?: return emptyList()
 
           return itemRepository.findByLocationId(location.id)

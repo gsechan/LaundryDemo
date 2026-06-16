@@ -14,6 +14,12 @@ function Shell({ token, currentAdmin }) {
     const perms = currentAdmin.permissions || [];
     const [page, setPage] = useState(() => getInitialPage(perms));
     const [orgId, setOrgId] = useState("");
+    const [itemLocationId, setItemLocationId] = useState("");
+
+    function handleOrgChange(id: string) {
+        setOrgId(id);
+        setItemLocationId("");
+    }
 
     return (
         <AuthContext.Provider value={makeAuthValue(token, currentAdmin)}>
@@ -23,10 +29,17 @@ function Shell({ token, currentAdmin }) {
                     {page === "admins" && <AdminsPage />}
                     {page === "roles" && <RolesPage />}
                     {page === "organizations" && <OrganizationsPage />}
-                    {page === "locations" && <LocationsPage orgId={orgId} onOrgChange={setOrgId} />}
-                    {page === "orders" && <OrdersPage orgId={orgId} onOrgChange={setOrgId} />}
-                    {page === "users" && <UsersPage orgId={orgId} onOrgChange={setOrgId} />}
-                    {page === "items" && <ItemsPage orgId={orgId} onOrgChange={setOrgId} />}
+                    {page === "locations" && <LocationsPage orgId={orgId} onOrgChange={handleOrgChange} />}
+                    {page === "orders" && <OrdersPage orgId={orgId} onOrgChange={handleOrgChange} />}
+                    {page === "users" && <UsersPage orgId={orgId} onOrgChange={handleOrgChange} />}
+                    {page === "items" && (
+                        <ItemsPage
+                            orgId={orgId}
+                            onOrgChange={handleOrgChange}
+                            locationId={itemLocationId}
+                            onLocationChange={setItemLocationId}
+                        />
+                    )}
                 </main>
             </div>
         </AuthContext.Provider>
