@@ -4,6 +4,7 @@ import useApi from "../useApi";
 import { saveResource, loadResource, deleteResource } from "../apiUtils";
 import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
+import { uuidToShortId } from "../idUtils";
 
 const ORDER_STATES = [
     "SUBMITTED", "PICKUP_IN_PROGRESS", "PICKED_UP", "CLEANING",
@@ -69,7 +70,7 @@ function OrderDetail({ order, orgId, onBack, onSaved, onDeleted }) {
 
     return (
         <DetailView
-            title="Edit Order"
+            title={`Order ${uuidToShortId(order.id)}`}
             backLabel="Back to orders"
             onBack={onBack}
             canSave={canEdit}
@@ -148,8 +149,8 @@ export default function OrdersPage({ orgId, onOrgChange }) {
         >
             {orders && orders.map((o) => (
                 <div className="admin-row" key={o.id} onClick={() => setSelected(o)}>
-                    <span className="name">{o.state}</span>
-                    <span className="meta"> — pickup {msToLabel(o.scheduledPickup)} — {o.lines.length} item(s)</span>
+                    <span className="name">{uuidToShortId(o.id)}</span>
+                    <span className="meta"> — {o.state} — pickup {msToLabel(o.scheduledPickup)} — {o.lines.length} item(s)</span>
                 </div>
             ))}
         </PageList>
