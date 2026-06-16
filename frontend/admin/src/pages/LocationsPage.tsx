@@ -93,12 +93,11 @@ function LocationCreate({ orgId, onBack, onCreated }) {
     );
 }
 
-export default function LocationsPage() {
+export default function LocationsPage({ orgId, onOrgChange }) {
     const { hasAnyPermission } = useAuth();
     const api = useApi();
     const canEdit = hasAnyPermission("EDIT_ORG", "CREATE_ORG");
     const [orgs, setOrgs] = useState(null);
-    const [orgId, setOrgId] = useState("");
     const [locations, setLocations] = useState(null);
     const [selected, setSelected] = useState(null);
     const [creating, setCreating] = useState(false);
@@ -142,7 +141,7 @@ export default function LocationsPage() {
             title="Locations"
             orgs={orgs ?? []}
             orgId={orgId}
-            onOrgChange={setOrgId}
+            onOrgChange={onOrgChange}
             canAdd={!!orgId && canEdit}
             onAdd={() => setCreating(true)}
             loading={!!orgId && !locations && !error}

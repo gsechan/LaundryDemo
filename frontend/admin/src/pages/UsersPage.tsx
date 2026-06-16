@@ -3,10 +3,9 @@ import useApi from "../useApi";
 import { loadResource } from "../apiUtils";
 import PageList from "../components/PageList";
 
-export default function UsersPage() {
+export default function UsersPage({ orgId, onOrgChange }) {
     const api = useApi();
     const [orgs, setOrgs] = useState(null);
-    const [orgId, setOrgId] = useState("");
     const [users, setUsers] = useState(null);
     const [error, setError] = useState(null);
 
@@ -26,7 +25,7 @@ export default function UsersPage() {
             title="Users"
             orgs={orgs ?? []}
             orgId={orgId}
-            onOrgChange={setOrgId}
+            onOrgChange={onOrgChange}
             loading={!!orgId && !users && !error}
             error={error}
         >

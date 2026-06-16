@@ -13,6 +13,7 @@ import UsersPage from "./pages/UsersPage";
 function Shell({ token, currentAdmin }) {
     const perms = currentAdmin.permissions || [];
     const [page, setPage] = useState(() => getInitialPage(perms));
+    const [orgId, setOrgId] = useState("");
 
     return (
         <AuthContext.Provider value={makeAuthValue(token, currentAdmin)}>
@@ -22,10 +23,10 @@ function Shell({ token, currentAdmin }) {
                     {page === "admins" && <AdminsPage />}
                     {page === "roles" && <RolesPage />}
                     {page === "organizations" && <OrganizationsPage />}
-                    {page === "locations" && <LocationsPage />}
+                    {page === "locations" && <LocationsPage orgId={orgId} onOrgChange={setOrgId} />}
                     {page === "orders" && <OrdersPage />}
-                    {page === "users" && <UsersPage />}
-                    {page === "items" && <ItemsPage />}
+                    {page === "users" && <UsersPage orgId={orgId} onOrgChange={setOrgId} />}
+                    {page === "items" && <ItemsPage orgId={orgId} onOrgChange={setOrgId} />}
                 </main>
             </div>
         </AuthContext.Provider>

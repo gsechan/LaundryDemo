@@ -132,12 +132,11 @@ function ItemCreate({ orgId, onBack, onCreated }) {
     );
 }
 
-export default function ItemsPage() {
+export default function ItemsPage({ orgId, onOrgChange }) {
     const { hasAnyPermission } = useAuth();
     const api = useApi();
     const canEdit = hasAnyPermission("EDIT_ORG", "CREATE_ORG");
     const [orgs, setOrgs] = useState(null);
-    const [orgId, setOrgId] = useState("");
     const [items, setItems] = useState(null);
     const [selected, setSelected] = useState(null);
     const [creating, setCreating] = useState(false);
@@ -181,7 +180,7 @@ export default function ItemsPage() {
             title="Items"
             orgs={orgs ?? []}
             orgId={orgId}
-            onOrgChange={setOrgId}
+            onOrgChange={onOrgChange}
             canAdd={!!orgId && canEdit}
             onAdd={() => setCreating(true)}
             loading={!!orgId && !items && !error}
