@@ -9,6 +9,7 @@ import ItemsPage from "./pages/ItemsPage";
 import LocationsPage from "./pages/LocationsPage";
 import OrdersPage from "./pages/OrdersPage";
 import UsersPage from "./pages/UsersPage";
+import EmployeesPage from "./pages/EmployeesPage";
 
 function Shell({ token, currentAdmin }) {
     const perms = currentAdmin.permissions || [];
@@ -32,6 +33,7 @@ function Shell({ token, currentAdmin }) {
                     {page === "locations" && <LocationsPage orgId={orgId} onOrgChange={handleOrgChange} />}
                     {page === "orders" && <OrdersPage orgId={orgId} onOrgChange={handleOrgChange} />}
                     {page === "users" && <UsersPage orgId={orgId} onOrgChange={handleOrgChange} />}
+                    {page === "employees" && <EmployeesPage orgId={orgId} onOrgChange={handleOrgChange} />}
                     {page === "items" && (
                         <ItemsPage
                             orgId={orgId}

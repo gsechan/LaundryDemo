@@ -4,6 +4,7 @@ const PAGES = [
     { key: "organizations", label: "Organizations" },
     { key: "locations", label: "Locations" },
     { key: "users", label: "Users" },
+    { key: "employees", label: "Employees" },
     { key: "orders", label: "Orders" },
     { key: "items", label: "Items" },
 ];
@@ -17,6 +18,7 @@ function pageVisible(key, perms) {
     if (key === "items") return has("CREATE_ORG") || has("DELETE_ORG") || has("EDIT_ORG");
     if (key === "orders") return has("CREATE_ORG") || has("DELETE_ORG") || has("EDIT_ORG");
     if (key === "users") return has("CREATE_ORG") || has("DELETE_ORG") || has("EDIT_ORG");
+    if (key === "employees") return has("EDIT_ORG");
     if (key === "roles") return has("ASSIGN_ADMIN_ROLES");
     return true;
 }
