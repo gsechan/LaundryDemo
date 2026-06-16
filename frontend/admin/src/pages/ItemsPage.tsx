@@ -13,32 +13,24 @@ function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
     const canEdit = hasAnyPermission("EDIT_ORG", "CREATE_ORG");
     const [price, setPrice] = useState(item.price || "");
     const [itemType, setItemType] = useState(item.itemType || "DRY_CLEANING");
-    const [names, setNames] = useState(item.names || []);
+    const [names, setNames] = useState(item.names.map((n) => ({ name: n.name, locale: n.locale })) || []);
     const [newName, setNewName] = useState("");
     const [newLocale, setNewLocale] = useState("");
     const [error, setError] = useState(null);
 
-    const namesUrl = "/admin/organizations/" + orgId + "/items/" + item.id + "/names";
-
-    function updateNameField(id, field, value) {
-        setNames((prev) => prev.map((n) => n.id === id ? { ...n, [field]: value } : n));
+    function updateNameField(i, field, value) {
+        setNames((prev) => prev.map((n, idx) => idx === i ? { ...n, [field]: value } : n));
     }
-
-    const saveName = (n) => saveResource(api, "PATCH", namesUrl + "/" + n.id,
-        { name: n.name, locale: n.locale }, setError, () => {}, "Could not save name");
-
-    const deleteName = (id) => deleteResource(api, namesUrl + "/" + id, setError,
-        () => setNames((prev) => prev.filter((n) => n.id !== id)), "Could not delete name");
-
-    async function addName() {
+    function removeName(i) { setNames((prev) => prev.filter((_, idx) => idx !== i)); }
+    function addName() {
         if (!newName || !newLocale) return;
-        await saveResource(api, "POST", namesUrl, { name: newName, locale: newLocale }, setError,
-            (data) => { setNames((prev) => [...prev, data]); setNewName(""); setNewLocale(""); },
-            "Could not add name");
+        setNames((prev) => [...prev, { name: newName, locale: newLocale }]);
+        setNewName("");
+        setNewLocale("");
     }
 
     const handleSave = () => saveResource(api, "PATCH", "/admin/organizations/" + orgId + "/items/" + item.id,
-        { item: { price, itemType } }, setError, onSaved, "Could not save item");
+        { item: { price, itemType, names } }, setError, onSaved, "Could not save item");
 
     const handleDelete = () => deleteResource(api, "/admin/organizations/" + orgId + "/items/" + item.id, setError, onDeleted, "Could not delete item");
 
@@ -66,14 +58,13 @@ function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
             <h3>Names</h3>
             {canEdit ? (
                 <div>
-                    {names.map((n) => (
-                        <div className="name-row" key={n.id}>
+                    {names.map((n, i) => (
+                        <div className="name-row" key={i}>
                             <input type="text" value={n.name || ""}
-                                   onChange={(e) => updateNameField(n.id, "name", e.target.value)} />
+                                   onChange={(e) => updateNameField(i, "name", e.target.value)} />
                             <input type="text" value={n.locale || ""}
-                                   onChange={(e) => updateNameField(n.id, "locale", e.target.value)} />
-                            <button type="button" onClick={() => saveName(n)}>Save</button>
-                            <button type="button" onClick={() => deleteName(n.id)}>✕</button>
+                                   onChange={(e) => updateNameField(i, "locale", e.target.value)} />
+                            <button type="button" onClick={() => removeName(i)}>✕</button>
                         </div>
                     ))}
                     <div className="name-row">
