@@ -2,6 +2,7 @@ const PAGES = [
     { key: "admins", label: "Admins" },
     { key: "roles", label: "Roles" },
     { key: "organizations", label: "Organizations" },
+    { key: "locations", label: "Locations" },
     { key: "users", label: "Users" },
     { key: "orders", label: "Orders" },
     { key: "items", label: "Items" },
@@ -12,6 +13,7 @@ function pageVisible(key, perms) {
     const has = (p) => perms.includes(p);
     if (key === "admins") return has("CREATE_ADMIN") || has("DELETE_ADMIN") || has("ASSIGN_ADMIN_ROLES");
     if (key === "organizations") return has("CREATE_ORG") || has("DELETE_ORG") || has("EDIT_ORG");
+    if (key === "locations") return has("CREATE_ORG") || has("DELETE_ORG") || has("EDIT_ORG");
     if (key === "items") return has("CREATE_ORG") || has("DELETE_ORG") || has("EDIT_ORG");
     if (key === "orders") return has("CREATE_ORG") || has("DELETE_ORG") || has("EDIT_ORG");
     if (key === "users") return has("CREATE_ORG") || has("DELETE_ORG") || has("EDIT_ORG");

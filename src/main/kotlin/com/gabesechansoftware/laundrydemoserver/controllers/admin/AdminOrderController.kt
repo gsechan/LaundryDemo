@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
-
-
+import com.gabesechansoftware.laundrydemoserver.model.adminview.AdminOrderView
+import com.gabesechansoftware.laundrydemoserver.model.adminview.toAdminView
 
 
 data class PatchOrderRequest(val order: PatchOrder)

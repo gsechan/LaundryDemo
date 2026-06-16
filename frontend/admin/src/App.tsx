@@ -6,6 +6,7 @@ import AdminsPage from "./pages/AdminsPage";
 import OrganizationsPage from "./pages/OrganizationsPage";
 import RolesPage from "./pages/RolesPage";
 import ItemsPage from "./pages/ItemsPage";
+import LocationsPage from "./pages/LocationsPage";
 import OrdersPage from "./pages/OrdersPage";
 import UsersPage from "./pages/UsersPage";
 
@@ -21,6 +22,7 @@ function Shell({ token, currentAdmin }) {
                     {page === "admins" && <AdminsPage />}
                     {page === "roles" && <RolesPage />}
                     {page === "organizations" && <OrganizationsPage />}
+                    {page === "locations" && <LocationsPage />}
                     {page === "orders" && <OrdersPage />}
                     {page === "users" && <UsersPage />}
                     {page === "items" && <ItemsPage />}
