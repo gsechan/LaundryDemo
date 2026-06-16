@@ -79,8 +79,8 @@ class AdminOrderServiceTest {
 
         assertEquals(OrderState.COMPLETED, result.state)
         assertEquals(futureMs, result.scheduledPickup!!.toInstant().toEpochMilli())
-        assertEquals("123 Main", result.pickupStreet1)
-        assertEquals("Chicago", result.pickupCity)
+        assertEquals("123 Main", result.pickupAddress?.street1)
+        assertEquals("Chicago", result.pickupAddress?.city)
         verify { orderRepository.save(order) }
     }
 

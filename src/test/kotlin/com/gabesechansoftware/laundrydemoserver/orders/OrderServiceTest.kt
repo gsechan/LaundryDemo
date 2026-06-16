@@ -13,6 +13,7 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderLine
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
+import com.gabesechansoftware.laundrydemoserver.model.dbview.EmbeddedAddress
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.OrderRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
@@ -112,8 +113,8 @@ class OrderServiceTest {
         completed = completed,
         scheduledPickup = scheduledPickup,
         scheduledDropoff = scheduledDropff,
-        pickupStreet1 = pickupAddress.street1,
-        dropoffStreet1 = dropoffAddress.street1,
+        pickupAddress = EmbeddedAddress(street1 = pickupAddress.street1 ?: ""),
+        dropoffAddress = EmbeddedAddress(street1 = dropoffAddress.street1 ?: ""),
     )
 
     val order2 = Order(
@@ -125,8 +126,8 @@ class OrderServiceTest {
         completed = completed,
         scheduledPickup = scheduledPickup,
         scheduledDropoff = scheduledDropff,
-        pickupStreet1 = pickupAddress.street1,
-        dropoffStreet1 = dropoffAddress.street1,
+        pickupAddress = EmbeddedAddress(street1 = pickupAddress.street1 ?: ""),
+        dropoffAddress = EmbeddedAddress(street1 = dropoffAddress.street1 ?: ""),
     )
 
     private val washFoldPrice = Item(organization.id, BigDecimal(1.0), mutableListOf(), ItemType.WASH_AND_FOLD)
@@ -269,8 +270,8 @@ class OrderServiceTest {
                 scheduledDropff.toInstant().toEpochMilli(),
                 result.scheduledDropoff!!.toInstant().toEpochMilli()
             )
-            assertEquals(dropoffAddress.street1, result.dropoffStreet1)
-            assertEquals(pickupAddress.street1, result.pickupStreet1)
+            assertEquals(dropoffAddress.street1, result.dropoffAddress?.street1)
+            assertEquals(pickupAddress.street1, result.pickupAddress?.street1)
 
             assertSize(2, result.lines)
             var line = result.lines[0]

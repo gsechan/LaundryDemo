@@ -43,8 +43,8 @@ fun Order.toAdminView() = AdminOrderView(
     completed = completed?.toInstant()?.toEpochMilli(),
     scheduledPickup = scheduledPickup?.toInstant()?.toEpochMilli(),
     scheduledDropoff = scheduledDropoff?.toInstant()?.toEpochMilli(),
-    pickupAddress = OrderAddressView(pickupStreet1, pickupStreet2, pickupCity, pickupState, pickupCountry, pickupPostcode),
-    dropoffAddress = OrderAddressView(dropoffStreet1, dropoffStreet2, dropoffCity, dropoffState, dropoffCountry, dropoffPostcode),
+    pickupAddress = OrderAddressView(pickupAddress?.street1, pickupAddress?.street2, pickupAddress?.city, pickupAddress?.state, pickupAddress?.country, pickupAddress?.postcode),
+    dropoffAddress = OrderAddressView(dropoffAddress?.street1, dropoffAddress?.street2, dropoffAddress?.city, dropoffAddress?.state, dropoffAddress?.country, dropoffAddress?.postcode),
     lines = lines.map {
         AdminOrderLineView(
             id = it.id.toString(),

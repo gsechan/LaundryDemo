@@ -1,9 +1,13 @@
 package com.gabesechansoftware.laundrydemoserver.model.dbview.orders
 
 import com.gabesechansoftware.laundrydemoserver.model.dbview.BaseEntity
+import com.gabesechansoftware.laundrydemoserver.model.dbview.EmbeddedAddress
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
+import jakarta.persistence.AttributeOverride
+import jakarta.persistence.AttributeOverrides
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
+import jakarta.persistence.Embedded
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -61,17 +65,25 @@ class Order(
     @Column(columnDefinition = "TIMESTAMP(9)")
     var scheduledDropoff: OffsetDateTime? = null,
 
-    var pickupStreet1: String? = null,
-    var pickupStreet2: String? = null,
-    var pickupCity: String? = null,
-    var pickupState: String? = null,
-    var pickupCountry: String? = null,
-    var pickupPostcode: String? = null,
+    @Embedded
+    @AttributeOverrides(
+        AttributeOverride(name = "street1",  column = Column(name = "pickup_street1")),
+        AttributeOverride(name = "street2",  column = Column(name = "pickup_street2")),
+        AttributeOverride(name = "city",     column = Column(name = "pickup_city")),
+        AttributeOverride(name = "state",    column = Column(name = "pickup_state")),
+        AttributeOverride(name = "country",  column = Column(name = "pickup_country")),
+        AttributeOverride(name = "postcode", column = Column(name = "pickup_postcode")),
+    )
+    var pickupAddress: EmbeddedAddress? = null,
 
-    var dropoffStreet1: String? = null,
-    var dropoffStreet2: String? = null,
-    var dropoffCity: String? = null,
-    var dropoffState: String? = null,
-    var dropoffCountry: String? = null,
-    var dropoffPostcode: String? = null,
+    @Embedded
+    @AttributeOverrides(
+        AttributeOverride(name = "street1",  column = Column(name = "dropoff_street1")),
+        AttributeOverride(name = "street2",  column = Column(name = "dropoff_street2")),
+        AttributeOverride(name = "city",     column = Column(name = "dropoff_city")),
+        AttributeOverride(name = "state",    column = Column(name = "dropoff_state")),
+        AttributeOverride(name = "country",  column = Column(name = "dropoff_country")),
+        AttributeOverride(name = "postcode", column = Column(name = "dropoff_postcode")),
+    )
+    var dropoffAddress: EmbeddedAddress? = null,
 ): BaseEntity()
