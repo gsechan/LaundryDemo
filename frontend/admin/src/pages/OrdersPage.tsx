@@ -20,9 +20,9 @@ function inputToMs(s) { return s ? new Date(s).getTime() : null; }
 function msToLabel(ms) { return ms == null ? "—" : new Date(ms).toLocaleString(); }
 
 function OrderDetail({ order, onBack, onSaved, onDeleted }) {
-    const { currentAdmin } = useAuth();
+    const { hasAnyPermission } = useAuth();
     const api = useApi();
-    const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
+    const canEdit = hasAnyPermission("EDIT_ORG", "CREATE_ORG");
     const [state, setState] = useState(order.state || "SUBMITTED");
     const [pickupAt, setPickupAt] = useState(msToInput(order.scheduledPickup));
     const [dropoffAt, setDropoffAt] = useState(msToInput(order.scheduledDropoff));

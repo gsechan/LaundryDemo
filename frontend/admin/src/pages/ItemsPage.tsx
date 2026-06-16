@@ -8,9 +8,9 @@ import DetailView from "../components/DetailView";
 const ITEM_TYPES = ["WASH_AND_FOLD", "DRY_CLEANING", "OTHER"];
 
 function ItemDetail({ orgId, item, onBack, onSaved, onDeleted }) {
-    const { currentAdmin } = useAuth();
+    const { hasAnyPermission } = useAuth();
     const api = useApi();
-    const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
+    const canEdit = hasAnyPermission("EDIT_ORG", "CREATE_ORG");
     const [price, setPrice] = useState(item.price || "");
     const [itemType, setItemType] = useState(item.itemType || "DRY_CLEANING");
     const [names, setNames] = useState(item.names || []);
@@ -142,9 +142,9 @@ function ItemCreate({ orgId, onBack, onCreated }) {
 }
 
 export default function ItemsPage() {
-    const { currentAdmin } = useAuth();
+    const { hasAnyPermission } = useAuth();
     const api = useApi();
-    const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
+    const canEdit = hasAnyPermission("EDIT_ORG", "CREATE_ORG");
     const [orgs, setOrgs] = useState(null);
     const [orgId, setOrgId] = useState("");
     const [items, setItems] = useState(null);

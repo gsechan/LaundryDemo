@@ -6,10 +6,10 @@ import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
 function OrganizationDetail({ org, onBack, onSaved, onDeleted }) {
-    const { currentAdmin } = useAuth();
+    const { hasAnyPermission } = useAuth();
     const api = useApi();
-    const canEdit = currentAdmin.permissions.includes("EDIT_ORG") || currentAdmin.permissions.includes("CREATE_ORG");
-    const canDelete = currentAdmin.permissions.includes("DELETE_ORG");
+    const canEdit = hasAnyPermission("EDIT_ORG", "CREATE_ORG");
+    const canDelete = hasAnyPermission("DELETE_ORG");
     const [name, setName] = useState(org.name || "");
     const [locale, setLocale] = useState(org.defaultLocale || "");
     const [error, setError] = useState(null);
@@ -76,7 +76,7 @@ function OrganizationCreate({ onBack, onCreated }) {
 }
 
 export default function OrganizationsPage() {
-    const { currentAdmin } = useAuth();
+    const { hasAnyPermission } = useAuth();
     const api = useApi();
     const [orgs, setOrgs] = useState(null);
     const [error, setError] = useState(null);
@@ -112,7 +112,7 @@ export default function OrganizationsPage() {
     return (
         <PageList
             title="Organizations"
-            canAdd={currentAdmin.permissions.includes("CREATE_ORG")}
+            canAdd={hasAnyPermission("CREATE_ORG")}
             onAdd={() => setCreating(true)}
             loading={!orgs && !error}
             error={error}

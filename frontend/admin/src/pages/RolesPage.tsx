@@ -24,9 +24,9 @@ function PermissionChecklist({ selected, onToggle }) {
 }
 
 function RoleDetail({ role, onBack, onSaved, onDeleted }) {
-    const { currentAdmin } = useAuth();
+    const { hasAnyPermission } = useAuth();
     const api = useApi();
-    const canAssign = currentAdmin.permissions.includes("ASSIGN_ADMIN_ROLES");
+    const canAssign = hasAnyPermission("ASSIGN_ADMIN_ROLES");
     const [name, setName] = useState(role.name || "");
     const [perms, setPerms] = useState(role.permissions || []);
     const [error, setError] = useState(null);
@@ -95,7 +95,7 @@ function RoleCreate({ onBack, onCreated }) {
 }
 
 export default function RolesPage() {
-    const { currentAdmin } = useAuth();
+    const { hasAnyPermission } = useAuth();
     const api = useApi();
     const [roles, setRoles] = useState(null);
     const [error, setError] = useState(null);
@@ -131,7 +131,7 @@ export default function RolesPage() {
     return (
         <PageList
             title="Roles"
-            canAdd={currentAdmin.permissions.includes("ASSIGN_ADMIN_ROLES")}
+            canAdd={hasAnyPermission("ASSIGN_ADMIN_ROLES")}
             onAdd={() => setCreating(true)}
             loading={!roles && !error}
             error={error}

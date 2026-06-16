@@ -1,5 +1,5 @@
 import { useState } from "react";
-import AuthContext from "./AuthContext";
+import AuthContext, { makeAuthValue } from "./AuthContext";
 import Navbar, { getInitialPage } from "./Navbar";
 import LoginPage from "./pages/LoginPage";
 import AdminsPage from "./pages/AdminsPage";
@@ -14,7 +14,7 @@ function Shell({ token, currentAdmin }) {
     const [page, setPage] = useState(() => getInitialPage(perms));
 
     return (
-        <AuthContext.Provider value={{ token, currentAdmin }}>
+        <AuthContext.Provider value={makeAuthValue(token, currentAdmin)}>
             <div className="shell">
                 <Navbar perms={perms} page={page} onNavigate={setPage} />
                 <main className="content">

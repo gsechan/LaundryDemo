@@ -6,9 +6,9 @@ import PageList from "../components/PageList";
 import DetailView from "../components/DetailView";
 
 function AdminDetail({ admin, onBack, onSaved, onDeleted }) {
-    const { currentAdmin } = useAuth();
+    const { hasAnyPermission } = useAuth();
     const api = useApi();
-    const canAssign = currentAdmin.permissions.includes("ASSIGN_ADMIN_ROLES");
+    const canAssign = hasAnyPermission("ASSIGN_ADMIN_ROLES");
     const currentRoleIds = admin.roleMemberships.map((m) => m.roleId);
     const [roles, setRoles] = useState(null);
     const [checked, setChecked] = useState(currentRoleIds);
@@ -63,7 +63,7 @@ function AdminDetail({ admin, onBack, onSaved, onDeleted }) {
             onBack={onBack}
             canSave={canAssign}
             onSave={handleSave}
-            canDelete={currentAdmin.permissions.includes("DELETE_ADMIN")}
+            canDelete={hasAnyPermission("DELETE_ADMIN")}
             onDelete={handleDelete}
             error={error}
         >
@@ -131,7 +131,7 @@ function AdminCreate({ onBack, onCreated }) {
 }
 
 export default function AdminsPage() {
-    const { currentAdmin } = useAuth();
+    const { hasAnyPermission } = useAuth();
     const api = useApi();
     const [admins, setAdmins] = useState(null);
     const [error, setError] = useState(null);
@@ -167,7 +167,7 @@ export default function AdminsPage() {
     return (
         <PageList
             title="Admins"
-            canAdd={currentAdmin.permissions.includes("CREATE_ADMIN")}
+            canAdd={hasAnyPermission("CREATE_ADMIN")}
             onAdd={() => setCreating(true)}
             loading={!admins && !error}
             error={error}
