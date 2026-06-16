@@ -15,7 +15,9 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderLine
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
 import com.gabesechansoftware.laundrydemoserver.model.dbview.EmbeddedAddress
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
+import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.LocationRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.OrderRepository
+import com.gabesechansoftware.laundrydemoserver.model.dbview.Location
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.validation.OrderValidator
@@ -51,6 +53,9 @@ class OrderServiceTest {
     lateinit var addressRepository: AddressRepository
 
     @MockK
+    lateinit var locationRepository: LocationRepository
+
+    @MockK
     lateinit var itemService: ItemService
 
     private val now = OffsetDateTime.now(ZoneOffset.UTC)
@@ -60,8 +65,8 @@ class OrderServiceTest {
     private val scheduledPickup = now.plusDays(5)
     private val scheduledDropff = now.plusDays(6)
     private val organization = Organization("Laundry", "es-ES")
-    private val pickupAddress = Address( street1 = "1")
-    private val dropoffAddress = Address( street1 = "2")
+    private val pickupAddress = Address(street1 = "1", postcode = "60601")
+    private val dropoffAddress = Address(street1 = "2")
     private val user = User(
         name = "Gabe",
         email = "test@example.com",
@@ -131,6 +136,11 @@ class OrderServiceTest {
     )
 
     private val locationId = UUID.randomUUID()
+    private val location = Location(
+        name = "Main",
+        address = EmbeddedAddress(street1 = "1", city = "Chicago", state = "IL", country = "US", postcode = "60601"),
+        organizationId = organization.id,
+    ).also { it.id = locationId }
     private val washFoldPrice = Item(locationId = locationId, price = BigDecimal(1.0), itemType = ItemType.WASH_AND_FOLD)
     val dryCleanItemName1 = ItemName(null, "Englsh", "en-US")
     val dryCleanItemName2 = ItemName(null, "Spanish", "es-ES")
@@ -154,6 +164,7 @@ class OrderServiceTest {
 
             every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
             every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress
+            every { locationRepository.findFirstByOrganizationIdAndAddressPostcode(organization.id, "60601") } returns location
             every { itemService.getItem(any(), any()) } returns dryCleanItem
             every {
                 itemNameForLocale(
@@ -184,6 +195,7 @@ class OrderServiceTest {
                 OrderService(
                     orderRepository = orderRepository,
                     addressRepository = addressRepository,
+                    locationRepository = locationRepository,
                     itemService = itemService,
                     orderValidator = mockValidator,
                 )
@@ -216,8 +228,9 @@ class OrderServiceTest {
 
             every { addressRepository.getReferenceById(pickupAddress.id) } returns pickupAddress
             every { addressRepository.getReferenceById(dropoffAddress.id) } returns dropoffAddress
-            every { itemService.getItem(any(), UUID.fromString("1d6b04c5-fcae-45af-8782-9af3f980d5b1")) } returns washFoldPrice
-            every { itemService.getItem(any(), UUID.fromString("3dbcaa3b-af68-4939-8fc1-22b44da261fb")) } returns dryCleanItem
+            every { locationRepository.findFirstByOrganizationIdAndAddressPostcode(organization.id, "60601") } returns location
+            every { itemService.getItem(locationId, UUID.fromString("1d6b04c5-fcae-45af-8782-9af3f980d5b1")) } returns washFoldPrice
+            every { itemService.getItem(locationId, UUID.fromString("3dbcaa3b-af68-4939-8fc1-22b44da261fb")) } returns dryCleanItem
             every {
                 itemNameForLocale(
                     any(),
@@ -252,6 +265,7 @@ class OrderServiceTest {
             val service = OrderService(
                 orderRepository = orderRepository,
                 addressRepository = addressRepository,
+                locationRepository = locationRepository,
                 itemService = itemService,
                 timeSource = timeSource,
             )

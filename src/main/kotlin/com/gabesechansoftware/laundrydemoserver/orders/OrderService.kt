@@ -9,6 +9,7 @@ import com.gabesechansoftware.laundrydemoserver.model.dbview.EmbeddedAddress
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
+import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.LocationRepository
 import com.gabesechansoftware.laundrydemoserver.model.dbview.user.User
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.OrderRepository
 import com.gabesechansoftware.laundrydemoserver.model.validation.OrderValidator
@@ -46,6 +47,7 @@ data class PatchOrder(
 class OrderService(
     private val orderRepository: OrderRepository,
     private val addressRepository: AddressRepository,
+    private val locationRepository: LocationRepository,
     private val itemService: ItemService,
     private val orderValidator: OrderValidator = OrderValidator(),
     private val timeSource: TimeSource = TimeSource(),
@@ -78,26 +80,10 @@ class OrderService(
         patch.scheduledDropoff?.let { order.scheduledDropoff = Instant.ofEpochMilli(it).atOffset(ZoneOffset.UTC) }
 
         patch.pickupAddress?.let { a ->
-            val existing = order.pickupAddress
-            order.pickupAddress = EmbeddedAddress(
-                street1 = a.street1 ?: existing?.street1 ?: "",
-                street2 = a.street2 ?: existing?.street2,
-                city = a.city ?: existing?.city ?: "",
-                state = a.state ?: existing?.state ?: "",
-                country = a.country ?: existing?.country ?: "",
-                postcode = a.postcode ?: existing?.postcode ?: "",
-            )
+            order.pickupAddress = order.pickupAddress!!.applyPatch(a)
         }
         patch.dropoffAddress?.let { a ->
-            val existing = order.dropoffAddress
-            order.dropoffAddress = EmbeddedAddress(
-                street1 = a.street1 ?: existing?.street1 ?: "",
-                street2 = a.street2 ?: existing?.street2,
-                city = a.city ?: existing?.city ?: "",
-                state = a.state ?: existing?.state ?: "",
-                country = a.country ?: existing?.country ?: "",
-                postcode = a.postcode ?: existing?.postcode ?: "",
-            )
+            order.pickupAddress = order.pickupAddress!!.applyPatch(a)
         }
 
         patch.lines?.forEach { linePatch ->
@@ -106,7 +92,7 @@ class OrderService(
             linePatch.quantity?.let { q ->
                 val quantity = try {
                     BigDecimal(q)
-                } catch (e: NumberFormatException) {
+                } catch (_: NumberFormatException) {
                     throw APIErrorException(listOf("Invalid quantity"))
                 }
                 line.quantity = quantity
@@ -140,9 +126,11 @@ class OrderService(
         val errors = mutableListOf<String>()
         val pickupAddress = addressRepository.getReferenceById(UUID.fromString(uploadOrder.pickupAddress))
         val dropoffAddress = addressRepository.getReferenceById(UUID.fromString(uploadOrder.dropoffAddress))
+        val location = locationRepository.findFirstByOrganizationIdAndAddressPostcode(org.id, pickupAddress.postcode!!)
+            ?: throw APIErrorException(listOf("No location found for pickup address postcode"))
         val order = uploadOrder.toDbOrder(authedUser, now, pickupAddress, dropoffAddress)
         order.lines.addAll(uploadOrder.lines.map {
-            val item = itemService.getItem(org.id, UUID.fromString(it.itemId))
+            val item = itemService.getItem(location.id, UUID.fromString(it.itemId))
             it.toDBOrderLine(item, locale, org.defaultLocale!!)
         }.toMutableList())
         orderValidator.validateOrder(order, errors, true)
@@ -155,4 +143,17 @@ class OrderService(
         }
         return order
     }
+ }
+
+
+
+fun EmbeddedAddress.applyPatch(patch: PatchOrderAddress): EmbeddedAddress {
+    return EmbeddedAddress(
+        street1 = patch.street1 ?: street1,
+        street2 = patch.street2 ?: street2,
+        city = patch.city ?: city,
+        state = patch.state ?: state,
+        country = patch.country ?: country,
+        postcode = patch.postcode ?: postcode,
+    )
 }
