@@ -1,9 +1,9 @@
 package com.gabesechansoftware.laundrydemoserver.model.validation
 
 import com.gabesechansoftware.laundrydemoserver.TimeSource
+import com.gabesechansoftware.laundrydemoserver.model.dbview.EmbeddedAddress
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.ItemType
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order
-import com.gabesechansoftware.laundrydemoserver.model.dbview.user.Address
 
 class OrderValidator(
     private val timeSource: TimeSource = TimeSource(),
@@ -11,8 +11,6 @@ class OrderValidator(
 ) {
     fun validateOrder(
         order: Order,
-        pickupAddress: Address?,
-        dropoffAddress: Address?,
         errors: MutableList<String>,
         isNewOrder: Boolean = false,
     ) {
@@ -78,18 +76,20 @@ class OrderValidator(
             errors.add("Pickup must be in the future")
         }
 
-        if(dropoffAddress == null) {
-            errors.add("There must be a dropoff address")
-        }
-        else {
-            addressValidator.validateAddress(dropoffAddress, errors)
-        }
-
-        if(pickupAddress == null) {
+        val pickup = order.pickupAddress
+        if(pickup == null) {
             errors.add("There must be a pickup address")
         }
         else {
-            addressValidator.validateAddress(pickupAddress, errors)
+            addressValidator.validateAddress(pickup, errors)
+        }
+
+        val dropoff = order.dropoffAddress
+        if(dropoff == null) {
+            errors.add("There must be a dropoff address")
+        }
+        else {
+            addressValidator.validateAddress(dropoff, errors)
         }
 
         order.lines.forEach { line ->
@@ -160,12 +160,8 @@ class OrderValidator(
             errors.add("The dropoff can't be before the pickup")
         }
 
-        addressValidator.validateAddress(snapshotToAddress(
-            order.pickupStreet1, order.pickupStreet2, order.pickupCity,
-            order.pickupState, order.pickupCountry, order.pickupPostcode), errors)
-        addressValidator.validateAddress(snapshotToAddress(
-            order.dropoffStreet1, order.dropoffStreet2, order.dropoffCity,
-            order.dropoffState, order.dropoffCountry, order.dropoffPostcode), errors)
+        order.pickupAddress?.let { addressValidator.validateAddress(it, errors) }
+        order.dropoffAddress?.let { addressValidator.validateAddress(it, errors) }
 
         order.lines.forEach { line ->
             when(line.itemType) {
@@ -187,19 +183,5 @@ class OrderValidator(
                 errors.add("Total cost is not the product of ppu and quantity")
             }
         }
-    }
-
-    private fun snapshotToAddress(
-        street1: String?, street2: String?, city: String?,
-        state: String?, country: String?, postcode: String?,
-    ): Address {
-        return Address(
-            street1 = street1,
-            street2 = street2,
-            city = city,
-            state = state,
-            country = country,
-            postcode = postcode,
-        )
     }
 }

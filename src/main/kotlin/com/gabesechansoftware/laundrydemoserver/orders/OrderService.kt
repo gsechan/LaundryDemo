@@ -5,6 +5,7 @@ import com.gabesechansoftware.laundrydemoserver.EntityDoesNotExistException
 import com.gabesechansoftware.laundrydemoserver.TimeSource
 import com.gabesechansoftware.laundrydemoserver.catalog.ItemService
 import com.gabesechansoftware.laundrydemoserver.model.customerview.UploadOrder
+import com.gabesechansoftware.laundrydemoserver.model.dbview.EmbeddedAddress
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.Order
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
 import com.gabesechansoftware.laundrydemoserver.model.dbview.repositories.AddressRepository
@@ -68,20 +69,26 @@ class OrderService(
         patch.scheduledDropoff?.let { order.scheduledDropoff = Instant.ofEpochMilli(it).atOffset(ZoneOffset.UTC) }
 
         patch.pickupAddress?.let { a ->
-            a.street1?.let { order.pickupStreet1 = it }
-            a.street2?.let { order.pickupStreet2 = it }
-            a.city?.let { order.pickupCity = it }
-            a.state?.let { order.pickupState = it }
-            a.country?.let { order.pickupCountry = it }
-            a.postcode?.let { order.pickupPostcode = it }
+            val existing = order.pickupAddress
+            order.pickupAddress = EmbeddedAddress(
+                street1 = a.street1 ?: existing?.street1 ?: "",
+                street2 = a.street2 ?: existing?.street2,
+                city = a.city ?: existing?.city ?: "",
+                state = a.state ?: existing?.state ?: "",
+                country = a.country ?: existing?.country ?: "",
+                postcode = a.postcode ?: existing?.postcode ?: "",
+            )
         }
         patch.dropoffAddress?.let { a ->
-            a.street1?.let { order.dropoffStreet1 = it }
-            a.street2?.let { order.dropoffStreet2 = it }
-            a.city?.let { order.dropoffCity = it }
-            a.state?.let { order.dropoffState = it }
-            a.country?.let { order.dropoffCountry = it }
-            a.postcode?.let { order.dropoffPostcode = it }
+            val existing = order.dropoffAddress
+            order.dropoffAddress = EmbeddedAddress(
+                street1 = a.street1 ?: existing?.street1 ?: "",
+                street2 = a.street2 ?: existing?.street2,
+                city = a.city ?: existing?.city ?: "",
+                state = a.state ?: existing?.state ?: "",
+                country = a.country ?: existing?.country ?: "",
+                postcode = a.postcode ?: existing?.postcode ?: "",
+            )
         }
 
         patch.lines?.forEach { linePatch ->
@@ -124,17 +131,12 @@ class OrderService(
         val errors = mutableListOf<String>()
         val pickupAddress = addressRepository.getReferenceById(UUID.fromString(uploadOrder.pickupAddress))
         val dropoffAddress = addressRepository.getReferenceById(UUID.fromString(uploadOrder.dropoffAddress))
-        val order = uploadOrder.toDbOrder(
-            authedUser,
-            now,
-            pickupAddress,
-            dropoffAddress,
-        )
+        val order = uploadOrder.toDbOrder(authedUser, now, pickupAddress, dropoffAddress)
         order.lines.addAll(uploadOrder.lines.map {
             val item = itemService.getItem(org.id, UUID.fromString(it.itemId))
             it.toDBOrderLine(item, locale, org.defaultLocale!!)
         }.toMutableList())
-        orderValidator.validateOrder(order, pickupAddress, dropoffAddress, errors, true)
+        orderValidator.validateOrder(order, errors, true)
 
         if(errors.isEmpty()) {
             orderRepository.save(order)

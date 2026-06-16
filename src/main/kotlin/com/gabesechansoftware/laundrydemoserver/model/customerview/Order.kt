@@ -1,5 +1,6 @@
 package com.gabesechansoftware.laundrydemoserver.model.customerview
 
+import com.gabesechansoftware.laundrydemoserver.model.dbview.EmbeddedAddress
 import com.gabesechansoftware.laundrydemoserver.model.dbview.catalog.itemNameForLocale
 import com.gabesechansoftware.laundrydemoserver.model.dbview.orders.OrderState
 import java.math.BigDecimal
@@ -30,18 +31,22 @@ data class UploadOrder(
             completed = null,
             scheduledPickup = Instant.ofEpochMilli(scheduledPickup).atOffset(ZoneOffset.UTC),
             scheduledDropoff = Instant.ofEpochMilli(scheduledDropoff).atOffset(ZoneOffset.UTC),
-            pickupStreet1 = pickupAddress.street1,
-            pickupStreet2 = pickupAddress.street2,
-            pickupCity = pickupAddress.city,
-            pickupState = pickupAddress.state,
-            pickupCountry = pickupAddress.country,
-            pickupPostcode = pickupAddress.postcode,
-            dropoffStreet1 = dropoffAddress.street1,
-            dropoffStreet2 = dropoffAddress.street2,
-            dropoffCity = dropoffAddress.city,
-            dropoffState = dropoffAddress.state,
-            dropoffCountry = dropoffAddress.country,
-            dropoffPostcode = dropoffAddress.postcode,
+            pickupAddress = EmbeddedAddress(
+                street1 = pickupAddress.street1 ?: "",
+                street2 = pickupAddress.street2,
+                city = pickupAddress.city ?: "",
+                state = pickupAddress.state ?: "",
+                country = pickupAddress.country ?: "",
+                postcode = pickupAddress.postcode ?: "",
+            ),
+            dropoffAddress = EmbeddedAddress(
+                street1 = dropoffAddress.street1 ?: "",
+                street2 = dropoffAddress.street2,
+                city = dropoffAddress.city ?: "",
+                state = dropoffAddress.state ?: "",
+                country = dropoffAddress.country ?: "",
+                postcode = dropoffAddress.postcode ?: "",
+            ),
         )
 
     }
@@ -116,20 +121,20 @@ fun DBOrder.toCustomer(): Order {
         scheduledPickup = scheduledPickup!!.toInstant().toEpochMilli(),
         scheduledDropoff = scheduledDropoff!!.toInstant().toEpochMilli(),
         pickupAddress = OrderAddress(
-            street1 = pickupStreet1,
-            street2 = pickupStreet2,
-            city = pickupCity,
-            state = pickupState,
-            country = pickupCountry,
-            postcode = pickupPostcode,
+            street1 = pickupAddress?.street1,
+            street2 = pickupAddress?.street2,
+            city = pickupAddress?.city,
+            state = pickupAddress?.state,
+            country = pickupAddress?.country,
+            postcode = pickupAddress?.postcode,
         ),
         dropoffAddress = OrderAddress(
-            street1 = dropoffStreet1,
-            street2 = dropoffStreet2,
-            city = dropoffCity,
-            state = dropoffState,
-            country = dropoffCountry,
-            postcode = dropoffPostcode,
+            street1 = dropoffAddress?.street1,
+            street2 = dropoffAddress?.street2,
+            city = dropoffAddress?.city,
+            state = dropoffAddress?.state,
+            country = dropoffAddress?.country,
+            postcode = dropoffAddress?.postcode,
         ),
         lines = lines.map { it.toCustomer() },
     )
