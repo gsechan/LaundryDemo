@@ -1,33 +1,18 @@
 # LaundryDemoServer
 This repo is a snapshot of an application written for a friend's laundromat.  The goal was to build out a mobile app for them.  Development continued from here in a private repo, with this repo kept as a portfolio piece, and a place for me to play with different patterns on server architecture.
 
+This is meant to be a multi-tenant SAAS POS backend service.  It has multiple laundromats (Organizations) each of which has 1 or more locations.  Pricing for dry cleaning and wash and fold is per location.  Customer accounts are tied to a phone number and organization, meaning a single user can have accounts at multiple organizations without knowing that they run the same backed.  In addition to customer logins, we have admin and employee logins.  Admins are meant to be employees of the SAAS company, and can create new organizations and admins.  Employees are tied to a single organization.  
+
+For authorization, we have role based authorization for both admins and employees.  Employees can have a role at either an entire organization, or at individual location(s).  This allows an owner of a multi-site laundromat to have global edit ability, while allowing manager and employees to only access individual locations.
+
+Everything here is built to production quality except for two things.  First, the  AvailableTimesController.  That controller is meant to serve the available pickup and dropoff times for a
+location.  It's currently a stub serving fixed data for a prototype, and needs to be restructured for rea data.  In particular, we hadn't decided on how to populate this without requiring the owner to set individual slots weekly while still respecting days off and holidays.  It was the next feature to be built.  
+
+The other fakes out part is the Customer->location mapping for prices and orders.  Right now, we're looking for a location with a matching postcode to the user's default address.  In the end we will probably want a more intelligent algorithm, but this was sufficient for a prototype to show location based pricing.
+
+
+
 # Architecture
 
 This server uses Spring Boot, Postgres and Hibernate for its  database access, with Flyway managing its migrations.
-
-## Models
-
-The DB entities are in model.dbview.  These are dumb models, and all derive from BaseEntity which defines their UUID primary key.  When these entities need different variations (such as for being sent to customers or uploaded by customers), these variations are in different model packages.  For now, we have customerview, which holds upload and download version for customers.  These may drop fields the customer doesn't need (such as organization ids), or add fields from other tables (such as item names being taken from translation tables and added to the item).
-
-Every item that is uploaded from a user has a validator in models.validation.  These validators inspect the object and accumulate errors in a list.  There are also validators for specific data fields like passwords and phone numbers.  Validators may (and should) call each other if needed.
-
-## Controllers
-
-Controllers are all places in the controllers package.  Each controller  is in charge of 1 closely related set of endpoints provided to the user.  They should not have any business logic that's in the Services.  Their responsibility is to take data from the request and send it to the service, and take data from the Service and send it to the user.  It is responsible for any model conversion to specific forms, but not for gathering, filtering, or validating data.  In some cases where data is needed from multiple tables, the service may take over conversion as well, as doing it in the controller would require the controller to know too much about the db.
-
-## Services
-
-Services exist in packages relating to their functionality, rather than in a central place.  Each service is responsible for a business logic unit, not for a specific db object.  For example, LoginAuthenticator owns login and authenticating users, so owns the password and sessions tables.  Services are the places that call repositories for data, do validation, and know how to combine data from multiple tables.
-
-## Dealing with bad data
-
-Any service that finds incorrect data should throw an APIErrorException.  A tob level APIExceptionHandler will catch that and return the proper result for all controllers
-
-Any service that finds bad data in the db and cannot continue should throw a DatabaseDataInvalidException.  Heavy alerting should be put on logs to find and fix these.  The known case that throws it is if we find multiple tokens on login, but that should be prevented by the DB constraints so we should never see it.
-
-## Dealing with time
-
-All times are stored in the DB as UTC times, and should be converted for display.  All times send over the network should be UTC times.  
-
-If a Service needs to know the current time, it should take a TimeSource as a parameter and use the now function on it.  This will assure it gets UTC time, as well as allow us to mock out time in tests.
 
